@@ -85,8 +85,8 @@ function OAuthSuccessContent() {
         // Check if user has any stores
         try {
           const storesResponse = await storeApi.getMyStores({
-            page: 0,
-            size: 1,
+            page: 1,
+            size: 10,
           });
           const hasStore = storesResponse.result.totalElements > 0;
 

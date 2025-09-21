@@ -39,7 +39,7 @@ export default function Page() {
   const router = useRouter();
 
   // Get user's stores
-  const { data: storesData } = useMyStores({ size: 1 });
+  const { data: storesData } = useMyStores({ size: 10 });
   const currentStore = storesData?.content?.[0];
   const storeId = currentStore?.storeId;
 
