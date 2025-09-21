@@ -17,7 +17,7 @@ export const storeApi = {
     const params = {
       page: pageable.page ?? 0,
       size: pageable.size ?? 10,
-      sort: pageable.sort ?? ["createdAt,desc"],
+      sort: pageable.sort ?? ["storeId,asc"], // 첫 번째 가게 (storeId가 가장 작은 것) 우선
     };
     return apiClient.get<ApiResponse<PageResponse<StoreResponse>>>(
       "/api/stores/my",

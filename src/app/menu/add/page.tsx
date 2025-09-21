@@ -17,6 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useCreateMenuWithPhotos } from "@/lib/hooks/useCreateMenuWithPhotos";
+import { useMyStores } from "@/lib/hooks/useStore";
 
 export default function Page() {
   const router = useRouter();
@@ -28,7 +29,18 @@ export default function Page() {
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const { createMenuWithPhotosAsync, isCreating } = useCreateMenuWithPhotos();
-  const [storeId] = useState(1); // TODO: 실제 storeId 가져오기
+
+  // 사용자의 가게 정보 가져오기 (첫 번째 가게 우선)
+  const { data: storesData } = useMyStores({ size: 10 });
+  const stores = storesData?.content || [];
+  // storeId가 가장 작은 가게 (첫 번째 가게) 선택
+  const currentStore =
+    stores.length > 0
+      ? stores.reduce((first, store) =>
+          store.storeId < first.storeId ? store : first
+        )
+      : null;
+  const storeId = currentStore?.storeId;
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -133,6 +145,15 @@ export default function Page() {
 
   const handleSubmit = async () => {
     if (!validateForm()) {
+      return;
+    }
+
+    // storeId가 없으면 등록 불가
+    if (!storeId) {
+      setErrorMessage(
+        "가게 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요."
+      );
+      setShowErrorDialog(true);
       return;
     }
 

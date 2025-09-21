@@ -38,9 +38,16 @@ const mockStoreProfile = {
 export default function Page() {
   const router = useRouter();
 
-  // Get user's stores
+  // Get user's stores (첫 번째 가게 우선)
   const { data: storesData } = useMyStores({ size: 10 });
-  const currentStore = storesData?.content?.[0];
+  const stores = storesData?.content || [];
+  // storeId가 가장 작은 가게 (첫 번째 가게) 선택
+  const currentStore =
+    stores.length > 0
+      ? stores.reduce((first, store) =>
+          store.storeId < first.storeId ? store : first
+        )
+      : null;
   const storeId = currentStore?.storeId;
 
   // React Query hooks - only fetch if we have a valid storeId
