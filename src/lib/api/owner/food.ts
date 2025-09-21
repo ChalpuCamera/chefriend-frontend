@@ -1,14 +1,18 @@
-import { apiClient } from '../client';
-import type { ApiResponse, PageResponse, Pageable } from '@/lib/types/api/common';
-import type { FoodItemRequest, FoodItemResponse } from '@/lib/types/api/food';
+import { apiClient } from "../client";
+import type {
+  ApiResponse,
+  PageResponse,
+  Pageable,
+} from "@/lib/types/api/common";
+import type { FoodItemRequest, FoodItemResponse } from "@/lib/types/api/food";
 
 export const foodApi = {
   // 매장별 음식 목록 조회
   getFoodsByStore: (storeId: number, pageable: Pageable = {}) => {
     const params = {
-      page: pageable.page ?? 0,
+      page: pageable.page ?? 1,
       size: pageable.size ?? 10,
-      sort: pageable.sort ?? ['createdAt,desc'],
+      sort: pageable.sort ?? ["createdAt,desc"],
     };
     return apiClient.get<ApiResponse<PageResponse<FoodItemResponse>>>(
       `/api/foods/store/${storeId}`,

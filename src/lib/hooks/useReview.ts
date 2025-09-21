@@ -1,20 +1,20 @@
-import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
-import { reviewApi } from '@/lib/api/owner/review';
-import type { Pageable } from '@/lib/types/api/common';
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
+import { reviewApi } from "@/lib/api/owner/review";
+import type { Pageable } from "@/lib/types/api/common";
 
 // Query Keys
 export const reviewKeys = {
-  all: ['reviews'] as const,
-  lists: () => [...reviewKeys.all, 'list'] as const,
+  all: ["reviews"] as const,
+  lists: () => [...reviewKeys.all, "list"] as const,
   listByStore: (storeId: number, filters?: Pageable) =>
-    [...reviewKeys.lists(), 'store', storeId, filters ?? {}] as const,
+    [...reviewKeys.lists(), "store", storeId, filters ?? {}] as const,
   listByFood: (foodId: number, filters?: Pageable) =>
-    [...reviewKeys.lists(), 'food', foodId, filters ?? {}] as const,
+    [...reviewKeys.lists(), "food", foodId, filters ?? {}] as const,
   infiniteByStore: (storeId: number) =>
-    [...reviewKeys.lists(), 'infinite', 'store', storeId] as const,
+    [...reviewKeys.lists(), "infinite", "store", storeId] as const,
   infiniteByFood: (foodId: number) =>
-    [...reviewKeys.lists(), 'infinite', 'food', foodId] as const,
-  details: () => [...reviewKeys.all, 'detail'] as const,
+    [...reviewKeys.lists(), "infinite", "food", foodId] as const,
+  details: () => [...reviewKeys.all, "detail"] as const,
   detail: (id: number) => [...reviewKeys.details(), id] as const,
 };
 
@@ -61,7 +61,7 @@ export function useInfiniteStoreReviews(storeId: number, size: number = 10) {
       const response = await reviewApi.getStoreReviews(storeId, {
         page: pageParam,
         size,
-        sort: ['createdAt,desc'],
+        sort: ["createdAt,desc"],
       });
       return response.result;
     },
@@ -81,7 +81,7 @@ export function useInfiniteFoodReviews(foodId: number, size: number = 10) {
       const response = await reviewApi.getFoodReviews(foodId, {
         page: pageParam,
         size,
-        sort: ['createdAt,desc'],
+        sort: ["createdAt,desc"],
       });
       return response.result;
     },
@@ -96,12 +96,12 @@ export function useInfiniteFoodReviews(foodId: number, size: number = 10) {
 // 최근 리뷰 가져오기 헬퍼 (홈 화면용)
 export function useRecentReviews(storeId: number, limit: number = 5) {
   return useQuery({
-    queryKey: [...reviewKeys.listByStore(storeId, { size: limit }), 'recent'],
+    queryKey: [...reviewKeys.listByStore(storeId, { size: limit }), "recent"],
     queryFn: async () => {
       const response = await reviewApi.getStoreReviews(storeId, {
-        page: 0,
+        page: 1,
         size: limit,
-        sort: ['createdAt,desc'],
+        sort: ["createdAt,desc"],
       });
       return response.result.content;
     },

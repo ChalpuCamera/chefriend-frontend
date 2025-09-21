@@ -1,34 +1,41 @@
-import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
-import { feedbackApi } from '@/lib/api/owner/feedback';
-import type { FeedbackCreateRequest, ReviewDisplayData } from '@/lib/types/api/feedback';
-import type { Pageable } from '@/lib/types/api/common';
-import { toast } from 'sonner';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  useInfiniteQuery,
+} from "@tanstack/react-query";
+import { feedbackApi } from "@/lib/api/owner/feedback";
+import type {
+  FeedbackCreateRequest,
+  ReviewDisplayData,
+} from "@/lib/types/api/feedback";
+import type { Pageable } from "@/lib/types/api/common";
+import { toast } from "sonner";
 
 // Query Keys
 export const feedbackKeys = {
-  all: ['feedbacks'] as const,
-  lists: () => [...feedbackKeys.all, 'list'] as const,
+  all: ["feedbacks"] as const,
+  lists: () => [...feedbackKeys.all, "list"] as const,
   listByStore: (storeId: number, filters?: Pageable) =>
-    [...feedbackKeys.lists(), 'store', storeId, filters ?? {}] as const,
+    [...feedbackKeys.lists(), "store", storeId, filters ?? {}] as const,
   listByFood: (foodId: number, filters?: Pageable) =>
-    [...feedbackKeys.lists(), 'food', foodId, filters ?? {}] as const,
+    [...feedbackKeys.lists(), "food", foodId, filters ?? {}] as const,
   infiniteByStore: (storeId: number) =>
-    [...feedbackKeys.lists(), 'infinite', 'store', storeId] as const,
+    [...feedbackKeys.lists(), "infinite", "store", storeId] as const,
   infiniteByFood: (foodId: number) =>
-    [...feedbackKeys.lists(), 'infinite', 'food', foodId] as const,
+    [...feedbackKeys.lists(), "infinite", "food", foodId] as const,
   myList: (filters?: Pageable) =>
-    [...feedbackKeys.lists(), 'me', filters ?? {}] as const,
-  infiniteMyList: () =>
-    [...feedbackKeys.lists(), 'infinite', 'me'] as const,
-  details: () => [...feedbackKeys.all, 'detail'] as const,
+    [...feedbackKeys.lists(), "me", filters ?? {}] as const,
+  infiniteMyList: () => [...feedbackKeys.lists(), "infinite", "me"] as const,
+  details: () => [...feedbackKeys.all, "detail"] as const,
   detail: (id: number) => [...feedbackKeys.details(), id] as const,
-  taste: () => ['taste'] as const,
-  myTaste: () => [...feedbackKeys.taste(), 'me'] as const,
-  reviews: () => ['reviews'] as const,
+  taste: () => ["taste"] as const,
+  myTaste: () => [...feedbackKeys.taste(), "me"] as const,
+  reviews: () => ["reviews"] as const,
   reviewsByStore: (storeId: number, filters?: Pageable) =>
-    [...feedbackKeys.reviews(), 'store', storeId, filters ?? {}] as const,
+    [...feedbackKeys.reviews(), "store", storeId, filters ?? {}] as const,
   reviewsByFood: (foodId: number, filters?: Pageable) =>
-    [...feedbackKeys.reviews(), 'food', foodId, filters ?? {}] as const,
+    [...feedbackKeys.reviews(), "food", foodId, filters ?? {}] as const,
 };
 
 // 매장별 피드백 목록 조회
@@ -77,9 +84,9 @@ export function useCreateFeedback() {
     onSuccess: () => {
       // 모든 피드백 관련 쿼리 무효화
       queryClient.invalidateQueries({
-        queryKey: feedbackKeys.all
+        queryKey: feedbackKeys.all,
       });
-      toast.success('피드백이 제출되었습니다');
+      toast.success("피드백이 제출되었습니다");
     },
   });
 }
@@ -92,7 +99,7 @@ export function useInfiniteStoreFeedbacks(storeId: number, size: number = 20) {
       const response = await feedbackApi.getStoreFeedbacks(storeId, {
         page: pageParam,
         size,
-        sort: ['createdAt,desc'],
+        sort: ["createdAt,desc"],
       });
       return response.result;
     },
@@ -112,7 +119,7 @@ export function useInfiniteMyFeedbacks(size: number = 20) {
       const response = await feedbackApi.getMyFeedbacks({
         page: pageParam,
         size,
-        sort: ['createdAt,desc'],
+        sort: ["createdAt,desc"],
       });
       return response.result;
     },
@@ -143,7 +150,7 @@ export function useInfiniteFoodFeedbacks(foodId: number, size: number = 20) {
       const response = await feedbackApi.getFoodFeedbacks(foodId, {
         page: pageParam,
         size,
-        sort: ['createdAt,desc'],
+        sort: ["createdAt,desc"],
       });
       return response.result;
     },
@@ -174,7 +181,7 @@ export function useUpdateCustomerTaste() {
     mutationFn: feedbackApi.updateCustomerTaste,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: feedbackKeys.myTaste() });
-      toast.success('취향 정보가 수정되었습니다');
+      toast.success("취향 정보가 수정되었습니다");
     },
   });
 }
@@ -182,7 +189,10 @@ export function useUpdateCustomerTaste() {
 // ============= UI용 통합 훅 (맛 프로필 포함) =============
 
 // 매장별 리뷰 목록 조회 (맛 프로필 포함)
-export function useStoreReviews(storeId: number, pageable: Pageable = {}): {
+export function useStoreReviews(
+  storeId: number,
+  pageable: Pageable = {}
+): {
   data: ReviewDisplayData[] | undefined;
   isLoading: boolean;
   error: unknown;
@@ -197,7 +207,10 @@ export function useStoreReviews(storeId: number, pageable: Pageable = {}): {
 }
 
 // 음식별 리뷰 목록 조회 (맛 프로필 포함)
-export function useFoodReviews(foodId: number, pageable: Pageable = {}): {
+export function useFoodReviews(
+  foodId: number,
+  pageable: Pageable = {}
+): {
   data: ReviewDisplayData[] | undefined;
   isLoading: boolean;
   error: unknown;
@@ -212,18 +225,24 @@ export function useFoodReviews(foodId: number, pageable: Pageable = {}): {
 }
 
 // 최근 리뷰 가져오기 헬퍼 (홈 화면용 - 맛 프로필 포함)
-export function useRecentReviews(storeId: number, limit: number = 5): {
+export function useRecentReviews(
+  storeId: number,
+  limit: number = 5
+): {
   data: ReviewDisplayData[] | undefined;
   isLoading: boolean;
   error: unknown;
 } {
   return useQuery({
-    queryKey: [...feedbackKeys.reviewsByStore(storeId, { size: limit }), 'recent'],
+    queryKey: [
+      ...feedbackKeys.reviewsByStore(storeId, { size: limit }),
+      "recent",
+    ],
     queryFn: async () => {
       return feedbackApi.getStoreReviews(storeId, {
-        page: 0,
+        page: 1,
         size: limit,
-        sort: ['createdAt,desc'],
+        sort: ["createdAt,desc"],
       });
     },
     enabled: !!storeId,
@@ -233,12 +252,12 @@ export function useRecentReviews(storeId: number, limit: number = 5): {
 // 매장별 리뷰 무한 스크롤 (UI용)
 export function useInfiniteStoreReviews(storeId: number, size: number = 10) {
   return useInfiniteQuery({
-    queryKey: [...feedbackKeys.reviews(), 'infinite', 'store', storeId],
+    queryKey: [...feedbackKeys.reviews(), "infinite", "store", storeId],
     queryFn: async ({ pageParam = 0 }) => {
       const reviews = await feedbackApi.getStoreReviews(storeId, {
         page: pageParam,
         size,
-        sort: ['createdAt,desc'],
+        sort: ["createdAt,desc"],
       });
       return {
         content: reviews,
@@ -257,12 +276,12 @@ export function useInfiniteStoreReviews(storeId: number, size: number = 10) {
 // 음식별 리뷰 무한 스크롤 (UI용)
 export function useInfiniteFoodReviews(foodId: number, size: number = 10) {
   return useInfiniteQuery({
-    queryKey: [...feedbackKeys.reviews(), 'infinite', 'food', foodId],
+    queryKey: [...feedbackKeys.reviews(), "infinite", "food", foodId],
     queryFn: async ({ pageParam = 0 }) => {
       const reviews = await feedbackApi.getFoodReviews(foodId, {
         page: pageParam,
         size,
-        sort: ['createdAt,desc'],
+        sort: ["createdAt,desc"],
       });
       return {
         content: reviews,
