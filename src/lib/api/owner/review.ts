@@ -50,7 +50,7 @@ export const reviewApi = {
     pageable: Pageable = {}
   ): Promise<ApiResponse<PageResponse<ReviewResponse>>> => {
     const params = {
-      page: pageable.page ?? 1,
+      page: pageable.page ?? 0,
       size: pageable.size ?? 20,
       sort: pageable.sort ?? ["createdAt,desc"],
     };
@@ -67,7 +67,7 @@ export const reviewApi = {
     pageable: Pageable = {}
   ): Promise<ApiResponse<PageResponse<ReviewResponse>>> => {
     const params = {
-      page: pageable.page ?? 1,
+      page: pageable.page ?? 0,
       size: pageable.size ?? 20,
       sort: pageable.sort ?? ["createdAt,desc"],
     };

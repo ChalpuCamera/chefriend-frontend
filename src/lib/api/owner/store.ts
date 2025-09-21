@@ -15,7 +15,7 @@ export const storeApi = {
   // 내 매장 목록 조회 (매장 ID 획득용)
   getMyStores: (pageable: Pageable = {}) => {
     const params = {
-      page: pageable.page ?? 1,
+      page: pageable.page ?? 0,
       size: pageable.size ?? 10,
       sort: pageable.sort ?? ["createdAt,desc"],
     };

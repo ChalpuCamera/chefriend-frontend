@@ -10,7 +10,7 @@ export const foodApi = {
   // 매장별 음식 목록 조회
   getFoodsByStore: (storeId: number, pageable: Pageable = {}) => {
     const params = {
-      page: pageable.page ?? 1,
+      page: pageable.page ?? 0,
       size: pageable.size ?? 10,
       sort: pageable.sort ?? ["createdAt,desc"],
     };
