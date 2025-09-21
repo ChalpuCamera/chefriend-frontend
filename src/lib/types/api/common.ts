@@ -19,7 +19,7 @@ export interface PageResponse<T> {
 export interface Pageable {
   page?: number; // 기본값: 0
   size?: number; // 기본값: 10
-  sort?: string[]; // 기본값: ['createdAt,desc']
+  sort?: string | string[]; // 문자열 또는 배열 모두 지원
 }
 
 export interface ErrorResponse {

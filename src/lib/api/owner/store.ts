@@ -14,10 +14,10 @@ import type {
 export const storeApi = {
   // 내 매장 목록 조회 (매장 ID 획득용)
   getMyStores: (pageable: Pageable = {}) => {
-    const params = {
+    const params: Record<string, any> = {
       page: pageable.page ?? 0,
       size: pageable.size ?? 10,
-      sort: pageable.sort ?? ["storeId,asc"], // 첫 번째 가게 (storeId가 가장 작은 것) 우선
+      sort: pageable.sort ?? ["id", "asc"], // 첫 번째 가게 (ID 오름차순) 우선
     };
     return apiClient.get<ApiResponse<PageResponse<StoreResponse>>>(
       "/api/stores/my",
