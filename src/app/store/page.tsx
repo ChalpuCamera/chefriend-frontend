@@ -3,43 +3,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Store, MapPin, Clock, Edit } from "lucide-react";
+import { Plus, Store, MapPin, Edit } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMyStores } from "@/lib/hooks/useStore";
-
-// Mock 데이터 - 사장님이 운영하는 가게들
-const mockStores = [
-  {
-    storeId: "1",
-    name: "맛있는 한식당",
-    address: "서울시 강남구 테헤란로 123",
-    category: "한식",
-    menuCount: 12,
-    totalFeedbacks: 89,
-    isActive: true,
-    operatingHours: "09:00 - 22:00",
-  },
-  {
-    storeId: "2",
-    name: "김사장 분식",
-    address: "서울시 서초구 서초대로 456",
-    category: "분식",
-    menuCount: 8,
-    totalFeedbacks: 63,
-    isActive: true,
-    operatingHours: "08:00 - 20:00",
-  },
-];
 
 export default function StoreListPage() {
   const router = useRouter();
 
   // Get user's stores
   const { data: storesData, isLoading } = useMyStores();
-  const userStores = storesData?.content || [];
-
-  // Use actual stores if available, otherwise fallback to mock
-  const stores = userStores.length > 0 ? userStores : mockStores;
+  const stores = storesData?.content || [];
 
   return (
     <div className="min-h-screen bg-background p-5">
@@ -73,19 +46,10 @@ export default function StoreListPage() {
                       </div>
                       <div>
                         <CardTitle className="text-lg">
-                          {(store as any).storeName || (store as any).name}
+                          {store.storeName}
                         </CardTitle>
                         <div className="flex items-center space-x-2 mt-1">
-                          {(store as any).category && (
-                            <Badge variant="secondary">
-                              {(store as any).category}
-                            </Badge>
-                          )}
-                          {(store as any).isActive !== false ? (
-                            <Badge variant="default">운영중</Badge>
-                          ) : (
-                            <Badge variant="destructive">휴업중</Badge>
-                          )}
+                          <Badge variant="default">운영중</Badge>
                         </div>
                       </div>
                     </div>
@@ -102,31 +66,38 @@ export default function StoreListPage() {
                 <CardContent>
                   <div className="space-y-3">
                     {/* 주소 */}
-                    <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                      <MapPin className="h-4 w-4" />
-                      <span>{store.address}</span>
-                    </div>
+                    {store.address && (
+                      <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                        <MapPin className="h-4 w-4" />
+                        <span>{store.address}</span>
+                      </div>
+                    )}
 
-                    {/* 운영시간 */}
-                    <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                      <Clock className="h-4 w-4" />
-                      <span>{(store as any).operatingHours}</span>
-                    </div>
+                    {/* 설명 */}
+                    {store.description && (
+                      <div className="text-sm text-muted-foreground">
+                        <p>{store.description}</p>
+                      </div>
+                    )}
 
-                    {/* 통계 */}
+                    {/* 링크 정보 */}
                     <div className="grid grid-cols-2 gap-4 pt-3 border-t">
                       <div>
-                        <p className="text-sm text-muted-foreground">메뉴</p>
-                        <p className="font-semibold">
-                          {(store as any).menuCount || 0}개
+                        <p className="text-sm text-muted-foreground">
+                          배달 연동
+                        </p>
+                        <p className="text-xs">
+                          {store.baeminLink ||
+                          store.yogiyoLink ||
+                          store.coupangEatsLink
+                            ? "연동됨"
+                            : "미연동"}
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground">
-                          총 피드백
-                        </p>
-                        <p className="font-semibold">
-                          {(store as any).totalFeedbacks || 0}개
+                        <p className="text-sm text-muted-foreground">매장 ID</p>
+                        <p className="font-semibold text-xs">
+                          #{store.storeId}
                         </p>
                       </div>
                     </div>
