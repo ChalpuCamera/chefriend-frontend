@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useFoodsByStore } from "@/lib/hooks/useFood";
 import { useRecentReviews } from "@/lib/hooks/useFeedback";
+import { useMyStores } from "@/lib/hooks/useStore";
 
 // Mock image placeholder (using local asset instead of localhost)
 const imgKimchi = "/kimchi.png";
@@ -37,9 +38,14 @@ const mockStoreProfile = {
 export default function Page() {
   const router = useRouter();
 
-  // React Query hooks
-  const { data: foodsData } = useFoodsByStore(1, { size: 7 });
-  const { data: reviewsData } = useRecentReviews(1, 5);
+  // Get user's stores
+  const { data: storesData } = useMyStores({ size: 1 });
+  const currentStore = storesData?.content?.[0];
+  const storeId = currentStore?.storeId;
+
+  // React Query hooks - only fetch if we have a storeId
+  const { data: foodsData } = useFoodsByStore(storeId || 0, { size: 7 });
+  const { data: reviewsData } = useRecentReviews(storeId || 0, 5);
 
   // 메뉴 데이터 처리 (최대 7개) - 서버 응답 필드명에 맞게 처리
   const menus =
@@ -92,7 +98,7 @@ export default function Page() {
           </div>
           <div className="flex flex-col">
             <h2 className="text-sub-title-b text-gray-800">
-              {mockStoreProfile.name}
+              {currentStore?.storeName || mockStoreProfile.name}
             </h2>
             <p className="text-sub-body-r text-gray-800 mt-1">
               안녕하세요 사장님 👨‍🌾

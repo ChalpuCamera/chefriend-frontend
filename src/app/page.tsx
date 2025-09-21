@@ -3,7 +3,7 @@
 import Image from "next/image";
 
 const initiateKakaoLogin = () => {
-  window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/oauth2/authorization/kakao`;
+  window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/oauth2/authorization/kakao/owner`;
 };
 
 export default function LoginPage() {
