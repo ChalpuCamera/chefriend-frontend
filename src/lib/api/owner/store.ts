@@ -14,7 +14,7 @@ import type {
 export const storeApi = {
   // 내 매장 목록 조회 (매장 ID 획득용)
   getMyStores: (pageable: Pageable = {}) => {
-    const params: Record<string, any> = {
+    const params: Record<string, string | number | string[]> = {
       page: pageable.page ?? 0,
       size: pageable.size ?? 10,
       sort: pageable.sort ?? ["id", "asc"], // 첫 번째 가게 (ID 오름차순) 우선
