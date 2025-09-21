@@ -227,7 +227,8 @@ export function useFoodReviews(
 // 최근 리뷰 가져오기 헬퍼 (홈 화면용 - 맛 프로필 포함)
 export function useRecentReviews(
   storeId: number,
-  limit: number = 5
+  limit: number = 5,
+  options?: { enabled?: boolean }
 ): {
   data: ReviewDisplayData[] | undefined;
   isLoading: boolean;
@@ -245,7 +246,7 @@ export function useRecentReviews(
         sort: ["createdAt,desc"],
       });
     },
-    enabled: !!storeId,
+    enabled: options?.enabled ?? !!storeId,
   });
 }
 

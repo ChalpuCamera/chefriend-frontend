@@ -15,7 +15,11 @@ export default function Page() {
   const currentStore = storesData?.content?.[0];
   const storeId = currentStore?.storeId;
 
-  const { data: foodsData, isLoading } = useFoodsByStore(storeId || 0);
+  const { data: foodsData, isLoading } = useFoodsByStore(
+    storeId!,
+    {},
+    { enabled: !!storeId }
+  );
 
   const menuItems = foodsData?.content?.map((food) => ({
     id: food.id || food.foodItemId, // 새 필드명 우선, 구 필드명 폴백
@@ -87,7 +91,7 @@ export default function Page() {
                       </div>
                       <button
                         className="px-3 py-1 text-sub-body-sb text-gray-800 border border-gray-800 rounded-[6px]"
-                        onClick={() => router.push(`/menu/${item.id || 0}`)}
+                        onClick={() => router.push(`/menu/${item.id!}`)}
                       >
                         자세히
                       </button>

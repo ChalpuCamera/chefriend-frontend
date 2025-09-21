@@ -43,9 +43,15 @@ export default function Page() {
   const currentStore = storesData?.content?.[0];
   const storeId = currentStore?.storeId;
 
-  // React Query hooks - only fetch if we have a storeId
-  const { data: foodsData } = useFoodsByStore(storeId || 0, { size: 7 });
-  const { data: reviewsData } = useRecentReviews(storeId || 0, 5);
+  // React Query hooks - only fetch if we have a valid storeId
+  const { data: foodsData } = useFoodsByStore(
+    storeId!,
+    { size: 7 },
+    { enabled: !!storeId }
+  );
+  const { data: reviewsData } = useRecentReviews(storeId!, 5, {
+    enabled: !!storeId,
+  });
 
   // 메뉴 데이터 처리 (최대 7개) - 서버 응답 필드명에 맞게 처리
   const menus =
@@ -142,7 +148,7 @@ export default function Page() {
                   className={`flex flex-col items-center cursor-pointer flex-shrink-0 w-[77px] ${
                     index === 0 ? "ml-4" : ""
                   } ${index < 6 ? "mr-2" : ""}`}
-                  onClick={() => handleMenuClick(menu.id || 0)}
+                  onClick={() => handleMenuClick(menu.id!)}
                 >
                   <div className="relative">
                     <div className="w-16 h-16 rounded-full overflow-hidden">
