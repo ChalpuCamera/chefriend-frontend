@@ -18,7 +18,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md space-y-10">
         {/* 헤더 */}
         <div className="flex flex-col items-center space-y-4">
-          <Image src="/chalpu_logo.png" alt="Logo" width={206} height={61} />
+          <Image src="/chefriend_logo.png" alt="Logo" width={206} height={61} />
           <p className="text-body-r text-[#595959]">
             안녕하세요 사장님, 가게를 살리는 찰푸입니다.
           </p>

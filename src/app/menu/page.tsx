@@ -45,7 +45,7 @@ export default function Page() {
   }
 
   const handleBack = () => {
-    router.back();
+    router.push("/home");
   };
 
   const handleAddMenu = () => {
@@ -105,7 +105,7 @@ export default function Page() {
                     </div>
 
                     <div className="text-headline-m text-gray-600">
-                      {item.price}원
+                      {item.price.toLocaleString()}원
                     </div>
 
                     <div className="flex items-center gap-0.5">

@@ -315,7 +315,7 @@ export default function Page({
                 onClick={() => {
                   window.open("https://open.kakao.com/o/sCpB58Hh", "_blank");
                 }}
-                className="w-27 h-9 bg-[#162456] text-sub-body-sb text-white rounded-[8px]"
+                className="w-27 h-9 bg-purple-700 text-sub-body-sb text-white rounded-[8px]"
               >
                 문의하기
               </Button>
