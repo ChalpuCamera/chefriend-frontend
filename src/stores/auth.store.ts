@@ -1,6 +1,16 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
+// Development mode admin token
+const DEV_ADMIN_TOKEN = "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiI0IiwiZW1haWwiOiJvd25lckB0ZXN0LmNvbSIsInJvbGUiOiJST0xFX09XTkVSIiwidHlwZSI6ImFjY2VzcyIsImlhdCI6MTc1NzkyMzQxMSwiZXhwIjoyMDczMjgzNDExfQ.vkSzvy8BVc0VMMXu4j2-KVdTM363--A8e6QnoKzUvsbKCyYF_yhitvfkDUpgMzWM";
+
+const DEV_USER: User = {
+  id: "4",
+  email: "owner@test.com",
+  name: "Dev Admin",
+  role: "ROLE_OWNER"
+};
+
 interface User {
   id: string;
   email?: string;
@@ -26,15 +36,58 @@ interface AuthState {
   refreshAccessToken: () => Promise<boolean>;
 }
 
+// Initialize with dev token in development mode
+const getInitialState = () => {
+  const isDevelopment = process.env.NODE_ENV === 'development';
+
+  if (isDevelopment) {
+    return {
+      token: DEV_ADMIN_TOKEN,
+      refreshToken: "dev-refresh-token",
+      user: DEV_USER,
+      isAuthenticated: true,
+      isLoading: false,
+    };
+  }
+
+  return {
+    token: null,
+    refreshToken: null,
+    user: null,
+    isAuthenticated: false,
+    isLoading: false,
+  };
+};
+
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set, get) => ({
-      // Initial State
-      token: null,
-      refreshToken: null,
-      user: null,
-      isAuthenticated: false,
-      isLoading: false,
+    (set, get) => {
+      // Initialize with development token if in dev mode
+      const isDevelopment = process.env.NODE_ENV === 'development';
+
+      // Set dev token in localStorage on initialization
+      if (isDevelopment && typeof window !== 'undefined') {
+        const devState = getInitialState();
+        const storageData = {
+          state: {
+            token: devState.token,
+            refreshToken: devState.refreshToken,
+            user: devState.user,
+            isAuthenticated: devState.isAuthenticated,
+          },
+          version: 0,
+        };
+
+        // Check if localStorage already has data
+        const existingData = localStorage.getItem('auth-storage');
+        if (!existingData) {
+          localStorage.setItem('auth-storage', JSON.stringify(storageData));
+        }
+      }
+
+      return {
+        // Initial State - use dev token in development
+        ...getInitialState(),
 
       // Set authentication data (refreshToken is now stored as httpOnly cookie)
       setAuth: (token: string, refreshToken: string, user: User) => {
@@ -58,6 +111,13 @@ export const useAuthStore = create<AuthState>()(
 
       // Clear authentication
       clearAuth: () => {
+        // In development mode, don't actually clear - just reset to dev token
+        if (process.env.NODE_ENV === 'development') {
+          const devState = getInitialState();
+          set(devState);
+          return;
+        }
+
         set({
           token: null,
           refreshToken: null,
@@ -84,6 +144,11 @@ export const useAuthStore = create<AuthState>()(
       // Check if authenticated (simplified - just check if token exists)
       checkAuth: async () => {
         const { token, clearAuth } = get();
+
+        // In development mode, always return true
+        if (process.env.NODE_ENV === 'development') {
+          return true;
+        }
 
         if (!token) {
           clearAuth();
@@ -131,7 +196,8 @@ export const useAuthStore = create<AuthState>()(
           return false;
         }
       },
-    }),
+    };
+    },
     {
       name: "auth-storage",
       storage: createJSONStorage(() => localStorage),

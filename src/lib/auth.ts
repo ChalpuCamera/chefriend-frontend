@@ -1,15 +1,38 @@
 import { useAuthStore } from "@/stores/auth.store";
 
+// Development mode admin token (same as in auth.store.ts)
+const DEV_ADMIN_TOKEN = "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiI0IiwiZW1haWwiOiJvd25lckB0ZXN0LmNvbSIsInJvbGUiOiJST0xFX09XTkVSIiwidHlwZSI6ImFjY2VzcyIsImlhdCI6MTc1NzkyMzQxMSwiZXhwIjoyMDczMjgzNDExfQ.vkSzvy8BVc0VMMXu4j2-KVdTM363--A8e6QnoKzUvsbKCyYF_yhitvfkDUpgMzWM";
+
+// Check if we're in development mode
+export function isDevMode(): boolean {
+  return process.env.NODE_ENV === 'development';
+}
+
+// Get development token
+export function getDevToken(): string | null {
+  return isDevMode() ? DEV_ADMIN_TOKEN : null;
+}
+
 // Get authorization header
 export function getAuthHeader():
   | { Authorization: string }
   | Record<string, never> {
+  // In development mode, always use the dev token
+  if (isDevMode()) {
+    return { Authorization: `Bearer ${DEV_ADMIN_TOKEN}` };
+  }
+
   const token = useAuthStore.getState().token;
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 // Check if user is authenticated
 export function isAuthenticated(): boolean {
+  // In development mode, always authenticated
+  if (isDevMode()) {
+    return true;
+  }
+
   const state = useAuthStore.getState();
   return state.isAuthenticated && !!state.token;
 }
