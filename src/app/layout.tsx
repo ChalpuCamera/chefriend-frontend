@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { QueryProvider } from "@/lib/providers/query-provider";
 import { AuthProvider } from "@/providers/auth-provider";
-import { Toaster } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Feedback Platform",
-  description: "RhaJuPark Feedback Platform",
+  title: "Chefriend",
+  description: "Chefriend",
 };
 
 export default function RootLayout({

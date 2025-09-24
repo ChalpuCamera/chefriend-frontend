@@ -2,7 +2,6 @@
 
 import React from "react";
 import { ChevronRight, Plus } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
@@ -10,9 +9,84 @@ import Image from "next/image";
 import { useFoodsByStore } from "@/lib/hooks/useFood";
 import { useRecentReviews } from "@/lib/hooks/useFeedback";
 import { useMyStores } from "@/lib/hooks/useStore";
+import { CampaignCardCompact } from "@/components/campaign-card-compact";
 
 // Mock image placeholder (using local asset instead of localhost)
 const imgKimchi = "/kimchi.png";
+
+// Mock campaign images from Figma localhost
+const campaignImg1 =
+  "http://localhost:3845/assets/6c26d260a012c71d23d0c12247707166d363f15e.png";
+const campaignImg2 =
+  "http://localhost:3845/assets/3f321eca17684b76354e5f73d0651b78b4e6f090.png";
+
+// Mock campaign data
+const mockCampaigns = [
+  {
+    id: 1,
+    title: "기영이 김치찌개",
+    imageUrl: campaignImg1,
+    daysRemaining: 7,
+    currentCount: 89,
+    totalCount: 100,
+  },
+  {
+    id: 2,
+    title: "오삼불고기",
+    imageUrl: campaignImg2,
+    daysRemaining: 5,
+    currentCount: 65,
+    totalCount: 100,
+  },
+  {
+    id: 3,
+    title: "제육볶음",
+    imageUrl: campaignImg1,
+    daysRemaining: 3,
+    currentCount: 42,
+    totalCount: 100,
+  },
+  {
+    id: 4,
+    title: "김밥",
+    imageUrl: campaignImg2,
+    daysRemaining: 10,
+    currentCount: 23,
+    totalCount: 100,
+  },
+  {
+    id: 5,
+    title: "오믈렛",
+    imageUrl: campaignImg1,
+    daysRemaining: 15,
+    currentCount: 12,
+    totalCount: 100,
+  },
+  {
+    id: 6,
+    title: "된장찌개",
+    imageUrl: campaignImg2,
+    daysRemaining: 2,
+    currentCount: 95,
+    totalCount: 100,
+  },
+  {
+    id: 7,
+    title: "순두부찌개",
+    imageUrl: campaignImg1,
+    daysRemaining: 8,
+    currentCount: 50,
+    totalCount: 100,
+  },
+  {
+    id: 8,
+    title: "비빔밥",
+    imageUrl: campaignImg2,
+    daysRemaining: 20,
+    currentCount: 5,
+    totalCount: 100,
+  },
+];
 
 // Mock data for menu items with real images (unused - kept for reference)
 // const mockMenuData = [
@@ -49,6 +123,14 @@ export default function Page() {
         )
       : null;
   const storeId = currentStore?.storeId;
+
+  // Campaign data (나중에 API로 대체)
+  // 테스트를 위해 mockCampaigns 배열을 잘라서 사용
+  // 0개: const campaigns = [];
+  // 1개: const campaigns = mockCampaigns.slice(0, 1);
+  // 2개: const campaigns = mockCampaigns.slice(0, 2);
+  // 여러개: const campaigns = mockCampaigns;
+  const campaigns = mockCampaigns; // 전체 캠페인 표시
 
   // React Query hooks - only fetch if we have a valid storeId
   const { data: foodsData } = useFoodsByStore(
@@ -87,6 +169,19 @@ export default function Page() {
     router.push(`/menu/${menuId}`);
   };
 
+  const handleCampaignView = () => {
+    router.push("/campaign");
+  };
+
+  const handleCampaignClick = (campaignId: number) => {
+    // TODO: Navigate to campaign detail page when available
+    console.log(`Campaign ${campaignId} clicked`);
+  };
+
+  const handleAddCampaign = () => {
+    router.push("/campaign/add");
+  };
+
   return (
     <div className="bg-white w-full mx-auto py-3">
       {/* Header */}
@@ -120,6 +215,74 @@ export default function Page() {
         </div>
       </div>
 
+      {/* 캠페인 Section */}
+      <div className="mb-6">
+        {/* Campaign Items with 3 conditional states */}
+        {campaigns.length === 0 ? (
+          // Empty state
+          <div className="mx-4 h-48 bg-purple-50 rounded-[12px] flex flex-col items-center justify-center gap-3.5">
+            <p className="text-body-r text-black text-center">
+              캠페인을 등록한 메뉴는
+              <br />
+              고객의 솔직한 평가를 받아볼 수 있어요.
+            </p>
+            <Button
+              onClick={handleAddCampaign}
+              className="w-[127px] h-[34px] bg-purple-700 text-sub-body-sb text-white rounded-[8px]"
+            >
+              캠페인 등록하기
+            </Button>
+          </div>
+        ) : (
+          // Multiple campaigns with horizontal scroll
+          <>
+            <div
+              className="flex items-center px-4 justify-between mb-5"
+              onClick={handleCampaignView}
+            >
+              <h2 className="text-sub-title-b text-gray-800">
+                진행중인 캠페인
+              </h2>
+              {campaigns.length > 0 && (
+                <button className="p-1" onClick={handleCampaignView}>
+                  <ChevronRight className="w-5 h-5 text-gray-800" />
+                </button>
+              )}
+            </div>
+
+            <ScrollArea className="w-full">
+              <div className="flex w-max overflow-x-auto">
+                {/* Campaign items with padding on first item */}
+                {campaigns.map((campaign, index) => (
+                  <div
+                    key={campaign.id}
+                    className={`${index === 0 ? "ml-4" : ""} ${
+                      index < campaigns.length ? "mr-[18px]" : ""
+                    }`}
+                  >
+                    <CampaignCardCompact
+                      {...campaign}
+                      onClick={() => handleCampaignClick(campaign.id)}
+                    />
+                  </div>
+                ))}
+
+                {/* Add card - always show */}
+                <div
+                  className="flex flex-col items-center justify-center cursor-pointer flex-shrink-0 w-18 h-[194px] bg-purple-50 rounded-[12px] mr-4"
+                  onClick={handleAddCampaign}
+                >
+                  <Plus className="w-8 h-8 text-gray-500 mb-2" />
+                  <p className="text-body-r text-gray-700">캠페인</p>
+                  <p className="text-body-r text-gray-700">추가</p>
+                </div>
+              </div>
+              <ScrollBar orientation="horizontal" className="hidden" />
+            </ScrollArea>
+          </>
+        )}
+      </div>
+
       {/* Menu Section */}
       <div className="mb-6">
         <div className="flex items-center px-4 justify-between mb-5">
@@ -136,7 +299,7 @@ export default function Page() {
           // Empty state
           <div className="flex flex-col items-center justify-center w-full h-24">
             <p className="text-sub-body-r mb-4">
-              메뉴를 등록하면 손님이 평가할 수 있어요
+              메뉴를 등록하고 관리해 보세요.
             </p>
             <Button
               onClick={() => router.push("/menu/add")}
@@ -218,18 +381,6 @@ export default function Page() {
         )}
       </div>
 
-      {/* 캠페인 Section */}
-      <div className="px-4 py-6">
-        <h2 className="text-sub-title-b text-gray-800 mb-5">진행중인 캠페인</h2>
-
-        {/* 캠페인 추가 예정 */}
-        <Card className="flex items-center justify-center h-50 rounded-lg border border-gray-300">
-          <CardContent>
-            <p className="text-sub-body-r text-gray-600">캠페인 추가 예정</p>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Recent Reviews Section */}
       <div className="px-4 py-6">
         <h2 className="text-sub-title-b text-gray-800 mb-5">최근 손님 평가</h2>
@@ -238,7 +389,7 @@ export default function Page() {
           // Empty state
           <div className="flex flex-col items-center justify-center w-full h-24">
             <p className="text-sub-body-r mb-4">
-              아직 손님이 진행한 평가가 없어요
+              아직 손님이 진행한 평가가 없어요.
             </p>
             <Button
               onClick={() => {
