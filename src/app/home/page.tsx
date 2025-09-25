@@ -10,83 +10,10 @@ import { useFoodsByStore } from "@/lib/hooks/useFood";
 import { useRecentReviews } from "@/lib/hooks/useFeedback";
 import { useMyStores } from "@/lib/hooks/useStore";
 import { CampaignCardCompact } from "@/components/campaign-card-compact";
+import { useGetCampaignsByStore, calculateRemainingDays } from "@/lib/hooks/useCampaign";
 
 // Mock image placeholder (using local asset instead of localhost)
 const imgKimchi = "/kimchi.png";
-
-// Mock campaign images from Figma localhost
-const campaignImg1 =
-  "http://localhost:3845/assets/6c26d260a012c71d23d0c12247707166d363f15e.png";
-const campaignImg2 =
-  "http://localhost:3845/assets/3f321eca17684b76354e5f73d0651b78b4e6f090.png";
-
-// Mock campaign data
-const mockCampaigns = [
-  {
-    id: 1,
-    title: "기영이 김치찌개",
-    imageUrl: campaignImg1,
-    daysRemaining: 7,
-    currentCount: 89,
-    totalCount: 100,
-  },
-  {
-    id: 2,
-    title: "오삼불고기",
-    imageUrl: campaignImg2,
-    daysRemaining: 5,
-    currentCount: 65,
-    totalCount: 100,
-  },
-  {
-    id: 3,
-    title: "제육볶음",
-    imageUrl: campaignImg1,
-    daysRemaining: 3,
-    currentCount: 42,
-    totalCount: 100,
-  },
-  {
-    id: 4,
-    title: "김밥",
-    imageUrl: campaignImg2,
-    daysRemaining: 10,
-    currentCount: 23,
-    totalCount: 100,
-  },
-  {
-    id: 5,
-    title: "오믈렛",
-    imageUrl: campaignImg1,
-    daysRemaining: 15,
-    currentCount: 12,
-    totalCount: 100,
-  },
-  {
-    id: 6,
-    title: "된장찌개",
-    imageUrl: campaignImg2,
-    daysRemaining: 2,
-    currentCount: 95,
-    totalCount: 100,
-  },
-  {
-    id: 7,
-    title: "순두부찌개",
-    imageUrl: campaignImg1,
-    daysRemaining: 8,
-    currentCount: 50,
-    totalCount: 100,
-  },
-  {
-    id: 8,
-    title: "비빔밥",
-    imageUrl: campaignImg2,
-    daysRemaining: 20,
-    currentCount: 5,
-    totalCount: 100,
-  },
-];
 
 // Mock data for menu items with real images (unused - kept for reference)
 // const mockMenuData = [
@@ -124,13 +51,25 @@ export default function Page() {
       : null;
   const storeId = currentStore?.storeId;
 
-  // Campaign data (나중에 API로 대체)
-  // 테스트를 위해 mockCampaigns 배열을 잘라서 사용
-  // 0개: const campaigns = [];
-  // 1개: const campaigns = mockCampaigns.slice(0, 1);
-  // 2개: const campaigns = mockCampaigns.slice(0, 2);
-  // 여러개: const campaigns = mockCampaigns;
-  const campaigns = mockCampaigns; // 전체 캠페인 표시
+  // 진행중인 캠페인 데이터 가져오기
+  const { data: campaignsData } = useGetCampaignsByStore(
+    storeId!,
+    "ACTIVE",
+    0,
+    20,
+    !!storeId
+  );
+
+  // API 데이터를 UI 형식으로 변환
+  const campaigns = (campaignsData?.content || []).map(campaign => ({
+    id: campaign.id,
+    title: campaign.foodItemName || campaign.name,
+    imageUrl: campaign.foodItemThumbnailUrl || "/kimchi.png",
+    daysRemaining: calculateRemainingDays(campaign.endDate),
+    currentCount: campaign.currentFeedbackCount || 0,
+    totalCount: campaign.targetFeedbackCount,
+    foodItemId: campaign.foodItemId, // 메뉴와 매칭을 위해 추가
+  }))
 
   // React Query hooks - only fetch if we have a valid storeId
   const { data: foodsData } = useFoodsByStore(
@@ -142,17 +81,23 @@ export default function Page() {
     enabled: !!storeId,
   });
 
-  // 메뉴 데이터 처리 (최대 7개) - 서버 응답 필드명에 맞게 처리
+  // 메뉴 데이터 처리 (최대 7개) - 캠페인 진행 여부 확인
   const menus =
-    foodsData?.content?.slice(0, 7).map((food, index) => ({
-      id: food.id || food.foodItemId, // 새 필드명 우선, 구 필드명 폴백
-      name:
-        (food.name || food.foodName || "").length > 6
-          ? (food.name || food.foodName || "").substring(0, 5) + "..."
-          : food.name || food.foodName || "",
-      image: food.photoUrl || food.thumbnailUrl || imgKimchi, // 새 필드명 우선, 구 필드명 폴백
-      isNew: index < 2, // 처음 2개만 New 표시 (임시 로직)
-    })) || [];
+    foodsData?.content?.slice(0, 7).map((food) => {
+      const foodId = food.id || food.foodItemId;
+      // 해당 메뉴에 진행 중인 캠페인이 있는지 확인
+      const hasCampaign = campaigns.some(campaign => campaign.foodItemId === foodId);
+
+      return {
+        id: foodId,
+        name:
+          (food.name || food.foodName || "").length > 6
+            ? (food.name || food.foodName || "").substring(0, 5) + "..."
+            : food.name || food.foodName || "",
+        image: food.photoUrl || food.thumbnailUrl || imgKimchi,
+        hasCampaign: hasCampaign, // 캠페인 진행 여부
+      };
+    }) || [];
 
   // 리뷰 데이터 (ReviewDisplayData 타입)
   const reviews = reviewsData || [];
@@ -330,9 +275,9 @@ export default function Page() {
                         height={64}
                       />
                     </div>
-                    {menu.isNew && (
+                    {menu.hasCampaign && (
                       <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-purple-700 rounded-full flex items-center justify-center">
-                        <span className="text-white text-caption-b">N</span>
+                        <span className="text-white text-caption-b">C</span>
                       </div>
                     )}
                   </div>

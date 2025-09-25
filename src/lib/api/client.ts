@@ -34,6 +34,7 @@ class ApiClient {
 
     const response = await fetch(url, {
       ...options,
+      credentials: "include", // Always include cookies for refreshToken
       headers: {
         "Content-Type": "application/json",
         ...(token && { Authorization: `Bearer ${token}` }),

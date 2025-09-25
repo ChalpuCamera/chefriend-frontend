@@ -185,6 +185,18 @@
           }
         ],
         "responses": {
+          "200": {
+            "description": "리워드 사용 처리 성공",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "성공했습니다",
+                  "data": null
+                }
+              }
+            }
+          },
           "400": {
             "description": "잘못된 요청 (이미 사용된 리워드, 만료된 리워드 등)",
             "content": {
@@ -198,18 +210,6 @@
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/ApiResponseVoid" }
-              }
-            }
-          },
-          "200": {
-            "description": "리워드 사용 처리 성공",
-            "content": {
-              "application/json": {
-                "example": {
-                  "success": true,
-                  "message": "성공했습니다",
-                  "data": null
-                }
               }
             }
           }
@@ -233,18 +233,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "리워드 사용 취소 성공",
-            "content": {
-              "application/json": {
-                "example": {
-                  "success": true,
-                  "message": "성공했습니다",
-                  "data": null
-                }
-              }
-            }
-          },
           "404": {
             "description": "리워드 교환 내역을 찾을 수 없습니다",
             "content": {
@@ -258,6 +246,18 @@
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/ApiResponseVoid" }
+              }
+            }
+          },
+          "200": {
+            "description": "리워드 사용 취소 성공",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "성공했습니다",
+                  "data": null
+                }
               }
             }
           }
@@ -409,18 +409,6 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "읽음 처리 성공",
-            "content": {
-              "application/json": {
-                "example": {
-                  "success": true,
-                  "message": "성공했습니다",
-                  "data": null
-                }
-              }
-            }
-          },
           "401": {
             "description": "인증이 필요합니다",
             "content": {
@@ -434,6 +422,18 @@
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/ApiResponseVoid" }
+              }
+            }
+          },
+          "200": {
+            "description": "읽음 처리 성공",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "성공했습니다",
+                  "data": null
+                }
               }
             }
           }
@@ -703,6 +703,28 @@
           "required": true
         },
         "responses": {
+          "200": {
+            "description": "리워드 교환 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardRedemptionResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "성공했습니다",
+                  "data": {
+                    "id": 1,
+                    "rewardId": 1,
+                    "rewardTitle": "10% 할인",
+                    "status": "REDEEMED",
+                    "expiresAt": "2024-02-01T10:00:00",
+                    "redeemedAt": "2024-01-01T10:00:00"
+                  }
+                }
+              }
+            }
+          },
           "400": {
             "description": "잘못된 요청 (피드백 수 부족, 이미 교환한 리워드 등)",
             "content": {
@@ -729,28 +751,6 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiResponseRewardRedemptionResponse"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "리워드 교환 성공",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RewardRedemptionResponse"
-                },
-                "example": {
-                  "success": true,
-                  "message": "성공했습니다",
-                  "data": {
-                    "id": 1,
-                    "rewardId": 1,
-                    "rewardTitle": "10% 할인",
-                    "status": "REDEEMED",
-                    "expiresAt": "2024-02-01T10:00:00",
-                    "redeemedAt": "2024-01-01T10:00:00"
-                  }
                 }
               }
             }
@@ -1425,6 +1425,16 @@
         "description": "현재 로그인한 고객의 모든 리워드 교환 내역을 조회합니다. 사용한 리워드, 만료된 리워드 등 모든 상태를 포함합니다.",
         "operationId": "getMyRedemptions",
         "responses": {
+          "401": {
+            "description": "인증이 필요합니다",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseListRewardRedemptionResponse"
+                }
+              }
+            }
+          },
           "200": {
             "description": "내 리워드 내역 조회 성공",
             "content": {
@@ -1445,16 +1455,6 @@
                 }
               }
             }
-          },
-          "401": {
-            "description": "인증이 필요합니다",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseListRewardRedemptionResponse"
-                }
-              }
-            }
           }
         }
       }
@@ -1466,16 +1466,6 @@
         "description": "현재 로그인한 고객이 교환했지만 아직 사용하지 않은 리워드를 조회합니다. 만료된 리워드는 제외됩니다.",
         "operationId": "getMyActiveRedemptions",
         "responses": {
-          "401": {
-            "description": "인증이 필요합니다",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseListRewardRedemptionResponse"
-                }
-              }
-            }
-          },
           "200": {
             "description": "사용 가능한 리워드 조회 성공",
             "content": {
@@ -1496,6 +1486,16 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "인증이 필요합니다",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseListRewardRedemptionResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -1507,6 +1507,16 @@
         "description": "현재 로그인한 고객의 피드백 수에 따라 받을 수 있는 리워드 목록을 조회합니다. 피드백 수가 부족한 리워드는 제외됩니다.",
         "operationId": "getMyAvailableRewards",
         "responses": {
+          "401": {
+            "description": "인증이 필요합니다",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseListRewardResponse"
+                }
+              }
+            }
+          },
           "200": {
             "description": "내 리워드 목록 조회 성공",
             "content": {
@@ -1526,16 +1536,6 @@
                 }
               }
             }
-          },
-          "401": {
-            "description": "인증이 필요합니다",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseListRewardResponse"
-                }
-              }
-            }
           }
         }
       }
@@ -1547,14 +1547,6 @@
         "description": "현재 로그인한 고객의 피드백 수에 따른 리워드 수령 자격을 확인합니다. 최소 피드백 수 조건을 충족하는지 확인할 수 있습니다.",
         "operationId": "checkMyRewardEligibility",
         "responses": {
-          "401": {
-            "description": "인증이 필요합니다",
-            "content": {
-              "*/*": {
-                "schema": { "$ref": "#/components/schemas/ApiResponseBoolean" }
-              }
-            }
-          },
           "200": {
             "description": "리워드 자격 확인 성공",
             "content": {
@@ -1564,6 +1556,14 @@
                   "message": "성공했습니다",
                   "data": true
                 }
+              }
+            }
+          },
+          "401": {
+            "description": "인증이 필요합니다",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/ApiResponseBoolean" }
               }
             }
           }
@@ -1800,6 +1800,16 @@
           }
         ],
         "responses": {
+          "404": {
+            "description": "피드백을 찾을 수 없습니다",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseCustomerFeedbackResponse"
+                }
+              }
+            }
+          },
           "200": {
             "description": "피드백 상세 조회 성공",
             "content": {
@@ -1825,16 +1835,6 @@
                     ],
                     "createdAt": "2024-01-01T10:00:00"
                   }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "피드백을 찾을 수 없습니다",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseCustomerFeedbackResponse"
                 }
               }
             }
@@ -1879,6 +1879,16 @@
               }
             }
           },
+          "404": {
+            "description": "피드백을 찾을 수 없습니다",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseOwnerFeedbackResponse"
+                }
+              }
+            }
+          },
           "200": {
             "description": "피드백 및 고객 입맛 조회 성공",
             "content": {
@@ -1902,16 +1912,6 @@
                     ],
                     "createdAt": "2024-01-01T10:00:00"
                   }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "피드백을 찾을 수 없습니다",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseOwnerFeedbackResponse"
                 }
               }
             }
@@ -1942,16 +1942,6 @@
           }
         ],
         "responses": {
-          "404": {
-            "description": "매장을 찾을 수 없습니다",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponsePageResponseOwnerFeedbackResponse"
-                }
-              }
-            }
-          },
           "200": {
             "description": "매장 피드백 목록 조회 성공",
             "content": {
@@ -1982,6 +1972,16 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "매장을 찾을 수 없습니다",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponsePageResponseOwnerFeedbackResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -2003,32 +2003,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "조회 성공",
-            "content": {
-              "application/json": {
-                "schema": { "type": "string" },
-                "example": {
-                  "success": true,
-                  "message": "성공했습니다",
-                  "data": [
-                    {
-                      "foodItemId": 1,
-                      "foodName": "김치찌개",
-                      "unreadCount": 3,
-                      "totalCount": 10
-                    },
-                    {
-                      "foodItemId": 2,
-                      "foodName": "된장찌개",
-                      "unreadCount": 0,
-                      "totalCount": 5
-                    }
-                  ]
-                }
-              }
-            }
-          },
           "401": {
             "description": "인증이 필요합니다",
             "content": {
@@ -2055,6 +2029,32 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiResponseListFeedbackUnreadCountResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "조회 성공",
+            "content": {
+              "application/json": {
+                "schema": { "type": "string" },
+                "example": {
+                  "success": true,
+                  "message": "성공했습니다",
+                  "data": [
+                    {
+                      "foodItemId": 1,
+                      "foodName": "김치찌개",
+                      "unreadCount": 3,
+                      "totalCount": 10
+                    },
+                    {
+                      "foodItemId": 2,
+                      "foodName": "된장찌개",
+                      "unreadCount": 0,
+                      "totalCount": 5
+                    }
+                  ]
                 }
               }
             }
@@ -2802,6 +2802,13 @@
             "format": "int64",
             "example": 1
           },
+          "campaignId": {
+            "type": "integer",
+            "description": "캠페인 ID (선택적)",
+            "format": "int64",
+            "nullable": true,
+            "example": 1
+          },
           "surveyAnswers": {
             "type": "array",
             "description": "설문 답변 목록",
@@ -3209,16 +3216,27 @@
             "description": "음식명",
             "example": "김치찌개"
           },
+          "foodItemThumbnailUrl": {
+            "type": "string",
+            "description": "음식 썸네일 이미지 URL",
+            "example": "https://s3.amazonaws.com/bucket/food-thumbnail.jpg"
+          },
           "targetFeedbackCount": {
             "type": "integer",
             "description": "목표 피드백 수",
             "format": "int32",
             "example": 100
           },
+          "currentFeedbackCount": {
+            "type": "integer",
+            "description": "현재 피드백 수",
+            "format": "int32",
+            "example": 45
+          },
           "status": {
             "type": "string",
             "description": "캠페인 상태",
-            "example": "활성"
+            "example": "ACTIVE"
           },
           "targetDays": {
             "type": "integer",
@@ -4090,6 +4108,11 @@
             "description": "음식명",
             "example": "김치찌개"
           },
+          "foodItemThumbnailUrl": {
+            "type": "string",
+            "description": "음식 썸네일 이미지 URL",
+            "example": "https://s3.amazonaws.com/bucket/food-thumbnail.jpg"
+          },
           "targetFeedbackCount": {
             "type": "integer",
             "description": "목표 피드백 수",
@@ -4099,7 +4122,7 @@
           "currentFeedbackCount": {
             "type": "integer",
             "description": "현재 피드백 수",
-            "format": "int64",
+            "format": "int32",
             "example": 45
           },
           "status": {

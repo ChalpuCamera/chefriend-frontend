@@ -24,7 +24,7 @@ interface DeleteCampaignRequest {
 }
 
 interface ChangeCampaignStatusRequest {
-  id: number;
+  campaignId: number;
   status: "DRAFT" | "ACTIVE" | "PAUSED" | "COMPLETED" | "EXPIRED";
 }
 
@@ -48,8 +48,8 @@ export interface CampaignResponse {
   endDate: string;
   createdAt: string;
   updatedAt: string;
-  currentFeedbackCount?: number; // 백엔드에 요청 필요
-  foodItemThumbnailUrl?: string; // 백엔드에 요청 필요
+  currentFeedbackCount: number;
+  foodItemThumbnailUrl: string;
 }
 
 interface PageResponse<T> {
@@ -70,9 +70,7 @@ interface ApiResponse<T> {
 
 // ============ API Functions ============
 const createCampaign = async (data: CreateCampaignRequest): Promise<ApiResponse<{ campaignId: number }>> => {
-  return apiClient.post<ApiResponse<{ campaignId: number }>>("/api/campaigns", {
-    body: JSON.stringify(data)
-  });
+  return apiClient.post<ApiResponse<{ campaignId: number }>>("/api/campaigns", data);
 };
 
 const getCampaignsByStore = async (
@@ -80,30 +78,24 @@ const getCampaignsByStore = async (
   page = 0,
   size = 20
 ): Promise<PageResponse<CampaignResponse>> => {
-  const params = { page, size };
   const response = await apiClient.post<ApiResponse<PageResponse<CampaignResponse>>>(
-    `/api/campaigns/store/list`,
-    { body: JSON.stringify(request), params }
+    `/api/campaigns/store/list?page=${page}&size=${size}`,
+    request
   );
   return response.result;
 };
 
 const updateCampaign = async (data: UpdateCampaignRequest): Promise<ApiResponse<void>> => {
-  return apiClient.put<ApiResponse<void>>("/api/campaigns", {
-    body: JSON.stringify(data)
-  });
+  return apiClient.put<ApiResponse<void>>("/api/campaigns", data);
 };
 
 const deleteCampaign = async (data: DeleteCampaignRequest): Promise<ApiResponse<void>> => {
-  return apiClient.delete<ApiResponse<void>>("/api/campaigns", {
-    body: JSON.stringify(data)
-  });
+  // DELETE 요청은 일반적으로 body를 갖지 않으므로 URL에 id를 포함
+  return apiClient.delete<ApiResponse<void>>(`/api/campaigns/${data.id}`);
 };
 
 const changeCampaignStatus = async (data: ChangeCampaignStatusRequest): Promise<ApiResponse<void>> => {
-  return apiClient.patch<ApiResponse<void>>("/api/campaigns/status", {
-    body: JSON.stringify(data)
-  });
+  return apiClient.patch<ApiResponse<void>>("/api/campaigns/status", data);
 };
 
 // ============ Hooks ============

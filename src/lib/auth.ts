@@ -139,12 +139,12 @@ export async function exchangeCodeForToken(code: string): Promise<{
 
   // User info will be managed separately
 
-  // Get refresh token from cookie (set by backend)
-  const refreshToken = getRefreshTokenFromCookie() || "";
+  // Refresh token is now stored in httpOnly cookie by backend
+  // No need to retrieve it here as it will be automatically sent with requests
 
   return {
     accessToken: result.accessToken,
-    refreshToken, // RefreshToken from cookie
+    refreshToken: "", // Empty string as refresh token is in httpOnly cookie
     role: result.role, // Role from API response
     user: undefined, // User info managed separately
   };

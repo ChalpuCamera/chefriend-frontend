@@ -159,14 +159,9 @@ export const useAuthStore = create<AuthState>()(
         return true;
       },
 
-      // Refresh access token using refresh token
+      // Refresh access token using refresh token from cookie
       refreshAccessToken: async () => {
-        const { refreshToken, clearAuth, updateToken } = get();
-
-        if (!refreshToken) {
-          clearAuth();
-          return false;
-        }
+        const { clearAuth, updateToken } = get();
 
         try {
           const response = await fetch(
@@ -176,8 +171,7 @@ export const useAuthStore = create<AuthState>()(
               headers: {
                 "Content-Type": "application/json",
               },
-              credentials: "include",
-              body: JSON.stringify({ refreshToken }),
+              credentials: "include", // Include cookies (refreshToken is in httpOnly cookie)
             }
           );
 
@@ -188,7 +182,7 @@ export const useAuthStore = create<AuthState>()(
           const data = await response.json();
 
           // Update only access token (refresh token remains in httpOnly cookie)
-          updateToken(data.accessToken);
+          updateToken(data.result?.accessToken || data.accessToken);
           return true;
         } catch (error) {
           console.error("Token refresh failed:", error);

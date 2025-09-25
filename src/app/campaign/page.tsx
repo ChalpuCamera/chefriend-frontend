@@ -61,7 +61,7 @@ export default function Page() {
   // API 데이터를 UI 형식으로 변환
   const campaigns: Campaign[] = (campaignsData?.content || []).map(campaign => ({
     id: campaign.id,
-    title: campaign.foodItemName || campaign.name,
+    title: campaign.foodItemName,
     status: campaign.status === "ACTIVE" ? "active" : "ended" as "active" | "ended",
     daysRemaining: calculateRemainingDays(campaign.endDate),
     evaluationType: "손님 평가 수" as const,
@@ -128,16 +128,6 @@ export default function Page() {
             ))}
           </div>
         )}
-      </div>
-
-      {/* Bottom New Button */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t">
-        <button
-          onClick={handleNewCampaign}
-          className="w-full py-3 bg-purple-700 text-white rounded-lg text-body-sb"
-        >
-          신규 캠페인 등록
-        </button>
       </div>
     </div>
   )
