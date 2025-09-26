@@ -110,13 +110,15 @@ export default function Page() {
       </div>
 
       {/* Bottom Section */}
-      <div className="fixed bottom-6 left-0 right-0 flex justify-center px-4">
-        <CustomButton
-          disabled={!isValid || createStoreMutation.isPending}
-          onClick={handleSubmit}
-        >
-          {createStoreMutation.isPending ? "등록 중..." : "등록하기"}
-        </CustomButton>
+      <div className="fixed bottom-6 left-0 right-0">
+        <div className="max-w-[430px] mx-auto flex justify-center px-4">
+          <CustomButton
+            disabled={!isValid || createStoreMutation.isPending}
+            onClick={handleSubmit}
+          >
+            {createStoreMutation.isPending ? "등록 중..." : "등록하기"}
+          </CustomButton>
+        </div>
       </div>
     </div>
   );

@@ -319,10 +319,12 @@ export default function Page() {
       </div>
 
       {/* Submit Button */}
-      <div className="fixed bottom-0 left-0 right-0 pb-6 flex justify-center px-4 bg-white outline-1 outline-transparent">
-        <CustomButton onClick={handleSubmit} disabled={isUpdating || isLoading}>
-          {isUpdating ? "수정 중..." : "수정하기"}
-        </CustomButton>
+      <div className="fixed bottom-0 left-0 right-0 bg-white">
+        <div className="max-w-[430px] mx-auto pb-6 flex justify-center px-4">
+          <CustomButton onClick={handleSubmit} disabled={isUpdating || isLoading}>
+            {isUpdating ? "수정 중..." : "수정하기"}
+          </CustomButton>
+        </div>
       </div>
 
       {/* Error Dialog */}

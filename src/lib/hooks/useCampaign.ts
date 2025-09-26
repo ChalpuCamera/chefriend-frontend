@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
 
 // ============ Types ============
@@ -100,11 +100,13 @@ const changeCampaignStatus = async (data: ChangeCampaignStatusRequest): Promise<
 
 // ============ Hooks ============
 export const useCreateCampaign = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: createCampaign,
     onSuccess: () => {
       // 캠페인 목록 무효화
-      // queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
     },
   });
 };
@@ -124,31 +126,37 @@ export const useGetCampaignsByStore = (
 };
 
 export const useUpdateCampaign = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: updateCampaign,
     onSuccess: () => {
       // 캠페인 목록 무효화
-      // queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
     },
   });
 };
 
 export const useDeleteCampaign = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: deleteCampaign,
     onSuccess: () => {
       // 캠페인 목록 무효화
-      // queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
     },
   });
 };
 
 export const useChangeCampaignStatus = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: changeCampaignStatus,
     onSuccess: () => {
       // 캠페인 목록 무효화
-      // queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
     },
   });
 };

@@ -2,7 +2,6 @@
 
 import React from "react";
 import { ChevronRight, Plus } from "lucide-react";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -195,8 +194,8 @@ export default function Page() {
               )}
             </div>
 
-            <ScrollArea className="w-full">
-              <div className="flex w-max overflow-x-auto">
+            <div className="w-full overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400">
+              <div className="flex w-max pb-2">
                 {/* Campaign items with padding on first item */}
                 {campaigns.map((campaign, index) => (
                   <div
@@ -222,8 +221,7 @@ export default function Page() {
                   <p className="text-body-r text-gray-700">추가</p>
                 </div>
               </div>
-              <ScrollBar orientation="horizontal" className="hidden" />
-            </ScrollArea>
+            </div>
           </>
         )}
       </div>
@@ -254,8 +252,8 @@ export default function Page() {
             </Button>
           </div>
         ) : (
-          <ScrollArea className="w-full">
-            <div className="flex w-max overflow-x-auto">
+          <div className="w-full overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400">
+            <div className="flex w-max pb-2">
               {/* Menu items with padding on first item */}
               {menus.slice(0, 7).map((menu, index) => (
                 <div
@@ -321,8 +319,7 @@ export default function Page() {
                 </div>
               ) : null}
             </div>
-            <ScrollBar orientation="horizontal" className="hidden" />
-          </ScrollArea>
+          </div>
         )}
       </div>
 

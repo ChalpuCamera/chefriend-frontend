@@ -124,8 +124,10 @@ export default function Page() {
       )}
 
       {/* Fixed Bottom Button */}
-      <div className="fixed bottom-0 left-0 right-0 pb-6 flex justify-center px-4 bg-white outline-1 outline-transparent">
-        <CustomButton onClick={handleAddMenu}>메뉴 추가하기</CustomButton>
+      <div className="fixed bottom-0 left-0 right-0 bg-white">
+        <div className="max-w-[430px] mx-auto pb-6 flex justify-center px-4">
+          <CustomButton onClick={handleAddMenu}>메뉴 추가하기</CustomButton>
+        </div>
       </div>
     </div>
   );

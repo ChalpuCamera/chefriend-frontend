@@ -341,13 +341,15 @@ function CampaignAddContent() {
       </div>
 
       {/* 완료 버튼 */}
-      <div className="fixed bottom-0 left-0 right-0 pb-6 flex justify-center px-4 bg-white">
-        <CustomButton
-          onClick={handleSubmit}
-          disabled={createCampaign.isPending}
-        >
-          {createCampaign.isPending ? "등록 중..." : "완료"}
-        </CustomButton>
+      <div className="fixed bottom-0 left-0 right-0 bg-white">
+        <div className="max-w-[430px] mx-auto pb-6 flex justify-center px-4">
+          <CustomButton
+            onClick={handleSubmit}
+            disabled={createCampaign.isPending}
+          >
+            {createCampaign.isPending ? "등록 중..." : "완료"}
+          </CustomButton>
+        </div>
       </div>
 
       {/* Error Dialog */}

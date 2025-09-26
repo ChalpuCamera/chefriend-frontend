@@ -277,13 +277,15 @@ export default function Page() {
       </div>
 
       {/* 완료 버튼 - 그라데이션 배경으로 더 돋보이게 */}
-      <div className="fixed bottom-0 left-0 right-0 pb-6 pt-4 flex items-center justify-center px-4 bg-gradient-to-t from-white via-white to-transparent">
-        <CustomButton onClick={handleSubmit} className="shadow-lg">
-          <span className="flex justify-center items-center gap-2">
-            <Check size={18} />
-            설정 완료
-          </span>
-        </CustomButton>
+      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-white via-white to-transparent">
+        <div className="max-w-[430px] mx-auto pb-6 pt-4 flex items-center justify-center px-4">
+          <CustomButton onClick={handleSubmit} className="shadow-lg">
+            <span className="flex justify-center items-center gap-2">
+              <Check size={18} />
+              설정 완료
+            </span>
+          </CustomButton>
+        </div>
       </div>
     </div>
   );
