@@ -6,12 +6,17 @@ const initiateKakaoLogin = () => {
   // Try to use Kakao SDK first (for better mobile/WebView experience)
   if (typeof window !== 'undefined' && window.Kakao?.Auth) {
     try {
+      // SDK 사용 플래그 저장 (oauth2/success에서 판별용)
+      sessionStorage.setItem('kakao_sdk_used', 'true');
+
       window.Kakao.Auth.authorize({
         redirectUri: `${window.location.origin}/oauth2/success`,
       });
       console.log("Using Kakao SDK for login");
     } catch (error) {
       console.error("Kakao SDK login failed, falling back to REST API", error);
+      // SDK 실패 시 플래그 제거
+      sessionStorage.removeItem('kakao_sdk_used');
       // Fallback to REST API method
       window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/oauth2/authorization/kakao/owner`;
     }
