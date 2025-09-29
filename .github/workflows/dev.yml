@@ -20,8 +20,9 @@ jobs:
           script: |
             # 프로젝트 폴더로 이동
             cd /home/ubuntu/chefriend-frontend # 실제 EC2의 프로젝트 경로로 수정
-            # 최신 코드 pull
-            git pull
+            # develop 브랜치로 이동
+            git fetch origin
+            git checkout -B develop origin/develop
             # 의존성 설치 (package-lock.json 기준)
             npm ci
             # 빌드
