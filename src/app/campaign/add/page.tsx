@@ -76,7 +76,11 @@ function CampaignAddContent() {
   const menus = foodsData?.content || [];
 
   const handleBack = () => {
+    if (showMenuSelector) {
+      setShowMenuSelector(false);
+    } else {
       router.back();
+    }
   };
 
   const handleMenuSelect = (menu: {
@@ -215,17 +219,21 @@ function CampaignAddContent() {
                     <h3 className="text-headline-b text-gray-800">
                       {selectedMenu.name}
                     </h3>
-                    <X size={16} className="text-gray-800" />
                   </div>
                   <p className="text-headline-m text-gray-700 mt-1">
                     {selectedMenu.price.toLocaleString()}원
                   </p>
                 </div>
-                <button
-                  onClick={handleRemoveMenu}
-                  className="p-2"
-                  aria-label="메뉴 제거"
-                ></button>
+                {/* URL 파라미터로 온 메뉴가 아닐 때만 삭제 버튼 표시 */}
+                {!searchParams.get('menuId') && (
+                  <button
+                    onClick={handleRemoveMenu}
+                    className="p-2"
+                    aria-label="메뉴 제거"
+                  >
+                    <X size={16} className="text-gray-800" />
+                  </button>
+                )}
               </div>
             </div>
           ) : (

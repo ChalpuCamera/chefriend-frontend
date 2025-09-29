@@ -13,7 +13,7 @@ interface Window {
       logout: () => Promise<void>;
     };
     API: {
-      request: (options: any) => Promise<any>;
+      request: (options: unknown) => Promise<unknown>;
     };
   };
 }

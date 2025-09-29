@@ -5,6 +5,7 @@ import { useAuthStore } from "@/stores/auth.store";
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { toast } from "sonner";
+import { apiClient } from "@/lib/api/client";
 
 interface LogoutButtonProps {
   variant?:
@@ -34,8 +35,8 @@ export function LogoutButton({
 
   const handleLogout = async () => {
     try {
-      // TODO: Call logout API endpoint if needed
-      // await api.post('/auth/logout');
+      // Call logout API using apiClient
+      await apiClient.post("/api/auth/logout");
 
       // Clear auth state
       clearAuth();

@@ -1,359 +1,315 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LogoutButton } from "@/components/logout-button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Store,
-  User,
-  Clock,
-  MapPin,
-  Phone,
-  Save,
-  Plus
+  ChevronRight,
+  MessageCircle,
+  FileText,
+  Shield,
+  AlertCircle,
+  Utensils,
+  Plus,
+  ChefHat,
 } from "lucide-react";
+import { useAuthStore } from "@/stores/auth.store";
+import { toast } from "sonner";
+import { storeApi } from "@/lib/api/owner/store";
+import { useQuery } from "@tanstack/react-query";
+import { CustomHeader } from "@/components/ui/custom-header";
+import { apiClient } from "@/lib/api/client";
 
-// Mock 데이터
-const mockRestaurants = [
-  {
-    id: "1",
-    name: "맛있는 한식당",
-    address: "서울시 강남구 테헤란로 123",
-    phoneNumber: "02-1234-5678",
-    businessNumber: "123-45-67890",
-    description: "정성스럽게 만든 한식을 제공하는 가족 운영 식당입니다.",
-    categories: ["한식", "찌개류", "볶음류"],
-    isActive: true,
-    operatingHours: {
-      월: { open: "09:00", close: "22:00" },
-      화: { open: "09:00", close: "22:00" },
-      수: { open: "09:00", close: "22:00" },
-      목: { open: "09:00", close: "22:00" },
-      금: { open: "09:00", close: "22:00" },
-      토: { open: "10:00", close: "21:00" },
-      일: { open: "휴무", close: "휴무" }
+export default function MyPage() {
+  const router = useRouter();
+  const { user, clearAuth } = useAuthStore();
+  const [showWithdrawDialog, setShowWithdrawDialog] = useState(false);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
+
+  // Fetch stores
+  const { data: storesData } = useQuery({
+    queryKey: ["my-stores"],
+    queryFn: () => storeApi.getMyStores({ page: 0, size: 10 }),
+    enabled: !!user,
+  });
+
+  const stores = storesData?.result?.content || [];
+  const totalStores = stores.length;
+
+  const handleWithdraw = async () => {
+    setIsWithdrawing(true);
+    try {
+      await apiClient.delete("/api/user/me");
+      clearAuth();
+      toast.success("회원 탈퇴가 완료되었습니다.");
+      router.push("/");
+    } catch (error) {
+      console.error("Withdrawal error:", error);
+      toast.error("회원 탈퇴 중 오류가 발생했습니다.");
+    } finally {
+      setIsWithdrawing(false);
+      setShowWithdrawDialog(false);
     }
-  },
-  {
-    id: "2",
-    name: "김사장 분식",
-    address: "서울시 서초구 서초대로 456",
-    phoneNumber: "02-9876-5432",
-    businessNumber: "987-65-43210",
-    description: "맛있는 분식을 저렴하게 즐길 수 있는 곳",
-    categories: ["분식", "김밥", "떡볶이"],
-    isActive: true,
-    operatingHours: {
-      월: { open: "08:00", close: "20:00" },
-      화: { open: "08:00", close: "20:00" },
-      수: { open: "08:00", close: "20:00" },
-      목: { open: "08:00", close: "20:00" },
-      금: { open: "08:00", close: "20:00" },
-      토: { open: "09:00", close: "19:00" },
-      일: { open: "휴무", close: "휴무" }
-    }
-  }
-];
-
-const mockProfile = {
-  name: "김사장",
-  email: "kim@example.com",
-  phone: "010-1234-5678",
-  joinDate: "2024.01.01"
-};
-
-export default function SettingsPage() {
-  const [selectedRestaurant, setSelectedRestaurant] = useState("1");
-  const [profileData, setProfileData] = useState(mockProfile);
-  const [restaurantData, setRestaurantData] = useState(mockRestaurants[0]);
-
-  const handleSaveProfile = () => {
-    // TODO: API 호출하여 프로필 저장
-    console.log("Save profile:", profileData);
   };
 
-  const handleSaveRestaurant = () => {
-    // TODO: API 호출하여 가게 정보 저장
-    console.log("Save restaurant:", restaurantData);
-  };
-
-  const toggleRestaurantStatus = (restaurantId: string) => {
-    // TODO: API 호출하여 가게 운영 상태 변경
-    console.log("Toggle restaurant status:", restaurantId);
-  };
+  const menuItems = [
+    {
+      icon: MessageCircle,
+      label: "고객센터",
+      description: "도움이 필요하신가요?",
+      onClick: () => window.open("https://open.kakao.com/o/sCpB58Hh", "_blank"),
+      color: "text-purple-600",
+    },
+    {
+      icon: FileText,
+      label: "운영약관",
+      description: "서비스 운영 정책",
+      onClick: () => window.open("https://chefriend.kr/operation", "_blank"),
+      color: "text-blue-600",
+    },
+    {
+      icon: FileText,
+      label: "이용약관",
+      description: "서비스 이용 약관",
+      onClick: () => window.open("https://chefriend.kr/term", "_blank"),
+      color: "text-blue-600",
+    },
+    {
+      icon: Shield,
+      label: "개인정보 처리방침",
+      description: "고객님의 정보를 안전하게",
+      onClick: () => window.open("https://chefriend.kr/privacy", "_blank"),
+      color: "text-green-600",
+    },
+  ];
 
   return (
-    <div className="min-h-screen bg-background p-5">
-      <div className="w-full max-w-4xl mx-auto space-y-6">
-        {/* 헤더 */}
-        <h1 className="text-2xl font-bold">설정</h1>
+    <div className="min-h-screen bg-gradient-to-b from-purple-50 via-white to-purple-50">
+      {/* Header with brand color */}
+      <CustomHeader handleBack={() => router.back()} title="마이페이지" />
 
-        <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="profile">프로필</TabsTrigger>
-            <TabsTrigger value="restaurants">가게 관리</TabsTrigger>
-            <TabsTrigger value="notifications">알림 설정</TabsTrigger>
-          </TabsList>
-
-          {/* 프로필 탭 */}
-          <TabsContent value="profile" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <User className="h-5 w-5" />
-                  <span>내 프로필</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="name">이름</Label>
-                  <Input
-                    id="name"
-                    value={profileData.name}
-                    onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
-                  />
+      <div className="px-5 py-6 space-y-6 max-w-md mx-auto pt-30">
+        {/* Profile Section with Chef Theme */}
+        <div className="relative">
+          <div className="absolute -top-3 -right-3 w-32 h-32 bg-purple-200 rounded-full opacity-30 blur-3xl"></div>
+          <Card className="overflow-hidden border-0 shadow-xl bg-white">
+            <CardHeader className="pb-4 bg-gradient-to-b from-purple-50/50 to-white">
+              <div className="flex items-center space-x-4">
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br bg-purple-700 flex items-center justify-center shadow-xl">
+                    <ChefHat className="h-8 w-8 text-white" />
+                  </div>
                 </div>
-
-                <div>
-                  <Label htmlFor="email">이메일</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={profileData.email}
-                    onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                  />
+                <div className="flex-1">
+                  <h2 className="text-xl font-bold text-gray-900">
+                    {user?.name || "사장님"}
+                  </h2>
+                  <p className="text-sm text-gray-500">
+                    {user?.email || "owner@chefriend.com"}
+                  </p>
+                  <div className="flex items-center gap-2 mt-2">
+                    {totalStores > 0 && (
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                        {totalStores}개 매장
+                      </span>
+                    )}
+                  </div>
                 </div>
+              </div>
+            </CardHeader>
+          </Card>
+        </div>
 
-                <div>
-                  <Label htmlFor="phone">전화번호</Label>
-                  <Input
-                    id="phone"
-                    value={profileData.phone}
-                    onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
-                  />
-                </div>
-
-                <div>
-                  <Label>가입일</Label>
-                  <p className="text-sm text-muted-foreground">{profileData.joinDate}</p>
-                </div>
-
-                <Button onClick={handleSaveProfile}>
-                  <Save className="mr-2 h-4 w-4" />
-                  저장
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* 가게 관리 탭 */}
-          <TabsContent value="restaurants" className="space-y-4">
-            {/* 가게 선택 */}
-            <div className="flex space-x-2">
-              {mockRestaurants.map((restaurant) => (
-                <Button
-                  key={restaurant.id}
-                  variant={selectedRestaurant === restaurant.id ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => {
-                    setSelectedRestaurant(restaurant.id);
-                    setRestaurantData(restaurant);
-                  }}
-                >
-                  {restaurant.name}
-                </Button>
-              ))}
-              <Button variant="ghost" size="sm">
-                <Plus className="mr-2 h-4 w-4" />
-                가게 추가
-              </Button>
+        {/* Menu Management Button */}
+        <button
+          onClick={() => router.push("/menu")}
+          className="w-full bg-gradient-to-r bg-purple-700 rounded-xl p-4 shadow-lg hover:shadow-xl transform transition-all duration-300 hover:scale-[1.02]"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-lg bg-white/20 backdrop-blur flex items-center justify-center">
+                <Utensils className="h-6 w-6 text-white" />
+              </div>
+              <div className="text-left">
+                <p className="text-white font-semibold">메뉴 관리</p>
+                <p className="text-white/80 text-xs">
+                  메뉴를 추가하고 관리하세요
+                </p>
+              </div>
             </div>
+            <ChevronRight className="h-5 w-5 text-white/80" />
+          </div>
+        </button>
 
-            {/* 기본 정보 */}
-            <Card>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <CardTitle className="flex items-center space-x-2">
-                    <Store className="h-5 w-5" />
-                    <span>가게 정보</span>
-                  </CardTitle>
-                  <div className="flex items-center space-x-2">
-                    <Label htmlFor="restaurant-active" className="text-sm">운영 상태</Label>
-                    <Switch
-                      id="restaurant-active"
-                      checked={restaurantData.isActive}
-                      onCheckedChange={() => toggleRestaurantStatus(restaurantData.id)}
-                    />
+        {/* My Store Section - MVP 단일 가게 */}
+        <Card className="border-0 shadow-lg overflow-hidden">
+          <CardHeader className="border-b border-gray-200 pb-3 pt-0 mb-0">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <Store className="h-4 w-4 text-purple-600" />
+                </div>
+                <h3 className="font-bold text-gray-900">내 가게</h3>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-3">
+            {stores.length > 0 ? (
+              <button className="w-full flex items-center justify-between p-3.5 rounded-xl hover:bg-purple-50 transition-all duration-200 group">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center shadow-sm">
+                    <Utensils className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-semibold text-gray-900">
+                      {stores[0].storeName}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {stores[0].address || "주소 정보 없음"}
+                    </p>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="restaurant-name">가게명</Label>
-                  <Input
-                    id="restaurant-name"
-                    value={restaurantData.name}
-                    onChange={(e) => setRestaurantData({ ...restaurantData, name: e.target.value })}
-                  />
+              </button>
+            ) : (
+              <div className="text-center py-8">
+                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center">
+                  <Store className="h-10 w-10 text-purple-500" />
                 </div>
-
-                <div>
-                  <Label htmlFor="address">주소</Label>
-                  <div className="flex space-x-2">
-                    <MapPin className="h-5 w-5 text-muted-foreground mt-2" />
-                    <Input
-                      id="address"
-                      value={restaurantData.address}
-                      onChange={(e) => setRestaurantData({ ...restaurantData, address: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="phone">전화번호</Label>
-                  <div className="flex space-x-2">
-                    <Phone className="h-5 w-5 text-muted-foreground mt-2" />
-                    <Input
-                      id="phone"
-                      value={restaurantData.phoneNumber}
-                      onChange={(e) => setRestaurantData({ ...restaurantData, phoneNumber: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="business-number">사업자번호</Label>
-                  <Input
-                    id="business-number"
-                    value={restaurantData.businessNumber}
-                    onChange={(e) => setRestaurantData({ ...restaurantData, businessNumber: e.target.value })}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="description">설명</Label>
-                  <Textarea
-                    id="description"
-                    value={restaurantData.description}
-                    onChange={(e) => setRestaurantData({ ...restaurantData, description: e.target.value })}
-                    rows={3}
-                  />
-                </div>
-
-                <div>
-                  <Label>카테고리</Label>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {restaurantData.categories.map((category) => (
-                      <Badge key={category} variant="secondary">{category}</Badge>
-                    ))}
-                    <Button variant="ghost" size="sm">
-                      <Plus className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* 운영 시간 */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Clock className="h-5 w-5" />
-                  <span>운영 시간</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {Object.entries(restaurantData.operatingHours).map(([day, hours]) => (
-                    <div key={day} className="grid grid-cols-3 gap-4 items-center">
-                      <span className="font-medium">{day}요일</span>
-                      <Input
-                        value={hours.open}
-                        onChange={(e) => setRestaurantData({
-                          ...restaurantData,
-                          operatingHours: {
-                            ...restaurantData.operatingHours,
-                            [day]: { ...hours, open: e.target.value }
-                          }
-                        })}
-                        placeholder="09:00"
-                      />
-                      <Input
-                        value={hours.close}
-                        onChange={(e) => setRestaurantData({
-                          ...restaurantData,
-                          operatingHours: {
-                            ...restaurantData.operatingHours,
-                            [day]: { ...hours, close: e.target.value }
-                          }
-                        })}
-                        placeholder="22:00"
-                      />
-                    </div>
-                  ))}
-                </div>
-                
-                <Button className="mt-4" onClick={handleSaveRestaurant}>
-                  <Save className="mr-2 h-4 w-4" />
-                  가게 정보 저장
+                <p className="text-gray-600 font-medium mb-1">
+                  아직 등록된 가게가 없어요
+                </p>
+                <p className="text-xs text-gray-400 mb-4">
+                  가게를 등록해보세요!
+                </p>
+                <Button
+                  className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-lg"
+                  onClick={() => router.push("/store/add")}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  가게 등록하기
                 </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-          {/* 알림 설정 탭 */}
-          <TabsContent value="notifications" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>알림 설정</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="new-feedback">새 피드백 알림</Label>
-                    <p className="text-sm text-muted-foreground">
-                      새로운 피드백이 등록되면 알림을 받습니다
-                    </p>
-                  </div>
-                  <Switch id="new-feedback" defaultChecked />
+        {/* Service Menu */}
+        <div className="space-y-2">
+          {menuItems.map((item, index) => (
+            <button
+              key={index}
+              className="w-full flex items-center justify-between p-4 bg-white rounded-xl hover:bg-gray-50 transition-all duration-200 group shadow-sm hover:shadow-md"
+              onClick={item.onClick}
+            >
+              <div className="flex items-center space-x-3">
+                <div
+                  className={`p-2 rounded-lg bg-gray-50 group-hover:bg-gray-100 transition-colors`}
+                >
+                  <item.icon className={`h-5 w-5 ${item.color}`} />
                 </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="weekly-report">주간 리포트</Label>
-                    <p className="text-sm text-muted-foreground">
-                      매주 월요일 오전에 주간 성과 리포트를 받습니다
-                    </p>
-                  </div>
-                  <Switch id="weekly-report" defaultChecked />
+                <div className="text-left">
+                  <p className="font-medium text-gray-900">{item.label}</p>
+                  {item.description && (
+                    <p className="text-xs text-gray-500">{item.description}</p>
+                  )}
                 </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-purple-600 transition-colors" />
+            </button>
+          ))}
+        </div>
 
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="low-satisfaction">낮은 만족도 알림</Label>
-                    <p className="text-sm text-muted-foreground">
-                      만족도 3점 이하 피드백 시 즉시 알림
-                    </p>
-                  </div>
-                  <Switch id="low-satisfaction" defaultChecked />
-                </div>
+        {/* Account Actions */}
+        <div className="space-y-3 pt-4">
+          <LogoutButton
+            variant="outline"
+            className="w-full border-purple-200 hover:border-purple-400 hover:bg-purple-50"
+            showIcon={true}
+            showText={true}
+          />
 
+          <button
+            className="w-full py-3 text-sm text-red-600 transition-colors"
+            onClick={() => setShowWithdrawDialog(true)}
+          >
+            회원 탈퇴
+          </button>
+        </div>
 
-                <Button>
-                  <Save className="mr-2 h-4 w-4" />
-                  알림 설정 저장
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        {/* App Info */}
+        <div className="text-center space-y-2 pt-8 pb-4">
+          <Image
+            src="/chefriend_logo.png"
+            alt="Chefriend"
+            width={100}
+            height={30}
+            className="mx-auto opacity-60"
+          />
+          <p className="text-xs text-gray-400">버전 1.0.0 | © 2024 Chefriend</p>
+        </div>
       </div>
+
+      {/* Withdrawal Dialog */}
+      <AlertDialog
+        open={showWithdrawDialog}
+        onOpenChange={setShowWithdrawDialog}
+      >
+        <AlertDialogContent className="max-w-sm mx-4">
+          <AlertDialogHeader>
+            <div className="mx-auto w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-3">
+              <AlertCircle className="h-6 w-6 text-red-600" />
+            </div>
+            <AlertDialogTitle className="text-center">
+              정말 탈퇴하시겠습니까?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="text-center space-y-3">
+                <p className="text-sm">
+                  셰프랜드와 함께한 모든 정보가 삭제됩니다
+                </p>
+                <div className="bg-gray-50 rounded-lg p-3 text-left space-y-1">
+                  <p className="text-xs text-gray-600">
+                    • 가게 정보 및 메뉴 데이터
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    • 고객 피드백 및 분석 데이터
+                  </p>
+                  <p className="text-xs text-gray-600">• 모든 서비스 이용 기록</p>
+                </div>
+                <p className="text-xs text-red-600 font-semibold">
+                  ⚠️ 이 작업은 되돌릴 수 없습니다
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
+            <AlertDialogCancel className="w-full sm:w-auto">
+              취소
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleWithdraw}
+              disabled={isWithdrawing}
+              className="w-full sm:w-auto bg-red-600 hover:bg-red-700"
+            >
+              {isWithdrawing ? "처리 중..." : "탈퇴하기"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
