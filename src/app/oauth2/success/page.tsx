@@ -59,17 +59,6 @@ function OAuthSuccessContent() {
         return;
       }
 
-      // SDK 사용 여부 확인 (카카오 인가 코드 판별)
-      const isSDKUsed = sessionStorage.getItem('kakao_sdk_used');
-      if (isSDKUsed) {
-        console.log("SDK login detected, redirecting to backend with Kakao code");
-        // 플래그 제거
-        sessionStorage.removeItem('kakao_sdk_used');
-        // 백엔드 authorization URL에 카카오 인가 코드 전달
-        window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/oauth2/authorization/kakao/owner?code=${code}`;
-        return;
-      }
-
       try {
         const {
           accessToken,
