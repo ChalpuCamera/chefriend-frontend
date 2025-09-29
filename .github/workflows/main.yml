@@ -24,12 +24,15 @@ jobs:
             git pull
             # 의존성 설치 (package-lock.json 기준)
             npm ci
-            # 빌드
-            npm run build
-            # PM2로 앱 시작
+
             if pm2 list | grep -q "chefriend"; then
               pm2 delete chefriend
             fi
+
+            # 빌드
+            npm run build
+            
+            # PM2로 앱 시작
             pm2 start npm --name chefriend -- run start -- -p 3000
             # PM2 상태 저장 (서버 재부팅 시 자동 실행)
             pm2 save
