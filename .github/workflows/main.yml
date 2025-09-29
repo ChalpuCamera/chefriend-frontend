@@ -1,63 +1,37 @@
 name: Deploy to EC2 on main push
+
 on:
   push:
     branches:
       - main
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          
-      - name: Install dependencies and build
-        run: |
-          npm ci
-          npm run build
-          
-      - name: Create deployment package
-        run: |
-          tar -czf deploy.tar.gz .next package.json package-lock.json next.config.js public node_modules
-          
-      - name: Deploy to EC2
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_LIVE_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "deploy.tar.gz"
-          target: "/home/ubuntu"
-          
-      - name: Extract and restart
+      - name: Deploy on EC2 via SSH
         uses: appleboy/ssh-action@v1.0.3
+        continue-on-error: true
         with:
           host: ${{ secrets.EC2_LIVE_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /home/ubuntu/chefriend-frontend
-            
-            # 기존 파일 백업
-            if [ -d ".next" ]; then
-              mv .next .next.backup
-            fi
-            
-            # 새 빌드 파일 압축 해제
-            tar -xzf /home/ubuntu/deploy.tar.gz -C /home/ubuntu/chefriend-frontend
-            rm /home/ubuntu/deploy.tar.gz
-            
-            # PM2 재시작
+            # 프로젝트 폴더로 이동
+            cd /home/ubuntu/chefriend-frontend # 실제 EC2의 프로젝트 경로로 수정
+            # 최신 코드 pull
+            git pull
+            # 의존성 설치 (package-lock.json 기준)
+            npm ci
+            # 빌드
+            npm run build
+            # PM2로 앱 시작
             if pm2 list | grep -q "chefriend"; then
-              pm2 reload chefriend
-            else
-              pm2 start npm --name chefriend -- run start -- -p 3000
+              pm2 delete chefriend
             fi
+            pm2 start npm --name chefriend -- run start -- -p 3000
+            # PM2 상태 저장 (서버 재부팅 시 자동 실행)
             pm2 save
-            
-            # 백업 삭제
-            rm -rf .next.backup
+            # nginx 재시작
+            sudo systemctl restart nginx
