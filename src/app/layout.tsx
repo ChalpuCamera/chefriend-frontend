@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { QueryProvider } from "@/lib/providers/query-provider";
 import { AuthProvider } from "@/providers/auth-provider";
 import { Toaster } from "@/components/ui/sonner";
+import KakaoScript from "@/components/kakao-script";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -29,6 +30,7 @@ export default function RootLayout({
           </AuthProvider>
           <Toaster position="top-center" />
         </QueryProvider>
+        <KakaoScript />
       </body>
     </html>
   );
