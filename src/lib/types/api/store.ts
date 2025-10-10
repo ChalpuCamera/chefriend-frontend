@@ -7,6 +7,11 @@ export interface StoreRequest {
   baeminLink?: string;
   yogiyoLink?: string;
   coupangeatsLink?: string;
+  naverLink?: string;
+  kakaoLink?: string;
+  instagramLink?: string;
+  kakaoTalkLink?: string;
+  siteLink?: string;
 }
 
 export interface StoreResponse {
@@ -17,6 +22,18 @@ export interface StoreResponse {
   baeminLink?: string;
   yogiyoLink?: string;
   coupangEatsLink?: string;
+  naverLink?: string;
+  kakaoLink?: string;
+  instagramLink?: string;
+  kakaoTalkLink?: string;
+  siteLink?: string;
+  feedbackCount?: number;
+  menuCount?: number;
+  thumbnailUrl?: string;
+}
+
+export interface StoreIdResponse {
+  storeId: number;
 }
 
 export interface MemberResponse {

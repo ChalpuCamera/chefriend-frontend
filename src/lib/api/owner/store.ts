@@ -7,6 +7,7 @@ import type {
 import type {
   StoreRequest,
   StoreResponse,
+  StoreIdResponse,
   MemberResponse,
   MemberInviteRequest,
 } from "@/lib/types/api/store";
@@ -40,6 +41,10 @@ export const storeApi = {
   // 매장 삭제
   deleteStore: (storeId: number) =>
     apiClient.delete<ApiResponse<void>>(`/api/stores/${storeId}`),
+
+  // 사이트 링크 중복 체크 (공개 API)
+  checkSiteLink: (siteLink: string) =>
+    apiClient.get<ApiResponse<StoreIdResponse>>(`/api/public/stores/${siteLink}`),
 
   // 매장 멤버 목록 조회
   getStoreMembers: (storeId: number) =>

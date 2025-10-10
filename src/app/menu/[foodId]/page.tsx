@@ -16,8 +16,8 @@ import {
   getFlattenedReviews,
 } from "@/lib/hooks/useFoodReviews";
 import { Button } from "@/components/ui/button";
-import { useGetActiveCampaignByFood, calculateRemainingDays } from "@/lib/hooks/useCampaign";
-import { useMyStores } from "@/lib/hooks/useStore";
+// import { useGetActiveCampaignByFood, calculateRemainingDays } from "@/lib/hooks/useCampaign";
+// import { useMyStores } from "@/lib/hooks/useStore";
 
 export default function Page({
   params,
@@ -45,22 +45,22 @@ export default function Page({
   const updateThumbnail = useUpdateThumbnail();
 
   // 사용자의 가게 정보 가져오기
-  const { data: storesData } = useMyStores({ size: 10 });
-  const stores = storesData?.content || [];
-  const currentStore =
-    stores.length > 0
-      ? stores.reduce((first, store) =>
-          store.storeId < first.storeId ? store : first
-        )
-      : null;
-  const storeId = currentStore?.storeId;
+  // const { data: storesData } = useMyStores({ size: 10 });
+  // const stores = storesData?.content || [];
+  // const currentStore =
+  //   stores.length > 0
+  //     ? stores.reduce((first, store) =>
+  //         store.storeId < first.storeId ? store : first
+  //       )
+  //     : null;
+  // const storeId = currentStore?.storeId;
 
   // 캠페인 데이터 가져오기
-  const { data: activeCampaign } = useGetActiveCampaignByFood(
-    storeId!,
-    foodId,
-    !!storeId && !!foodId
-  );
+  // const { data: activeCampaign } = useGetActiveCampaignByFood(
+  //   storeId!,
+  //   foodId,
+  //   !!storeId && !!foodId
+  // );
 
   // 이미지 배열 구성 (thumbnail + photos)
   const allImages = [
@@ -74,17 +74,17 @@ export default function Page({
 
   const reviews = getFlattenedReviews(reviewsData);
 
-  // 캠페인 데이터 처리
-  const hasCampaign = !!activeCampaign;
-  const campaignData = activeCampaign ? {
-    ...activeCampaign,
-    daysRemaining: calculateRemainingDays(activeCampaign.endDate),
-    progressPercent: activeCampaign.currentFeedbackCount
-      ? Math.round((activeCampaign.currentFeedbackCount / activeCampaign.targetFeedbackCount) * 100)
-      : 0,
-    // 이미지는 음식 썸네일 또는 기본 이미지 사용 (백엔드에서 제공하지 않는 경우)
-    imageUrl: activeCampaign.foodItemThumbnailUrl || menuData?.thumbnailUrl || "/kimchi.png"
-  } : null;
+  // // 캠페인 데이터 처리
+  // const hasCampaign = !!activeCampaign;
+  // const campaignData = activeCampaign ? {
+  //   ...activeCampaign,
+  //   daysRemaining: calculateRemainingDays(activeCampaign.endDate),
+  //   progressPercent: activeCampaign.currentFeedbackCount
+  //     ? Math.round((activeCampaign.currentFeedbackCount / activeCampaign.targetFeedbackCount) * 100)
+  //     : 0,
+  //   // 이미지는 음식 썸네일 또는 기본 이미지 사용 (백엔드에서 제공하지 않는 경우)
+  //   imageUrl: activeCampaign.foodItemThumbnailUrl || menuData?.thumbnailUrl || "/kimchi.png"
+  // } : null;
 
   // 무한 스크롤 설정
   useEffect(() => {
@@ -105,7 +105,7 @@ export default function Page({
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const handleBack = () => {
-    router.back();
+    router.push("/menu");
   };
 
   const handleEdit = () => {
@@ -209,18 +209,24 @@ export default function Page({
       {/* Main Content - pt 추가하여 헤더 공간 확보 */}
       <div className="pt-[104px] pb-6">
         {/* Main Image */}
-        <div className="w-full h-[220px]">
+        <div className="w-full h-[220px] bg-gray-100">
           {allImages.length > 0 ? (
             <Image
-              src={allImages[selectedImageIndex]?.url || "/kimchi.png"}
+              src={allImages[selectedImageIndex]?.url || "/menu_icon.png"}
               alt={menuData?.foodName || "메뉴 이미지"}
               width={375}
               height={220}
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-              <p className="text-gray-500">이미지 없음</p>
+            <div className="w-full h-full flex items-center justify-center">
+              <Image
+                src="/menu_icon.png"
+                alt="준비중"
+                width={120}
+                height={120}
+                className="opacity-30"
+              />
             </div>
           )}
         </div>
@@ -231,20 +237,20 @@ export default function Page({
             <div className="flex gap-1.5">
               {(allImages.length > 0
                 ? allImages
-                : [{ url: "/kimchi.png", id: "default" }]
+                : [{ url: "/menu_icon.png", id: "default" }]
               ).map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImageIndex(index)}
                   className="flex flex-col items-center"
                 >
-                  <div className="w-[38px] h-[38px] rounded-md overflow-hidden">
+                  <div className="w-[38px] h-[38px] rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
                     <Image
                       src={image.url}
                       alt={`메뉴 이미지 ${index + 1}`}
                       width={38}
                       height={38}
-                      className="w-full h-full object-cover"
+                      className={`w-full h-full object-cover ${allImages.length === 0 ? 'opacity-30' : ''}`}
                     />
                   </div>
                   {selectedImageIndex === index && (
@@ -288,47 +294,47 @@ export default function Page({
         </div>
 
         {/* Campaign Section */}
-        <div className="px-4 mb-6">
+        {/* <div className="px-4 mb-6">
           <h3 className="text-sub-title-b text-gray-800 mb-4">캠페인 현황</h3>
 
-          {hasCampaign && campaignData ? (
-            // 캠페인 진행 중 상태 - Figma 디자인 기반
-            <div className="bg-white border border-purple-700 rounded-[8px] relative overflow-hidden h-[140px]">
+          {hasCampaign && campaignData ? ( */}
+            {/* 캠페인 진행 중 상태 - Figma 디자인 기반 */}
+            {/* <div className="bg-white border border-purple-700 rounded-[8px] relative overflow-hidden h-[140px]">
               <div className="flex h-full">
-                <div className="flex-1 p-4 pr-[135px]">
+                <div className="flex-1 p-4 pr-[135px]"> */}
                   {/* 메뉴 이름 */}
-                  <h4 className="text-headline-b text-gray-700 mb-2">
+                  {/* <h4 className="text-headline-b text-gray-700 mb-2">
                     {campaignData.foodItemName || campaignData.name}
-                  </h4>
+                  </h4> */}
 
                   {/* 남은 기간 */}
-                  <p className="text-body-sb text-purple-700 mb-4">
+                  {/* <p className="text-body-sb text-purple-700 mb-4">
                     {campaignData.daysRemaining > 0
                       ? `${campaignData.daysRemaining}일 남음`
                       : '오늘 종료'}
-                  </p>
+                  </p> */}
 
                   {/* 평가 수 정보 */}
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="text-sub-body-r text-gray-700">고객 평가 수</span>
                       <span className="text-sub-body-r text-gray-700">
                         {campaignData.currentFeedbackCount || 0}/{campaignData.targetFeedbackCount}
                       </span>
-                    </div>
+                    </div> */}
 
                     {/* 진행률 바 */}
-                    <div className="h-[9px] bg-gray-300 rounded-[20px] overflow-hidden">
+                    {/* <div className="h-[9px] bg-gray-300 rounded-[20px] overflow-hidden">
                       <div
                         className="h-full bg-purple-700 rounded-[20px] transition-all"
                         style={{ width: `${campaignData.progressPercent}%` }}
                       />
                     </div>
                   </div>
-                </div>
+                </div> */}
 
                 {/* 오른쪽 이미지 */}
-                <div className="absolute right-0 top-0 h-[140px] w-[131px]">
+                {/* <div className="absolute right-0 top-0 h-[140px] w-[131px]">
                   <Image
                     src={campaignData.imageUrl}
                     alt="캠페인 메뉴"
@@ -340,9 +346,9 @@ export default function Page({
                 </div>
               </div>
             </div>
-          ) : (
-            // 캠페인 미등록 상태
-            <div className="bg-[#f7f4fe] rounded-[12px] p-6 flex flex-col items-center justify-center">
+          ) : ( */}
+            {/* 캠페인 미등록 상태 */}
+            {/* <div className="bg-[#f7f4fe] rounded-[12px] p-6 flex flex-col items-center justify-center">
               <p className="text-body-r text-black text-center mb-4 leading-[24px]">
                 캠페인을 등록한 메뉴는
                 <br />
@@ -366,7 +372,7 @@ export default function Page({
               </button>
             </div>
           )}
-        </div>
+        </div> */}
 
         {/* Menu Stats */}
         <div className="px-4 mb-4">

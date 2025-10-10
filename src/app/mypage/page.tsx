@@ -169,7 +169,7 @@ export default function MyPage() {
           </CardHeader>
           <CardContent className="p-3">
             {stores.length > 0 ? (
-              <button className="w-full flex items-center justify-between p-3.5 rounded-xl hover:bg-purple-50 transition-all duration-200 group">
+              <div className="w-full flex items-center justify-between p-3.5 rounded-xl hover:bg-purple-50 transition-all duration-200 group">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center shadow-sm">
                     <Utensils className="h-5 w-5 text-purple-600" />
@@ -183,7 +183,16 @@ export default function MyPage() {
                     </p>
                   </div>
                 </div>
-              </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    router.push(`/store/${stores[0].storeId}/edit`);
+                  }}
+                  className="text-xs text-purple-700 font-semibold px-4 py-2 min-w-[48px] min-h-[44px] flex items-center justify-center"
+                >
+                  수정
+                </button>
+              </div>
             ) : (
               <div className="text-center py-8">
                 <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center">
