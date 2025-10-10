@@ -96,3 +96,22 @@ export function useDeleteStore() {
     },
   });
 }
+
+// 사이트 링크 중복 체크
+export function useCheckSiteLink() {
+  return useMutation({
+    mutationFn: async (siteLink: string) => {
+      try {
+        const response = await storeApi.checkSiteLink(siteLink);
+        // 매장이 존재하면 중복
+        return { isAvailable: false, storeId: response.result.storeId };
+      } catch (error: unknown) {
+        // 404 에러면 사용 가능 (ApiError 객체의 status 확인)
+        if ((error as { status?: number }).status === 404 || (error as { response?: { status?: number } }).response?.status === 404) {
+          return { isAvailable: true, storeId: null };
+        }
+        throw error;
+      }
+    },
+  });
+}

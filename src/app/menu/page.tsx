@@ -76,17 +76,23 @@ export default function Page() {
               <div key={item.id} className="px-4 py-2.5">
                 <div className="flex items-center gap-4 h-25 w-full">
                   {/* Menu Image */}
-                  <div className="w-25 h-25 bg-gray-100 border border-gray-200 rounded-lg flex-shrink-0 overflow-hidden">
+                  <div className="w-25 h-25 bg-gray-100 border border-gray-200 rounded-lg flex-shrink-0 overflow-hidden flex items-center justify-center">
                     {item.imageUrl ? (
                       <Image
                         src={item.imageUrl}
                         alt={item.name}
                         width={98}
                         height={98}
-                        className="object-cover"
+                        className="object-cover w-full h-full"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gray-100" />
+                      <Image
+                        src="/menu_icon.png"
+                        alt="준비중"
+                        width={60}
+                        height={60}
+                        className="opacity-30"
+                      />
                     )}
                   </div>
 

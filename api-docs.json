@@ -17,83 +17,29 @@
   "servers": [{ "url": "/", "description": "Local Server" }],
   "security": [{ "bearerAuth": [] }],
   "tags": [
-    { "name": "Authentication", "description": "인증 관련 API" },
     { "name": "Campaign", "description": "캠페인 관리 API" },
     {
       "name": "고객 피드백",
       "description": "고객 음식 피드백 관리 API - 음식 리뷰, 사진 업로드, 설문 응답을 통합 관리합니다"
     },
-    { "name": "Token Exchange", "description": "토큰 교환 API" },
-    { "name": "User", "description": "사용자 정보 관련 API" },
-    { "name": "사진 API", "description": "사진 관련 API" },
     { "name": "FoodItem", "description": "음식 관련 API" },
     { "name": "Store", "description": "매장 관리 API" },
-    {
-      "name": "리워드",
-      "description": "고객 리워드 관리 API - 피드백 작성에 따른 리워드 생성, 교환, 사용 처리를 관리합니다"
-    }
+    { "name": "Store Public", "description": "공개 API(인증 필요 없음)" }
   ],
   "paths": {
-    "/api/user/profile/taste": {
+    "/api/public/stores/{siteLink}": {
       "get": {
-        "tags": ["User"],
-        "summary": "고객 취향 정보 조회",
-        "description": "현재 로그인한 사용자의 고객 취향 정보(매운맛, 식사량, 식사 지출)를 조회합니다.",
-        "operationId": "getCustomerTaste",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseCustomerTasteDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [{ "bearerAuth": [] }]
-      },
-      "put": {
-        "tags": ["User"],
-        "summary": "고객 취향 정보 수정",
-        "description": "현재 로그인한 사용자의 고객 취향 정보(매운맛, 식사량, 식사 지출)를 수정합니다. 각 값은 1-5 범위여야 합니다.",
-        "operationId": "updateCustomerTaste",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/CustomerTasteDto" }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseCustomerTasteDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [{ "bearerAuth": [] }]
-      }
-    },
-    "/api/stores/{storeId}": {
-      "get": {
-        "tags": ["Store"],
-        "summary": "매장 상세 조회",
-        "description": "특정 매장의 상세 정보를 조회합니다.",
-        "operationId": "getStore",
+        "tags": ["Store Public"],
+        "summary": "사이트 링크로 매장 조회",
+        "description": "사이트 링크로 매장 ID를 조회합니다. 인증이 필요없는 공개 API입니다.",
+        "operationId": "getStoreBySiteLink",
         "parameters": [
           {
-            "name": "storeId",
+            "name": "siteLink",
             "in": "path",
+            "description": "사이트 링크",
             "required": true,
-            "schema": { "type": "integer", "format": "int64" }
+            "schema": { "type": "string" }
           }
         ],
         "responses": {
@@ -102,13 +48,15 @@
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiResponseStoreResponse"
+                  "$ref": "#/components/schemas/ApiResponseStoreIdResponse"
                 }
               }
             }
           }
         }
-      },
+      }
+    },
+    "/api/stores/{storeId}": {
       "put": {
         "tags": ["Store"],
         "summary": "매장 정보 수정",
@@ -168,115 +116,26 @@
         }
       }
     },
-    "/api/rewards/redemptions/{redemptionId}/use": {
+    "/api/stores/{storeId}/thumbnail": {
       "put": {
-        "tags": ["리워드"],
-        "summary": "리워드 사용 처리",
-        "description": "교환된 리워드를 사용 처리합니다. 매장에서 주문 시 리워드를 적용할 때 사용합니다.",
-        "operationId": "markRedemptionAsUsed",
+        "tags": ["Store"],
+        "summary": "매장 대표 사진 설정",
+        "description": "매장의 대표 사진 URL을 설정합니다.",
+        "operationId": "updateStoreThumbnail",
         "parameters": [
           {
-            "name": "redemptionId",
+            "name": "storeId",
             "in": "path",
-            "description": "교환 ID",
-            "required": true,
-            "schema": { "type": "integer", "format": "int64" },
-            "example": 1
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "리워드 사용 처리 성공",
-            "content": {
-              "application/json": {
-                "example": {
-                  "success": true,
-                  "message": "성공했습니다",
-                  "data": null
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "잘못된 요청 (이미 사용된 리워드, 만료된 리워드 등)",
-            "content": {
-              "*/*": {
-                "schema": { "$ref": "#/components/schemas/ApiResponseVoid" }
-              }
-            }
-          },
-          "404": {
-            "description": "리워드 교환 내역을 찾을 수 없습니다",
-            "content": {
-              "*/*": {
-                "schema": { "$ref": "#/components/schemas/ApiResponseVoid" }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/rewards/redemptions/{redemptionId}/cancel": {
-      "put": {
-        "tags": ["리워드"],
-        "summary": "리워드 사용 취소",
-        "description": "사용된 리워드의 사용을 취소하여 다시 사용 가능하게 만듭니다. 주문 취소 시 리워드를 복구할 때 사용합니다.",
-        "operationId": "cancelRedemption",
-        "parameters": [
-          {
-            "name": "redemptionId",
-            "in": "path",
-            "description": "교환 ID",
-            "required": true,
-            "schema": { "type": "integer", "format": "int64" },
-            "example": 1
-          }
-        ],
-        "responses": {
-          "404": {
-            "description": "리워드 교환 내역을 찾을 수 없습니다",
-            "content": {
-              "*/*": {
-                "schema": { "$ref": "#/components/schemas/ApiResponseVoid" }
-              }
-            }
-          },
-          "400": {
-            "description": "잘못된 요청 (사용되지 않은 리워드, 만료된 리워드 등)",
-            "content": {
-              "*/*": {
-                "schema": { "$ref": "#/components/schemas/ApiResponseVoid" }
-              }
-            }
-          },
-          "200": {
-            "description": "리워드 사용 취소 성공",
-            "content": {
-              "application/json": {
-                "example": {
-                  "success": true,
-                  "message": "성공했습니다",
-                  "data": null
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/foods/{foodId}": {
-      "get": {
-        "tags": ["FoodItem"],
-        "summary": "음식 상세 조회",
-        "description": "특정 음식의 상세 정보를 조회합니다.",
-        "operationId": "getFoodItem",
-        "parameters": [
-          {
-            "name": "foodId",
-            "in": "path",
-            "description": "음식 ID",
+            "description": "매장 ID",
             "required": true,
             "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "photoUrl",
+            "in": "query",
+            "description": "대표 사진 URL",
+            "required": true,
+            "schema": { "type": "string" }
           }
         ],
         "responses": {
@@ -285,13 +144,15 @@
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiResponseFoodItemResponse"
+                  "$ref": "#/components/schemas/ApiResponseStoreResponse"
                 }
               }
             }
           }
         }
-      },
+      }
+    },
+    "/api/foods/{foodId}": {
       "put": {
         "tags": ["FoodItem"],
         "summary": "음식 수정",
@@ -417,14 +278,6 @@
               }
             }
           },
-          "403": {
-            "description": "해당 매장의 사장님만 처리 가능합니다",
-            "content": {
-              "*/*": {
-                "schema": { "$ref": "#/components/schemas/ApiResponseVoid" }
-              }
-            }
-          },
           "200": {
             "description": "읽음 처리 성공",
             "content": {
@@ -434,6 +287,14 @@
                   "message": "성공했습니다",
                   "data": null
                 }
+              }
+            }
+          },
+          "403": {
+            "description": "해당 매장의 사장님만 처리 가능합니다",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/ApiResponseVoid" }
               }
             }
           }
@@ -684,199 +545,7 @@
         }
       }
     },
-    "/api/rewards/redeem": {
-      "post": {
-        "tags": ["리워드"],
-        "summary": "리워드 교환",
-        "description": "현재 로그인한 고객이 리워드를 교환합니다. 피드백 수가 부족하거나 이미 교환한 리워드는 교환할 수 없습니다.",
-        "operationId": "redeemReward",
-        "requestBody": {
-          "description": "리워드 교환 요청",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RewardRedemptionRequest"
-              },
-              "example": { "rewardId": 1 }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "리워드 교환 성공",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RewardRedemptionResponse"
-                },
-                "example": {
-                  "success": true,
-                  "message": "성공했습니다",
-                  "data": {
-                    "id": 1,
-                    "rewardId": 1,
-                    "rewardTitle": "10% 할인",
-                    "status": "REDEEMED",
-                    "expiresAt": "2024-02-01T10:00:00",
-                    "redeemedAt": "2024-01-01T10:00:00"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "잘못된 요청 (피드백 수 부족, 이미 교환한 리워드 등)",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseRewardRedemptionResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "인증이 필요합니다",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseRewardRedemptionResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "리워드를 찾을 수 없습니다",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseRewardRedemptionResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/photos/tmp/presigned-url": {
-      "post": {
-        "tags": ["사진 API"],
-        "summary": "임시 폴더 Presigned URL 생성",
-        "description": "tmp 폴더에 업로드하기 위한 Presigned URL을 생성합니다.",
-        "operationId": "generateTmpPresignedUrl",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/PhotoUploadRequest" }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponsePhotoPresignedUrlResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/photos/register": {
-      "post": {
-        "tags": ["사진 API"],
-        "summary": "사진 정보 등록",
-        "description": "S3에 업로드 완료 후, 파일 메타데이터를 서버에 등록합니다.",
-        "operationId": "registerPhoto",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/PhotoRegisterRequest" }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponsePhotoResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/photos/presigned-url": {
-      "post": {
-        "tags": ["사진 API"],
-        "summary": "Presigned URL 생성",
-        "description": "클라이언트가 AWS S3에 파일을 직접 업로드하기 위해 사용하는 Presigned URL을 생성합니다.\n\n**클라이언트 처리 순서:**\n1. 이 API를 호출하여 `presignedUrl`과 `s3Key`를 받습니다.\n2. 받은 `presignedUrl`을 목적지로, 업로드할 파일의 원본 데이터를 body에 담아 **HTTP PUT** 요청을 보냅니다.\n   - **주의:** `Content-Type` 헤더에 반드시 실제 파일의 MIME 타입(예: `image/jpeg`)을 포함해야 합니다.\n3. S3 업로드가 성공(HTTP 200 OK)하면, `/api/photos/register` API를 호출하여 업로드 완료 사실을 서버에 알립니다.\n   - 이때 응답으로 받았던 `s3Key`와 파일의 원본 이름 등 필요한 메타데이터를 함께 전송합니다.\n",
-        "operationId": "generatePresignedUrl",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/PhotoUploadRequest" }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponsePhotoPresignedUrlResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/foods/store/{storeId}": {
-      "get": {
-        "tags": ["FoodItem"],
-        "summary": "매장별 음식 목록 조회",
-        "description": "특정 매장의 음식 목록을 페이지네이션하여 조회합니다.",
-        "operationId": "getFoodItems",
-        "parameters": [
-          {
-            "name": "storeId",
-            "in": "path",
-            "description": "매장 ID",
-            "required": true,
-            "schema": { "type": "integer", "format": "int64" }
-          },
-          {
-            "name": "pageable",
-            "in": "query",
-            "required": true,
-            "schema": { "$ref": "#/components/schemas/Pageable" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponsePageResponseFoodItemResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [{ "bearerAuth": [] }]
-      },
       "post": {
         "tags": ["FoodItem"],
         "summary": "음식 생성",
@@ -956,164 +625,6 @@
         "security": [{ "bearerAuth": [] }]
       }
     },
-    "/api/customer-feedback": {
-      "post": {
-        "tags": ["고객 피드백"],
-        "summary": "피드백 생성",
-        "description": "음식에 대한 피드백과 설문 응답을 생성합니다. 사진 업로드를 위한 S3 presigned URL 생성 API를 먼저 호출해야 합니다.",
-        "operationId": "createFeedback",
-        "requestBody": {
-          "description": "피드백 생성 요청",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/FeedbackCreateRequest"
-              },
-              "example": {
-                "storeId": 1,
-                "foodId": 1,
-                "surveyId": 1,
-                "photoS3Keys": ["feedback-photos/customer1/uuid1.jpg"],
-                "surveyAnswers": [
-                  {
-                    "questionId": 1,
-                    "answerText": "맛있었습니다",
-                    "numericValue": 4.5
-                  }
-                ]
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "401": {
-            "description": "인증이 필요합니다",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseCustomerFeedbackResponse"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "피드백 생성 성공",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/FeedbackResponse" },
-                "example": {
-                  "success": true,
-                  "message": "성공했습니다",
-                  "data": {
-                    "id": 1,
-                    "storeId": 1,
-                    "foodId": 1,
-                    "surveyId": 1,
-                    "photoUrls": ["https://s3.../photo1.jpg"],
-                    "surveyAnswers": [
-                      {
-                        "questionId": 1,
-                        "answerText": "맛있었습니다",
-                        "numericValue": 4.5
-                      }
-                    ],
-                    "createdAt": "2024-01-01T10:00:00"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "잘못된 요청 데이터",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseCustomerFeedbackResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "매장, 음식 또는 설문을 찾을 수 없습니다",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseCustomerFeedbackResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/customer-feedback/presigned-urls": {
-      "post": {
-        "tags": ["고객 피드백"],
-        "summary": "피드백 사진들 Presigned URL 생성",
-        "description": "    고객이 여러 개의 피드백 사진을 S3에 직접 업로드하기 위한 Presigned URL들을 한 번에 생성합니다.\n\n    **클라이언트 처리 순서:**\n    1. 이 API를 호출하여 각 파일별 `presignedUrl`과 `s3Key`를 받습니다.\n    2. 각 `presignedUrl`에 해당하는 파일을 **HTTP PUT** 요청으로 업로드합니다.\n       - **주의:** `Content-Type` 헤더에 반드시 실제 파일의 MIME 타입(예: `image/jpeg`)을 포함해야 합니다.\n    3. 모든 S3 업로드가 성공하면, 피드백 생성 API를 호출할 때 모든 `s3Key`를 포함해서 전송합니다.\n\n    **사용 예시:**\n    - 1개 파일: `[\"photo1.jpg\"]`\n    - 여러개 파일: `[\"photo1.jpg\", \"photo2.jpg\", \"photo3.jpg\"]`\n",
-        "operationId": "generateMultiplePresignedUrls",
-        "requestBody": {
-          "description": "피드백 사진 업로드 요청",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/FeedbackPhotosUploadRequest"
-              },
-              "example": {
-                "fileNames": ["photo1.jpg", "photo2.jpg", "photo3.jpg"]
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "401": {
-            "description": "인증이 필요합니다",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseFeedbackPhotosPresignedUrlResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "잘못된 요청 데이터 (너무 많은 파일 또는 잘못된 파일 확장자)",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseFeedbackPhotosPresignedUrlResponse"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "Presigned URL 생성 성공",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/FeedbackPhotosPresignedUrlResponse"
-                },
-                "example": {
-                  "success": true,
-                  "message": "성공했습니다",
-                  "data": {
-                    "presignedUrls": [
-                      {
-                        "fileName": "photo1.jpg",
-                        "presignedUrl": "https://s3.../presigned-url",
-                        "s3Key": "feedback-photos/customer1/uuid1.jpg"
-                      }
-                    ]
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/campaigns/store/list": {
       "post": {
         "tags": ["Campaign"],
@@ -1156,78 +667,6 @@
                 "schema": {
                   "$ref": "#/components/schemas/ApiResponsePageResponseCampaignResponse"
                 }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/auth/token/exchange": {
-      "post": {
-        "tags": ["Token Exchange"],
-        "summary": "인증 코드로 토큰 교환",
-        "description": "OAuth2 인증 후 받은 코드로 액세스 토큰과 리프레시 토큰을 받습니다",
-        "operationId": "exchangeCode",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/CodeExchangeRequest" }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseTokenExchangeResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/auth/refresh": {
-      "post": {
-        "tags": ["Authentication"],
-        "operationId": "refresh",
-        "parameters": [
-          {
-            "name": "refreshToken",
-            "in": "cookie",
-            "required": true,
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseAccessTokenDTO"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/auth/logout": {
-      "post": {
-        "tags": ["Authentication"],
-        "summary": "로그아웃 처리",
-        "description": "현재 로그인한 사용자의 리프레쉬 토큰을 삭제합니다",
-        "operationId": "logout",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": { "$ref": "#/components/schemas/ApiResponseVoid" }
               }
             }
           }
@@ -1286,78 +725,6 @@
         }
       }
     },
-    "/api/user/me": {
-      "get": {
-        "tags": ["User"],
-        "summary": "현재 사용자 정보 조회",
-        "description": "JWT 인증을 통해 현재 로그인한 사용자의 상세 정보를 조회합니다.",
-        "operationId": "getCurrentUser",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": { "$ref": "#/components/schemas/ApiResponseUserDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearerAuth": [] }]
-      },
-      "delete": {
-        "tags": ["User"],
-        "summary": "사용자 정보 삭제",
-        "description": "사용자 정보를 삭제합니다.",
-        "operationId": "deleteUser",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": { "$ref": "#/components/schemas/ApiResponseVoid" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearerAuth": [] }]
-      }
-    },
-    "/api/test/token": {
-      "get": {
-        "tags": ["test-token-controller"],
-        "operationId": "generateTestToken",
-        "parameters": [
-          {
-            "name": "userId",
-            "in": "query",
-            "required": false,
-            "schema": { "type": "integer", "format": "int64", "default": 1 }
-          },
-          {
-            "name": "email",
-            "in": "query",
-            "required": false,
-            "schema": { "type": "string", "default": "test@example.com" }
-          },
-          {
-            "name": "role",
-            "in": "query",
-            "required": false,
-            "schema": { "type": "string", "default": "ROLE_CUSTOMER" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": { "$ref": "#/components/schemas/ApiResponseString" }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/stores/my": {
       "get": {
         "tags": ["Store"],
@@ -1380,309 +747,6 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiResponsePageResponseStoreResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/rewards": {
-      "get": {
-        "tags": ["리워드"],
-        "summary": "전체 리워드 목록 조회",
-        "description": "시스템에 등록된 모든 리워드 목록을 조회합니다. 각 리워드의 필요 피드백 수, 할인률, 설명 등을 확인할 수 있습니다.",
-        "operationId": "getAllRewards",
-        "responses": {
-          "200": {
-            "description": "리워드 목록 조회 성공",
-            "content": {
-              "application/json": {
-                "example": {
-                  "success": true,
-                  "message": "성공했습니다",
-                  "data": [
-                    {
-                      "id": 1,
-                      "title": "10% 할인",
-                      "description": "다음 방문 시 10% 할인",
-                      "requiredFeedbackCount": 5,
-                      "discountRate": 0.1,
-                      "isActive": true
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/rewards/redemptions/me": {
-      "get": {
-        "tags": ["리워드"],
-        "summary": "내 리워드 교환 내역 조회",
-        "description": "현재 로그인한 고객의 모든 리워드 교환 내역을 조회합니다. 사용한 리워드, 만료된 리워드 등 모든 상태를 포함합니다.",
-        "operationId": "getMyRedemptions",
-        "responses": {
-          "401": {
-            "description": "인증이 필요합니다",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseListRewardRedemptionResponse"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "내 리워드 내역 조회 성공",
-            "content": {
-              "application/json": {
-                "example": {
-                  "success": true,
-                  "message": "성공했습니다",
-                  "data": [
-                    {
-                      "id": 1,
-                      "rewardId": 1,
-                      "rewardTitle": "10% 할인",
-                      "status": "USED",
-                      "redeemedAt": "2024-01-01T10:00:00",
-                      "usedAt": "2024-01-15T15:30:00"
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/rewards/redemptions/me/active": {
-      "get": {
-        "tags": ["리워드"],
-        "summary": "내가 사용 가능한 리워드 조회",
-        "description": "현재 로그인한 고객이 교환했지만 아직 사용하지 않은 리워드를 조회합니다. 만료된 리워드는 제외됩니다.",
-        "operationId": "getMyActiveRedemptions",
-        "responses": {
-          "200": {
-            "description": "사용 가능한 리워드 조회 성공",
-            "content": {
-              "application/json": {
-                "example": {
-                  "success": true,
-                  "message": "성공했습니다",
-                  "data": [
-                    {
-                      "id": 1,
-                      "rewardId": 1,
-                      "rewardTitle": "10% 할인",
-                      "status": "REDEEMED",
-                      "expiresAt": "2024-02-01T10:00:00",
-                      "discountRate": 0.1
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "인증이 필요합니다",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseListRewardRedemptionResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/rewards/me": {
-      "get": {
-        "tags": ["리워드"],
-        "summary": "내가 받을 수 있는 리워드 조회",
-        "description": "현재 로그인한 고객의 피드백 수에 따라 받을 수 있는 리워드 목록을 조회합니다. 피드백 수가 부족한 리워드는 제외됩니다.",
-        "operationId": "getMyAvailableRewards",
-        "responses": {
-          "401": {
-            "description": "인증이 필요합니다",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseListRewardResponse"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "내 리워드 목록 조회 성공",
-            "content": {
-              "application/json": {
-                "example": {
-                  "success": true,
-                  "message": "성공했습니다",
-                  "data": [
-                    {
-                      "id": 1,
-                      "title": "10% 할인",
-                      "description": "다음 방문 시 10% 할인",
-                      "requiredFeedbackCount": 5,
-                      "canRedeem": true
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/rewards/eligible": {
-      "get": {
-        "tags": ["리워드"],
-        "summary": "내 리워드 수령 자격 확인",
-        "description": "현재 로그인한 고객의 피드백 수에 따른 리워드 수령 자격을 확인합니다. 최소 피드백 수 조건을 충족하는지 확인할 수 있습니다.",
-        "operationId": "checkMyRewardEligibility",
-        "responses": {
-          "200": {
-            "description": "리워드 자격 확인 성공",
-            "content": {
-              "application/json": {
-                "example": {
-                  "success": true,
-                  "message": "성공했습니다",
-                  "data": true
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "인증이 필요합니다",
-            "content": {
-              "*/*": {
-                "schema": { "$ref": "#/components/schemas/ApiResponseBoolean" }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/photos/{photoId}": {
-      "get": {
-        "tags": ["사진 API"],
-        "summary": "사진 상세 조회",
-        "description": "특정 사진의 상세 정보를 조회합니다.",
-        "operationId": "getPhoto",
-        "parameters": [
-          {
-            "name": "photoId",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "format": "int64" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponsePhotoResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": ["사진 API"],
-        "summary": "사진 삭제",
-        "description": "특정 사진을 삭제합니다.",
-        "operationId": "deletePhoto",
-        "parameters": [
-          {
-            "name": "photoId",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "format": "int64" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": { "$ref": "#/components/schemas/ApiResponseVoid" }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/photos/store/{storeId}": {
-      "get": {
-        "tags": ["사진 API"],
-        "summary": "가게별 사진 목록 조회",
-        "description": "특정 가게에 속한 사진 목록을 페이지네이션하여 조회합니다.",
-        "operationId": "getPhotosByStore",
-        "parameters": [
-          {
-            "name": "storeId",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "format": "int64" }
-          },
-          {
-            "name": "pageable",
-            "in": "query",
-            "required": true,
-            "schema": { "$ref": "#/components/schemas/Pageable" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponsePageResponsePhotoResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/photos/food-item/{foodId}": {
-      "get": {
-        "tags": ["사진 API"],
-        "summary": "음식별 사진 목록 조회",
-        "description": "특정 음식에 속한 사진 목록을 페이지네이션하여 조회합니다.",
-        "operationId": "getPhotosByFoodItem",
-        "parameters": [
-          {
-            "name": "foodId",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "format": "int64" }
-          },
-          {
-            "name": "pageable",
-            "in": "query",
-            "required": true,
-            "schema": { "$ref": "#/components/schemas/Pageable" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponsePageResponsePhotoResponse"
                 }
               }
             }
@@ -1783,65 +847,6 @@
         "security": [{ "bearerAuth": [] }]
       }
     },
-    "/api/customer-feedback/{feedbackId}": {
-      "get": {
-        "tags": ["고객 피드백"],
-        "summary": "특정 피드백 상세 조회하는 API",
-        "description": "특정 피드백의 상세 정보를 조회합니다. 피드백 사진, 설문 응답, 매장 및 음식 정보를 포함합니다.",
-        "operationId": "getFeedback",
-        "parameters": [
-          {
-            "name": "feedbackId",
-            "in": "path",
-            "description": "피드백 ID",
-            "required": true,
-            "schema": { "type": "integer", "format": "int64" },
-            "example": 1
-          }
-        ],
-        "responses": {
-          "404": {
-            "description": "피드백을 찾을 수 없습니다",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseCustomerFeedbackResponse"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "피드백 상세 조회 성공",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/FeedbackResponse" },
-                "example": {
-                  "success": true,
-                  "message": "성공했습니다",
-                  "data": {
-                    "id": 1,
-                    "storeId": 1,
-                    "storeName": "맛집",
-                    "foodId": 1,
-                    "foodName": "지리산",
-                    "photoUrls": ["https://s3.../photo1.jpg"],
-                    "surveyAnswers": [
-                      {
-                        "questionId": 1,
-                        "questionText": "맛은 어때는지요?",
-                        "answerText": "맛있었습니다",
-                        "numericValue": 4.5
-                      }
-                    ],
-                    "createdAt": "2024-01-01T10:00:00"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/customer-feedback/{feedbackId}/owner": {
       "get": {
         "tags": ["고객 피드백"],
@@ -1879,16 +884,6 @@
               }
             }
           },
-          "404": {
-            "description": "피드백을 찾을 수 없습니다",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseOwnerFeedbackResponse"
-                }
-              }
-            }
-          },
           "200": {
             "description": "피드백 및 고객 입맛 조회 성공",
             "content": {
@@ -1912,6 +907,16 @@
                     ],
                     "createdAt": "2024-01-01T10:00:00"
                   }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "피드백을 찾을 수 없습니다",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseOwnerFeedbackResponse"
                 }
               }
             }
@@ -2003,6 +1008,32 @@
           }
         ],
         "responses": {
+          "200": {
+            "description": "조회 성공",
+            "content": {
+              "application/json": {
+                "schema": { "type": "string" },
+                "example": {
+                  "success": true,
+                  "message": "성공했습니다",
+                  "data": [
+                    {
+                      "foodItemId": 1,
+                      "foodName": "김치찌개",
+                      "unreadCount": 3,
+                      "totalCount": 10
+                    },
+                    {
+                      "foodItemId": 2,
+                      "foodName": "된장찌개",
+                      "unreadCount": 0,
+                      "totalCount": 5
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "401": {
             "description": "인증이 필요합니다",
             "content": {
@@ -2029,91 +1060,6 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiResponseListFeedbackUnreadCountResponse"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "조회 성공",
-            "content": {
-              "application/json": {
-                "schema": { "type": "string" },
-                "example": {
-                  "success": true,
-                  "message": "성공했습니다",
-                  "data": [
-                    {
-                      "foodItemId": 1,
-                      "foodName": "김치찌개",
-                      "unreadCount": 3,
-                      "totalCount": 10
-                    },
-                    {
-                      "foodItemId": 2,
-                      "foodName": "된장찌개",
-                      "unreadCount": 0,
-                      "totalCount": 5
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/customer-feedback/me": {
-      "get": {
-        "tags": ["고객 피드백"],
-        "summary": "내 피드백 목록 조회",
-        "description": "현재 로그인한 고객이 작성한 모든 피드백을 페이징으로 조회합니다. 내가 방문한 매장들에 대한 피드백 내역을 확인할 수 있습니다. 기본 20개씩 최신 순으로 정렬됩니다.",
-        "operationId": "getMyFeedbacks",
-        "parameters": [
-          {
-            "name": "pageable",
-            "in": "query",
-            "required": true,
-            "schema": { "$ref": "#/components/schemas/Pageable" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "내 피드백 목록 조회 성공",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/PageResponse" },
-                "example": {
-                  "success": true,
-                  "message": "성공했습니다",
-                  "data": {
-                    "content": [
-                      {
-                        "id": 1,
-                        "storeId": 1,
-                        "storeName": "맛집",
-                        "foodId": 1,
-                        "foodName": "지리산",
-                        "photoUrls": ["https://s3.../photo1.jpg"],
-                        "createdAt": "2024-01-01T10:00:00"
-                      }
-                    ],
-                    "page": 0,
-                    "size": 20,
-                    "totalElements": 50,
-                    "totalPages": 3,
-                    "hasNext": true,
-                    "hasPrevious": false
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "인증이 필요합니다",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponsePageResponseCustomerFeedbackResponse"
                 }
               }
             }
@@ -2187,64 +1133,10 @@
           }
         }
       }
-    },
-    "/api/campaigns/{id}": {
-      "get": {
-        "tags": ["Campaign"],
-        "summary": "캠페인 상세 조회",
-        "description": "캠페인의 상세 정보를 조회합니다",
-        "operationId": "getCampaign",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "format": "int64" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "캠페인 조회 성공",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseCampaignDetailResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "캠페인을 찾을 수 없음",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseCampaignDetailResponse"
-                }
-              }
-            }
-          }
-        }
-      }
     }
   },
   "components": {
     "schemas": {
-      "CustomerTasteDto": {
-        "type": "object",
-        "properties": {
-          "spicyLevel": { "type": "integer", "format": "int32" },
-          "mealAmount": { "type": "integer", "format": "int32" },
-          "mealSpending": { "type": "integer", "format": "int32" }
-        }
-      },
-      "ApiResponseCustomerTasteDto": {
-        "type": "object",
-        "properties": {
-          "code": { "type": "integer", "format": "int32" },
-          "message": { "type": "string" },
-          "result": { "$ref": "#/components/schemas/CustomerTasteDto" }
-        }
-      },
       "StoreRequest": {
         "required": ["storeName"],
         "type": "object",
@@ -2273,6 +1165,31 @@
             "type": "string",
             "description": "쿠팡이츠 링크",
             "example": "https://coupangeats.com/store/12345"
+          },
+          "naverLink": {
+            "type": "string",
+            "description": "네이버 지도 링크",
+            "example": "https://map.naver.com/v5/entry/place/12345"
+          },
+          "kakaoLink": {
+            "type": "string",
+            "description": "카카오맵 링크",
+            "example": "https://place.map.kakao.com/12345"
+          },
+          "instagramLink": {
+            "type": "string",
+            "description": "인스타그램 링크",
+            "example": "https://instagram.com/store_account"
+          },
+          "kakaoTalkLink": {
+            "type": "string",
+            "description": "카카오톡 채널 링크",
+            "example": "https://pf.kakao.com/_store"
+          },
+          "siteLink": {
+            "type": "string",
+            "description": "사이트 링크 (URL 경로용)",
+            "example": "우리집냉면"
           },
           "description": {
             "type": "string",
@@ -2324,21 +1241,55 @@
             "description": "쿠팡이츠 링크",
             "example": "https://www.coupang.com/restaurant/12345"
           },
+          "naverLink": {
+            "type": "string",
+            "description": "네이버 지도 링크",
+            "example": "https://map.naver.com/v5/entry/place/12345"
+          },
+          "kakaoLink": {
+            "type": "string",
+            "description": "카카오맵 링크",
+            "example": "https://place.map.kakao.com/12345"
+          },
+          "instagramLink": {
+            "type": "string",
+            "description": "인스타그램 링크",
+            "example": "https://instagram.com/store_account"
+          },
+          "kakaoTalkLink": {
+            "type": "string",
+            "description": "카카오톡 채널 링크",
+            "example": "https://pf.kakao.com/_store"
+          },
+          "siteLink": {
+            "type": "string",
+            "description": "사이트 링크 (URL 경로용)",
+            "example": "우리집냉면"
+          },
           "description": {
             "type": "string",
             "description": "가게 설명",
             "example": "저희 가게는 신선한 재료로 음식을 만듭니다."
+          },
+          "feedbackCount": {
+            "type": "integer",
+            "description": "피드백 개수",
+            "format": "int64",
+            "example": 42
+          },
+          "menuCount": {
+            "type": "integer",
+            "description": "메뉴 개수",
+            "format": "int64",
+            "example": 15
+          },
+          "thumbnailUrl": {
+            "type": "string",
+            "description": "썸네일 URL",
+            "example": "https://chalpu.s3.ap-northeast-2.amazonaws.com/stores/1/thumbnail.jpg"
           }
         },
         "description": "매장 응답"
-      },
-      "ApiResponseVoid": {
-        "type": "object",
-        "properties": {
-          "code": { "type": "integer", "format": "int32" },
-          "message": { "type": "string" },
-          "result": { "type": "object" }
-        }
       },
       "FoodItemRequest": {
         "required": ["foodName"],
@@ -2422,6 +1373,12 @@
             "type": "string",
             "description": "수정 시간",
             "format": "date-time"
+          },
+          "feedbackCount": {
+            "type": "integer",
+            "description": "피드백 개수",
+            "format": "int64",
+            "example": 23
           }
         },
         "description": "음식 응답"
@@ -2444,6 +1401,14 @@
           }
         },
         "description": "다건 피드백 읽음 처리 요청"
+      },
+      "ApiResponseVoid": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "format": "int32" },
+          "message": { "type": "string" },
+          "result": { "type": "object" }
+        }
       },
       "UpdateCampaignRequest": {
         "required": ["campaignId", "name", "targetDays", "targetFeedbackCount"],
@@ -2565,205 +1530,6 @@
         },
         "description": "멤버 응답"
       },
-      "RewardRedemptionRequest": {
-        "type": "object",
-        "properties": {
-          "rewardId": {
-            "type": "integer",
-            "description": "리워드 ID",
-            "format": "int64",
-            "example": 1
-          }
-        },
-        "description": "리워드 교환 요청"
-      },
-      "RewardRedemptionResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "description": "교환 ID",
-            "format": "int64",
-            "example": 1
-          },
-          "rewardName": {
-            "type": "string",
-            "description": "리워드 이름",
-            "example": "올리브영 1만원 상품권"
-          },
-          "rewardCount": {
-            "type": "integer",
-            "description": "교환 시 리워드 카운트",
-            "format": "int32",
-            "example": 10
-          },
-          "status": {
-            "type": "string",
-            "description": "교환 상태",
-            "example": "ISSUED",
-            "enum": ["ISSUED", "USED", "CANCELLED"]
-          },
-          "redeemedAt": {
-            "type": "string",
-            "description": "교환일시",
-            "format": "date-time"
-          }
-        },
-        "description": "리워드 교환 응답"
-      },
-      "ApiResponseRewardRedemptionResponse": {
-        "type": "object",
-        "properties": {
-          "code": { "type": "integer", "format": "int32" },
-          "message": { "type": "string" },
-          "result": { "$ref": "#/components/schemas/RewardRedemptionResponse" }
-        }
-      },
-      "PhotoUploadRequest": {
-        "type": "object",
-        "properties": {
-          "fileName": {
-            "type": "string",
-            "description": "업로드할 파일의 원본 이름",
-            "example": "kimchi-stew.jpg"
-          }
-        },
-        "description": "사진 업로드를 위한 Presigned URL 요청"
-      },
-      "ApiResponsePhotoPresignedUrlResponse": {
-        "type": "object",
-        "properties": {
-          "code": { "type": "integer", "format": "int32" },
-          "message": { "type": "string" },
-          "result": { "$ref": "#/components/schemas/PhotoPresignedUrlResponse" }
-        }
-      },
-      "PhotoPresignedUrlResponse": {
-        "type": "object",
-        "properties": {
-          "presignedUrl": {
-            "type": "string",
-            "description": "S3에 업로드할 때 사용할, 유효기간이 설정된 URL"
-          },
-          "s3Key": {
-            "type": "string",
-            "description": "업로드 후 S3에 저장될 파일의 고유 키. 업로드 완료 API 호출 시 필요.",
-            "example": "photos/stores/1/a1b2c3d4-e5f6-7890-1234-567890abcdef.jpg"
-          }
-        },
-        "description": "Presigned URL 발급 응답"
-      },
-      "PhotoRegisterRequest": {
-        "type": "object",
-        "properties": {
-          "s3Key": {
-            "type": "string",
-            "description": "Presigned URL 발급 시 받았던 S3 파일 키",
-            "example": "platform/a1b2c3d4-e5f6-7890-1234-567890abcdef.jpg"
-          },
-          "fileName": {
-            "type": "string",
-            "description": "업로드한 파일의 원본 이름",
-            "example": "kimchi-stew.jpg"
-          },
-          "foodItemId": {
-            "type": "integer",
-            "description": "사진이 속한 음식 아이템의 ID (선택)",
-            "format": "int64",
-            "example": 10
-          },
-          "fileSize": {
-            "type": "integer",
-            "description": "파일 크기 (bytes)",
-            "format": "int32",
-            "example": 3145728
-          },
-          "imageWidth": {
-            "type": "integer",
-            "description": "이미지 가로 길이 (px)",
-            "format": "int32",
-            "example": 1920
-          },
-          "imageHeight": {
-            "type": "integer",
-            "description": "이미지 세로 길이 (px)",
-            "format": "int32",
-            "example": 1080
-          }
-        },
-        "description": "S3 업로드 완료 후 사진 정보 등록 요청"
-      },
-      "ApiResponsePhotoResponse": {
-        "type": "object",
-        "properties": {
-          "code": { "type": "integer", "format": "int32" },
-          "message": { "type": "string" },
-          "result": { "$ref": "#/components/schemas/PhotoResponse" }
-        }
-      },
-      "PhotoResponse": {
-        "type": "object",
-        "properties": {
-          "photoId": {
-            "type": "integer",
-            "description": "사진 ID",
-            "format": "int64",
-            "example": 1
-          },
-          "storeId": {
-            "type": "integer",
-            "description": "매장 ID",
-            "format": "int64",
-            "example": 1
-          },
-          "userId": {
-            "type": "integer",
-            "description": "사용자 ID",
-            "format": "int64",
-            "example": 1
-          },
-          "foodItemId": {
-            "type": "integer",
-            "description": "음식 ID",
-            "format": "int64",
-            "example": 1
-          },
-          "imageUrl": {
-            "type": "string",
-            "description": "CloudFront를 통해 접근 가능한 이미지 전체 URL",
-            "example": "https://cdn.chalpu.com/photos/stores/1/image.jpg"
-          },
-          "fileName": {
-            "type": "string",
-            "description": "원본 파일명",
-            "example": "image.jpg"
-          },
-          "fileSize": {
-            "type": "integer",
-            "description": "파일 크기 (bytes)",
-            "format": "int32",
-            "example": 1024
-          },
-          "imageWidth": {
-            "type": "integer",
-            "description": "이미지 너비 (px)",
-            "format": "int32",
-            "example": 1920
-          },
-          "imageHeight": {
-            "type": "integer",
-            "description": "이미지 높이 (px)",
-            "format": "int32",
-            "example": 1080
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "생성 시간",
-            "format": "date-time"
-          }
-        },
-        "description": "사진 응답"
-      },
       "ApiResponseFoodItemExtractionStartResponse": {
         "type": "object",
         "properties": {
@@ -2779,297 +1545,6 @@
         "properties": {
           "requestId": { "type": "string" },
           "message": { "type": "string" }
-        }
-      },
-      "FeedbackCreateRequest": {
-        "type": "object",
-        "properties": {
-          "foodId": {
-            "type": "integer",
-            "description": "음식 ID",
-            "format": "int64",
-            "example": 1
-          },
-          "storeId": {
-            "type": "integer",
-            "description": "매장 ID",
-            "format": "int64",
-            "example": 1
-          },
-          "surveyId": {
-            "type": "integer",
-            "description": "설문 ID",
-            "format": "int64",
-            "example": 1
-          },
-          "campaignId": {
-            "type": "integer",
-            "description": "캠페인 ID (선택적)",
-            "format": "int64",
-            "nullable": true,
-            "example": 1
-          },
-          "surveyAnswers": {
-            "type": "array",
-            "description": "설문 답변 목록",
-            "items": { "$ref": "#/components/schemas/SurveyAnswerRequest" }
-          },
-          "photoS3Keys": {
-            "type": "array",
-            "description": "피드백 사진 목록",
-            "items": { "type": "string", "description": "피드백 사진 목록" }
-          }
-        },
-        "description": "피드백 생성 요청"
-      },
-      "SurveyAnswerRequest": {
-        "type": "object",
-        "properties": {
-          "questionId": {
-            "type": "integer",
-            "description": "질문 ID",
-            "format": "int64",
-            "example": 1
-          },
-          "answerText": {
-            "type": "string",
-            "description": "텍스트 답변 (TEXT 타입 질문용)",
-            "example": "음식이 매우 맛있었습니다"
-          },
-          "numericValue": {
-            "type": "number",
-            "description": "숫자 응답 (SLIDER: -2.0~2.0, RATING: 0~10)",
-            "format": "float",
-            "example": 1.5
-          }
-        },
-        "description": "설문 답변 요청"
-      },
-      "FeedbackResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "description": "피드백 ID",
-            "format": "int64",
-            "example": 1
-          },
-          "userId": {
-            "type": "integer",
-            "description": "사용자 ID",
-            "format": "int64",
-            "example": 1
-          },
-          "foodName": {
-            "type": "string",
-            "description": "음식 이름",
-            "example": "김치찌개"
-          },
-          "storeName": {
-            "type": "string",
-            "description": "매장 이름",
-            "example": "맛있는집"
-          },
-          "userNickname": {
-            "type": "string",
-            "description": "사용자 닉네임",
-            "example": "음식러버"
-          },
-          "surveyName": {
-            "type": "string",
-            "description": "설문 이름",
-            "example": "음식 만족도 조사"
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "피드백 생성일",
-            "format": "date-time"
-          },
-          "ownerMessage": {
-            "type": "string",
-            "description": "사장님께 한마디 (9번 질문 답변)",
-            "example": "충분히 맛있었습니다. 감자튀김이 약간 눅눅한 감이 있어서..."
-          },
-          "photoUrls": {
-            "type": "array",
-            "description": "피드백 사진 목록",
-            "items": { "type": "string", "description": "피드백 사진 목록" }
-          },
-          "isViewed": {
-            "type": "boolean",
-            "description": "사장님이 피드백을 조회했는지 여부",
-            "example": false
-          },
-          "spicyLevel": {
-            "type": "integer",
-            "description": "고객 매운맛 선호도 (1-5)",
-            "format": "int32",
-            "example": 3
-          },
-          "mealAmount": {
-            "type": "integer",
-            "description": "고객 식사량 (1-5)",
-            "format": "int32",
-            "example": 4
-          },
-          "mealSpending": {
-            "type": "integer",
-            "description": "고객 식사 지출 정도 (1-5)",
-            "format": "int32",
-            "example": 3
-          }
-        },
-        "description": "피드백 응답"
-      },
-      "ApiResponseCustomerFeedbackResponse": {
-        "type": "object",
-        "properties": {
-          "code": { "type": "integer", "format": "int32" },
-          "message": { "type": "string" },
-          "result": { "$ref": "#/components/schemas/CustomerFeedbackResponse" }
-        }
-      },
-      "CustomerFeedbackResponse": {
-        "type": "object",
-        "properties": {
-          "feedbackId": {
-            "type": "integer",
-            "description": "피드백 ID",
-            "format": "int64",
-            "example": 1
-          },
-          "foodName": {
-            "type": "string",
-            "description": "음식 이름",
-            "example": "김치찌개"
-          },
-          "storeName": {
-            "type": "string",
-            "description": "매장 이름",
-            "example": "맛있는집"
-          },
-          "surveyName": {
-            "type": "string",
-            "description": "설문 이름",
-            "example": "음식 만족도 조사"
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "피드백 생성일",
-            "format": "date-time"
-          },
-          "surveyAnswers": {
-            "type": "array",
-            "description": "설문 답변 목록",
-            "items": { "$ref": "#/components/schemas/SurveyAnswerResponse" }
-          },
-          "photoUrls": {
-            "type": "array",
-            "description": "피드백 사진 목록",
-            "items": { "type": "string", "description": "피드백 사진 목록" }
-          }
-        },
-        "description": "고객용 피드백 응답 (본인 피드백만)"
-      },
-      "SurveyAnswerResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "description": "답변 ID",
-            "format": "int64",
-            "example": 1
-          },
-          "questionId": {
-            "type": "integer",
-            "description": "질문 ID",
-            "format": "int64",
-            "example": 1
-          },
-          "questionText": {
-            "type": "string",
-            "description": "질문 내용",
-            "example": "음식의 맛은 어떠셨나요?"
-          },
-          "questionType": {
-            "type": "string",
-            "description": "질문 타입",
-            "example": "SLIDER",
-            "enum": ["SLIDER", "TEXT", "RATING", "NPS_RECOMMEND", "NPS_REORDER"]
-          },
-          "answerText": {
-            "type": "string",
-            "description": "텍스트 답변 (TEXT 타입용)",
-            "example": "매우 맛있었습니다"
-          },
-          "numericValue": {
-            "type": "number",
-            "description": "숫자 응답 (SLIDER/RATING 타입용)",
-            "format": "float",
-            "example": 1.5
-          }
-        },
-        "description": "설문 답변 응답"
-      },
-      "FeedbackPhotosUploadRequest": {
-        "type": "object",
-        "properties": {
-          "fileNames": {
-            "type": "array",
-            "description": "업로드할 파일들의 원본 이름 목록",
-            "example": [
-              "feedback-food-1.jpg",
-              "feedback-food-2.jpg",
-              "feedback-food-3.jpg"
-            ],
-            "items": {
-              "type": "string",
-              "description": "업로드할 파일들의 원본 이름 목록",
-              "example": "[\"feedback-food-1.jpg\",\"feedback-food-2.jpg\",\"feedback-food-3.jpg\"]"
-            }
-          }
-        },
-        "description": "피드백 사진들 업로드를 위한 Presigned URL 요청"
-      },
-      "FeedbackPhotoUrlInfo": {
-        "type": "object",
-        "properties": {
-          "originalFileName": {
-            "type": "string",
-            "description": "원본 파일명",
-            "example": "feedback-food-1.jpg"
-          },
-          "presignedUrl": {
-            "type": "string",
-            "description": "S3에 업로드할 때 사용할, 유효기간이 설정된 URL"
-          },
-          "s3Key": {
-            "type": "string",
-            "description": "업로드 후 S3에 저장될 파일의 고유 키. 피드백 생성 API 호출 시 필요.",
-            "example": "feedback-photos/a1b2c3d4-e5f6-7890-1234-567890abcdef.jpg"
-          }
-        },
-        "description": "개별 사진 업로드 정보"
-      },
-      "FeedbackPhotosPresignedUrlResponse": {
-        "type": "object",
-        "properties": {
-          "photoUrls": {
-            "type": "array",
-            "description": "각 파일별 presigned URL과 S3 키 정보",
-            "items": { "$ref": "#/components/schemas/FeedbackPhotoUrlInfo" }
-          }
-        },
-        "description": "피드백 사진들 Presigned URL 발급 응답"
-      },
-      "ApiResponseFeedbackPhotosPresignedUrlResponse": {
-        "type": "object",
-        "properties": {
-          "code": { "type": "integer", "format": "int32" },
-          "message": { "type": "string" },
-          "result": {
-            "$ref": "#/components/schemas/FeedbackPhotosPresignedUrlResponse"
-          }
         }
       },
       "CreateCampaignRequest": {
@@ -3312,60 +1787,6 @@
         },
         "description": "페이지네이션 응답"
       },
-      "CodeExchangeRequest": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string",
-            "description": "인증 코드",
-            "example": "abc123-def456-ghi789"
-          }
-        },
-        "description": "인증 코드 교환 요청"
-      },
-      "ApiResponseTokenExchangeResponse": {
-        "type": "object",
-        "properties": {
-          "code": { "type": "integer", "format": "int32" },
-          "message": { "type": "string" },
-          "result": { "$ref": "#/components/schemas/TokenExchangeResponse" }
-        }
-      },
-      "TokenExchangeResponse": {
-        "type": "object",
-        "properties": {
-          "accessToken": {
-            "type": "string",
-            "description": "액세스 토큰",
-            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-          },
-          "role": {
-            "type": "string",
-            "description": "사용자 역할",
-            "example": "ROLE_CUSTOMER"
-          }
-        },
-        "description": "토큰 교환 응답"
-      },
-      "AccessTokenDTO": {
-        "type": "object",
-        "properties": {
-          "accessToken": {
-            "type": "string",
-            "description": "액세스 토큰",
-            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-          }
-        },
-        "description": "액세스 토큰 정보 (토큰 갱신용)"
-      },
-      "ApiResponseAccessTokenDTO": {
-        "type": "object",
-        "properties": {
-          "code": { "type": "integer", "format": "int32" },
-          "message": { "type": "string" },
-          "result": { "$ref": "#/components/schemas/AccessTokenDTO" }
-        }
-      },
       "ChangeCampaignStatusRequest": {
         "required": ["campaignId", "status"],
         "type": "object",
@@ -3384,33 +1805,6 @@
           }
         },
         "description": "캠페인 상태 변경 요청"
-      },
-      "ApiResponseUserDto": {
-        "type": "object",
-        "properties": {
-          "code": { "type": "integer", "format": "int32" },
-          "message": { "type": "string" },
-          "result": { "$ref": "#/components/schemas/UserDto" }
-        }
-      },
-      "UserDto": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "integer", "format": "int64" },
-          "email": { "type": "string" },
-          "name": { "type": "string" },
-          "profileImageUrl": { "type": "string" },
-          "provider": { "type": "string" },
-          "role": { "type": "string" }
-        }
-      },
-      "ApiResponseString": {
-        "type": "object",
-        "properties": {
-          "code": { "type": "integer", "format": "int32" },
-          "message": { "type": "string" },
-          "result": { "type": "string" }
-        }
       },
       "ApiResponseListMemberResponse": {
         "type": "object",
@@ -3438,138 +1832,6 @@
             "type": "array",
             "description": "데이터 목록",
             "items": { "$ref": "#/components/schemas/StoreResponse" }
-          },
-          "page": {
-            "type": "integer",
-            "description": "현재 페이지 번호 (0부터 시작)",
-            "format": "int32",
-            "example": 0
-          },
-          "size": {
-            "type": "integer",
-            "description": "페이지 크기",
-            "format": "int32",
-            "example": 20
-          },
-          "totalElements": {
-            "type": "integer",
-            "description": "전체 요소 수",
-            "format": "int64",
-            "example": 100
-          },
-          "totalPages": {
-            "type": "integer",
-            "description": "전체 페이지 수",
-            "format": "int32",
-            "example": 5
-          },
-          "hasNext": {
-            "type": "boolean",
-            "description": "다음 페이지 존재 여부",
-            "example": true
-          },
-          "hasPrevious": {
-            "type": "boolean",
-            "description": "이전 페이지 존재 여부",
-            "example": false
-          }
-        },
-        "description": "페이지네이션 응답"
-      },
-      "ApiResponseListRewardRedemptionResponse": {
-        "type": "object",
-        "properties": {
-          "code": { "type": "integer", "format": "int32" },
-          "message": { "type": "string" },
-          "result": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/RewardRedemptionResponse" }
-          }
-        }
-      },
-      "ApiResponseListRewardResponse": {
-        "type": "object",
-        "properties": {
-          "code": { "type": "integer", "format": "int32" },
-          "message": { "type": "string" },
-          "result": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/RewardResponse" }
-          }
-        }
-      },
-      "RewardResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "description": "리워드 ID",
-            "format": "int64",
-            "example": 1
-          },
-          "rewardName": {
-            "type": "string",
-            "description": "리워드 이름",
-            "example": "올리브영 1만원 상품권"
-          },
-          "rewardType": {
-            "type": "string",
-            "description": "리워드 타입",
-            "example": "coupon"
-          },
-          "rewardValue": {
-            "type": "integer",
-            "description": "리워드 가치",
-            "format": "int32",
-            "example": 10000
-          },
-          "requiredCount": {
-            "type": "integer",
-            "description": "필요한 리워드 카운트",
-            "format": "int32",
-            "example": 5
-          },
-          "description": {
-            "type": "string",
-            "description": "리워드 설명",
-            "example": "올리브영에서 사용 가능한 1만원 상품권"
-          },
-          "expiryDate": {
-            "type": "string",
-            "description": "유효 기간",
-            "format": "date"
-          },
-          "available": {
-            "type": "boolean",
-            "description": "사용 가능 여부",
-            "example": true
-          }
-        },
-        "description": "리워드 정보"
-      },
-      "ApiResponseBoolean": {
-        "type": "object",
-        "properties": {
-          "code": { "type": "integer", "format": "int32" },
-          "message": { "type": "string" },
-          "result": { "type": "boolean" }
-        }
-      },
-      "ApiResponsePageResponsePhotoResponse": {
-        "type": "object",
-        "properties": {
-          "code": { "type": "integer", "format": "int32" },
-          "message": { "type": "string" },
-          "result": { "$ref": "#/components/schemas/PageResponsePhotoResponse" }
-        }
-      },
-      "PageResponsePhotoResponse": {
-        "type": "object",
-        "properties": {
-          "content": {
-            "type": "array",
-            "description": "데이터 목록",
-            "items": { "$ref": "#/components/schemas/PhotoResponse" }
           },
           "page": {
             "type": "integer",
@@ -3701,61 +1963,6 @@
           "levelDescription": { "type": "string" }
         }
       },
-      "ApiResponsePageResponseFoodItemResponse": {
-        "type": "object",
-        "properties": {
-          "code": { "type": "integer", "format": "int32" },
-          "message": { "type": "string" },
-          "result": {
-            "$ref": "#/components/schemas/PageResponseFoodItemResponse"
-          }
-        }
-      },
-      "PageResponseFoodItemResponse": {
-        "type": "object",
-        "properties": {
-          "content": {
-            "type": "array",
-            "description": "데이터 목록",
-            "items": { "$ref": "#/components/schemas/FoodItemResponse" }
-          },
-          "page": {
-            "type": "integer",
-            "description": "현재 페이지 번호 (0부터 시작)",
-            "format": "int32",
-            "example": 0
-          },
-          "size": {
-            "type": "integer",
-            "description": "페이지 크기",
-            "format": "int32",
-            "example": 20
-          },
-          "totalElements": {
-            "type": "integer",
-            "description": "전체 요소 수",
-            "format": "int64",
-            "example": 100
-          },
-          "totalPages": {
-            "type": "integer",
-            "description": "전체 페이지 수",
-            "format": "int32",
-            "example": 5
-          },
-          "hasNext": {
-            "type": "boolean",
-            "description": "다음 페이지 존재 여부",
-            "example": true
-          },
-          "hasPrevious": {
-            "type": "boolean",
-            "description": "이전 페이지 존재 여부",
-            "example": false
-          }
-        },
-        "description": "페이지네이션 응답"
-      },
       "ApiResponseFoodItemExtractionStatusResponse": {
         "type": "object",
         "properties": {
@@ -3777,6 +1984,82 @@
           "startedAt": { "type": "string", "format": "date-time" },
           "completedAt": { "type": "string", "format": "date-time" }
         }
+      },
+      "FeedbackResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "피드백 ID",
+            "format": "int64",
+            "example": 1
+          },
+          "userId": {
+            "type": "integer",
+            "description": "사용자 ID",
+            "format": "int64",
+            "example": 1
+          },
+          "foodName": {
+            "type": "string",
+            "description": "음식 이름",
+            "example": "김치찌개"
+          },
+          "storeName": {
+            "type": "string",
+            "description": "매장 이름",
+            "example": "맛있는집"
+          },
+          "userNickname": {
+            "type": "string",
+            "description": "사용자 닉네임",
+            "example": "음식러버"
+          },
+          "surveyName": {
+            "type": "string",
+            "description": "설문 이름",
+            "example": "음식 만족도 조사"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "피드백 생성일",
+            "format": "date-time"
+          },
+          "ownerMessage": {
+            "type": "string",
+            "description": "사장님께 한마디 (9번 질문 답변)",
+            "example": "충분히 맛있었습니다. 감자튀김이 약간 눅눅한 감이 있어서..."
+          },
+          "photoUrls": {
+            "type": "array",
+            "description": "피드백 사진 목록",
+            "items": { "type": "string", "description": "피드백 사진 목록" }
+          },
+          "isViewed": {
+            "type": "boolean",
+            "description": "사장님이 피드백을 조회했는지 여부",
+            "example": false
+          },
+          "spicyLevel": {
+            "type": "integer",
+            "description": "고객 매운맛 선호도 (1-5)",
+            "format": "int32",
+            "example": 3
+          },
+          "mealAmount": {
+            "type": "integer",
+            "description": "고객 식사량 (1-5)",
+            "format": "int32",
+            "example": 4
+          },
+          "mealSpending": {
+            "type": "integer",
+            "description": "고객 식사 지출 정도 (1-5)",
+            "format": "int32",
+            "example": 3
+          }
+        },
+        "description": "피드백 응답"
       },
       "ApiResponseOwnerFeedbackResponse": {
         "type": "object",
@@ -4003,156 +2286,6 @@
           }
         },
         "description": "음식별 읽지 않은 피드백 개수 응답"
-      },
-      "ApiResponsePageResponseCustomerFeedbackResponse": {
-        "type": "object",
-        "properties": {
-          "code": { "type": "integer", "format": "int32" },
-          "message": { "type": "string" },
-          "result": {
-            "$ref": "#/components/schemas/PageResponseCustomerFeedbackResponse"
-          }
-        }
-      },
-      "PageResponseCustomerFeedbackResponse": {
-        "type": "object",
-        "properties": {
-          "content": {
-            "type": "array",
-            "description": "데이터 목록",
-            "items": { "$ref": "#/components/schemas/CustomerFeedbackResponse" }
-          },
-          "page": {
-            "type": "integer",
-            "description": "현재 페이지 번호 (0부터 시작)",
-            "format": "int32",
-            "example": 0
-          },
-          "size": {
-            "type": "integer",
-            "description": "페이지 크기",
-            "format": "int32",
-            "example": 20
-          },
-          "totalElements": {
-            "type": "integer",
-            "description": "전체 요소 수",
-            "format": "int64",
-            "example": 100
-          },
-          "totalPages": {
-            "type": "integer",
-            "description": "전체 페이지 수",
-            "format": "int32",
-            "example": 5
-          },
-          "hasNext": {
-            "type": "boolean",
-            "description": "다음 페이지 존재 여부",
-            "example": true
-          },
-          "hasPrevious": {
-            "type": "boolean",
-            "description": "이전 페이지 존재 여부",
-            "example": false
-          }
-        },
-        "description": "페이지네이션 응답"
-      },
-      "ApiResponseCampaignDetailResponse": {
-        "type": "object",
-        "properties": {
-          "code": { "type": "integer", "format": "int32" },
-          "message": { "type": "string" },
-          "result": { "$ref": "#/components/schemas/CampaignDetailResponse" }
-        }
-      },
-      "CampaignDetailResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "description": "캠페인 ID",
-            "format": "int64",
-            "example": 1
-          },
-          "name": {
-            "type": "string",
-            "description": "캠페인 이름",
-            "example": "신메뉴 런칭 캠페인"
-          },
-          "description": {
-            "type": "string",
-            "description": "캠페인 설명",
-            "example": "신메뉴 출시를 기념하여 고객 피드백을 수집합니다"
-          },
-          "storeId": {
-            "type": "integer",
-            "description": "매장 ID",
-            "format": "int64",
-            "example": 1
-          },
-          "storeName": {
-            "type": "string",
-            "description": "매장명",
-            "example": "맛있는 식당"
-          },
-          "foodItemId": {
-            "type": "integer",
-            "description": "음식 ID",
-            "format": "int64",
-            "example": 5
-          },
-          "foodItemName": {
-            "type": "string",
-            "description": "음식명",
-            "example": "김치찌개"
-          },
-          "foodItemThumbnailUrl": {
-            "type": "string",
-            "description": "음식 썸네일 이미지 URL",
-            "example": "https://s3.amazonaws.com/bucket/food-thumbnail.jpg"
-          },
-          "targetFeedbackCount": {
-            "type": "integer",
-            "description": "목표 피드백 수",
-            "format": "int32",
-            "example": 100
-          },
-          "currentFeedbackCount": {
-            "type": "integer",
-            "description": "현재 피드백 수",
-            "format": "int32",
-            "example": 45
-          },
-          "status": {
-            "type": "string",
-            "description": "캠페인 상태",
-            "example": "활성"
-          },
-          "isActive": {
-            "type": "boolean",
-            "description": "활성 여부",
-            "example": true
-          },
-          "targetDays": {
-            "type": "integer",
-            "description": "캠페인 진행 일수",
-            "format": "int32",
-            "example": 10
-          },
-          "startDate": {
-            "type": "string",
-            "description": "캠페인 시작일",
-            "format": "date-time"
-          },
-          "endDate": {
-            "type": "string",
-            "description": "캠페인 종료일",
-            "format": "date-time"
-          }
-        },
-        "description": "캠페인 상세 응답"
       },
       "DeleteCampaignRequest": {
         "required": ["campaignId"],

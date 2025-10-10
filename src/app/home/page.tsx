@@ -8,11 +8,11 @@ import Image from "next/image";
 import { useFoodsByStore } from "@/lib/hooks/useFood";
 import { useRecentReviews } from "@/lib/hooks/useFeedback";
 import { useMyStores } from "@/lib/hooks/useStore";
-import { CampaignCardCompact } from "@/components/campaign-card-compact";
-import { useGetCampaignsByStore, calculateRemainingDays } from "@/lib/hooks/useCampaign";
+// import { CampaignCardCompact } from "@/components/campaign-card-compact";
+// import { useGetCampaignsByStore, calculateRemainingDays } from "@/lib/hooks/useCampaign";
 
 // Mock image placeholder (using local asset instead of localhost)
-const imgKimchi = "/kimchi.png";
+// const imgKimchi = "/kimchi.png";
 
 // Mock data for menu items with real images (unused - kept for reference)
 // const mockMenuData = [
@@ -51,24 +51,24 @@ export default function Page() {
   const storeId = currentStore?.storeId;
 
   // 진행중인 캠페인 데이터 가져오기
-  const { data: campaignsData } = useGetCampaignsByStore(
-    storeId!,
-    "ACTIVE",
-    0,
-    20,
-    !!storeId
-  );
+  // const { data: campaignsData } = useGetCampaignsByStore(
+  //   storeId!,
+  //   "ACTIVE",
+  //   0,
+  //   20,
+  //   !!storeId
+  // );
 
-  // API 데이터를 UI 형식으로 변환
-  const campaigns = (campaignsData?.content || []).map(campaign => ({
-    id: campaign.id,
-    title: campaign.foodItemName || campaign.name,
-    imageUrl: campaign.foodItemThumbnailUrl || "/kimchi.png",
-    daysRemaining: calculateRemainingDays(campaign.endDate),
-    currentCount: campaign.currentFeedbackCount || 0,
-    totalCount: campaign.targetFeedbackCount,
-    foodItemId: campaign.foodItemId, // 메뉴와 매칭을 위해 추가
-  }))
+  // // API 데이터를 UI 형식으로 변환
+  // const campaigns = (campaignsData?.content || []).map(campaign => ({
+  //   id: campaign.id,
+  //   title: campaign.foodItemName || campaign.name,
+  //   imageUrl: campaign.foodItemThumbnailUrl || "/kimchi.png",
+  //   daysRemaining: calculateRemainingDays(campaign.endDate),
+  //   currentCount: campaign.currentFeedbackCount || 0,
+  //   totalCount: campaign.targetFeedbackCount,
+  //   foodItemId: campaign.foodItemId, // 메뉴와 매칭을 위해 추가
+  // }))
 
   // React Query hooks - only fetch if we have a valid storeId
   const { data: foodsData } = useFoodsByStore(
@@ -84,8 +84,8 @@ export default function Page() {
   const menus =
     foodsData?.content?.slice(0, 7).map((food) => {
       const foodId = food.id || food.foodItemId;
-      // 해당 메뉴에 진행 중인 캠페인이 있는지 확인
-      const hasCampaign = campaigns.some(campaign => campaign.foodItemId === foodId);
+      // // 해당 메뉴에 진행 중인 캠페인이 있는지 확인
+      // const hasCampaign = campaigns.some(campaign => campaign.foodItemId === foodId);
 
       return {
         id: foodId,
@@ -93,8 +93,8 @@ export default function Page() {
           (food.name || food.foodName || "").length > 6
             ? (food.name || food.foodName || "").substring(0, 5) + "..."
             : food.name || food.foodName || "",
-        image: food.photoUrl || food.thumbnailUrl || imgKimchi,
-        hasCampaign: hasCampaign, // 캠페인 진행 여부
+        image: food.photoUrl || food.thumbnailUrl || "/menu_icon.png",
+        // hasCampaign: hasCampaign, // 캠페인 진행 여부
       };
     }) || [];
 
@@ -113,18 +113,18 @@ export default function Page() {
     router.push(`/menu/${menuId}`);
   };
 
-  const handleCampaignView = () => {
-    router.push("/campaign");
-  };
+  // const handleCampaignView = () => {
+  //   router.push("/campaign");
+  // };
 
-  const handleCampaignClick = (campaignId: number) => {
-    // TODO: Navigate to campaign detail page when available
-    console.log(`Campaign ${campaignId} clicked`);
-  };
+  // const handleCampaignClick = (campaignId: number) => {
+  //   // TODO: Navigate to campaign detail page when available
+  //   console.log(`Campaign ${campaignId} clicked`);
+  // };
 
-  const handleAddCampaign = () => {
-    router.push("/campaign/add");
-  };
+  // const handleAddCampaign = () => {
+  //   router.push("/campaign/add");
+  // };
 
   return (
     <div className="bg-white w-full mx-auto py-3">
@@ -138,33 +138,43 @@ export default function Page() {
 
       {/* Store Profile Section */}
       <div className="px-4 py-5 h-21 mt-6 mb-5">
-        <div className="flex items-center gap-3 h-full">
-          <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gray-200">
-            <Image
-              src="/store_icon.png"
-              alt="Profile"
-              width={48}
-              height={48}
-              className="rounded-full"
-            />
+        <div className="flex items-center justify-between h-full">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gray-200">
+              <Image
+                src="/store_icon.png"
+                alt="Profile"
+                width={48}
+                height={48}
+                className="rounded-full"
+              />
+            </div>
+            <div className="flex flex-col">
+              <h2 className="text-sub-title-b text-gray-800">
+                {currentStore?.storeName || mockStoreProfile.name}
+              </h2>
+              <p className="text-sub-body-r text-gray-800 mt-1">
+                안녕하세요 사장님 👨‍🌾
+              </p>
+            </div>
           </div>
-          <div className="flex flex-col">
-            <h2 className="text-sub-title-b text-gray-800">
-              {currentStore?.storeName || mockStoreProfile.name}
-            </h2>
-            <p className="text-sub-body-r text-gray-800 mt-1">
-              안녕하세요 사장님 👨‍🌾
-            </p>
-          </div>
+          {storeId && (
+            <button
+              onClick={() => router.push(`/store/${storeId}/edit`)}
+              className="text-sub-body-sb text-purple-700 px-3 py-2 min-w-[48px] min-h-[44px] flex items-center justify-center"
+            >
+              수정
+            </button>
+          )}
         </div>
       </div>
 
       {/* 캠페인 Section */}
-      <div className="mb-6">
+      {/* <div className="mb-6"> */}
         {/* Campaign Items with 3 conditional states */}
-        {campaigns.length === 0 ? (
-          // Empty state
-          <div className="mx-4 h-48 bg-purple-50 rounded-[12px] flex flex-col items-center justify-center gap-3.5">
+        {/* {campaigns.length === 0 ? ( */}
+          {/* Empty state */}
+          {/* <div className="mx-4 h-48 bg-purple-50 rounded-[12px] flex flex-col items-center justify-center gap-3.5">
             <p className="text-body-r text-black text-center">
               캠페인을 등록한 메뉴는
               <br />
@@ -176,10 +186,10 @@ export default function Page() {
             >
               캠페인 등록하기
             </Button>
-          </div>
-        ) : (
-          // Multiple campaigns with horizontal scroll
-          <>
+          </div> */}
+        {/* ) : ( */}
+          {/* Multiple campaigns with horizontal scroll */}
+          {/* <>
             <div
               className="flex items-center px-4 justify-between mb-5"
               onClick={handleCampaignView}
@@ -195,9 +205,9 @@ export default function Page() {
             </div>
 
             <div className="w-full overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400">
-              <div className="flex w-max pb-2">
+              <div className="flex w-max pb-2"> */}
                 {/* Campaign items with padding on first item */}
-                {campaigns.map((campaign, index) => (
+                {/* {campaigns.map((campaign, index) => (
                   <div
                     key={campaign.id}
                     className={`${index === 0 ? "ml-4" : ""} ${
@@ -209,10 +219,10 @@ export default function Page() {
                       onClick={() => handleCampaignClick(campaign.id)}
                     />
                   </div>
-                ))}
+                ))} */}
 
                 {/* Add card - always show */}
-                <div
+                {/* <div
                   className="flex flex-col items-center justify-center cursor-pointer flex-shrink-0 w-18 h-[194px] bg-purple-50 rounded-[12px] mr-4"
                   onClick={handleAddCampaign}
                 >
@@ -224,7 +234,7 @@ export default function Page() {
             </div>
           </>
         )}
-      </div>
+      </div> */}
 
       {/* Menu Section */}
       <div className="mb-6">
@@ -273,11 +283,11 @@ export default function Page() {
                         height={64}
                       />
                     </div>
-                    {menu.hasCampaign && (
+                    {/* {menu.hasCampaign && (
                       <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-purple-700 rounded-full flex items-center justify-center">
                         <span className="text-white text-caption-b">C</span>
                       </div>
-                    )}
+                    )} */}
                   </div>
                   <p className="text-body-r text-gray-800 mt-2 text-center truncate w-full">
                     {menu.name}
