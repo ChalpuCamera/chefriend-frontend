@@ -262,7 +262,7 @@ export default function Page() {
                     height={20}
                     className="object-contain"
                   />
-                  <span className="text-xs text-gray-700">{platformNames[type]}</span>
+                  <span className="text-xs text-gray-700">{type === "instagramLink" ? externalLinks[type] : platformNames[type]}</span>
                   <button
                     onClick={() => handleLinkRemove(type)}
                     className="ml-1 text-gray-500 hover:text-gray-700"

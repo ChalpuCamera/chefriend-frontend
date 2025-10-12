@@ -29,7 +29,7 @@ const platforms: Platform[] = [
   { key: "baeminLink", name: "배달의민족", icon: "/baemin.png", placeholder: "https://baemin.com/..." },
   { key: "coupangeatsLink", name: "쿠팡이츠", icon: "/coupangeats.png", placeholder: "https://coupangeats.com/..." },
   { key: "kakaoTalkLink", name: "카카오톡 채널", icon: "/kakaotalk.png", placeholder: "https://pf.kakao.com/..." },
-  { key: "instagramLink", name: "인스타그램", icon: "/instagram.png", placeholder: "https://instagram.com/..." },
+  { key: "instagramLink", name: "인스타그램", icon: "/instagram.png", placeholder: "인스타 아이디를 입력해주세요" },
 ];
 
 interface LinkSelectorDialogProps {
