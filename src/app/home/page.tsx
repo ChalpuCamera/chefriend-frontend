@@ -1,13 +1,24 @@
 "use client";
 
-import React from "react";
+import React, { useState, useRef } from "react";
 import { ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useFoodsByStore } from "@/lib/hooks/useFood";
-import { useRecentReviews } from "@/lib/hooks/useFeedback";
-import { useMyStores } from "@/lib/hooks/useStore";
+// import { useRecentReviews } from "@/lib/hooks/useFeedback";
+import { useMyStores, storeKeys } from "@/lib/hooks/useStore";
+import { photoApi } from "@/lib/api/owner/photo";
+import { storeApi } from "@/lib/api/owner/store";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 // import { CampaignCardCompact } from "@/components/campaign-card-compact";
 // import { useGetCampaignsByStore, calculateRemainingDays } from "@/lib/hooks/useCampaign";
 
@@ -37,6 +48,13 @@ const mockStoreProfile = {
 
 export default function Page() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+
+  // Dialog states
+  const [isSiteLinkDialogOpen, setIsSiteLinkDialogOpen] = useState(false);
+  const [isProfileImageDialogOpen, setIsProfileImageDialogOpen] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Get user's stores (첫 번째 가게 우선)
   const { data: storesData } = useMyStores({ size: 10 });
@@ -76,9 +94,9 @@ export default function Page() {
     { size: 7 },
     { enabled: !!storeId }
   );
-  const { data: reviewsData } = useRecentReviews(storeId!, 5, {
-    enabled: !!storeId,
-  });
+  // const { data: reviewsData } = useRecentReviews(storeId!, 5, {
+  //   enabled: !!storeId,
+  // });
 
   // 메뉴 데이터 처리 (최대 7개) - 캠페인 진행 여부 확인
   const menus =
@@ -98,8 +116,8 @@ export default function Page() {
       };
     }) || [];
 
-  // 리뷰 데이터 (ReviewDisplayData 타입)
-  const reviews = reviewsData || [];
+  // 리뷰 데이터 (ReviewDisplayData 타입) - 추후 사용 예정
+  // const reviews = reviewsData || [];
 
   const handleMenuView = () => {
     router.push("/menu");
@@ -111,6 +129,78 @@ export default function Page() {
 
   const handleMenuClick = (menuId: number) => {
     router.push(`/menu/${menuId}`);
+  };
+
+  // 사이트 주소 복사
+  const handleCopySiteLink = async () => {
+    if (currentStore?.siteLink) {
+      try {
+        await navigator.clipboard.writeText(`https://chefriend.kr/${currentStore.siteLink}`);
+        toast.success("사이트 주소가 복사되었습니다!");
+      } catch (error) {
+        console.error("Failed to copy:", error);
+        toast.error("복사에 실패했습니다.");
+      }
+    }
+  };
+
+  // 사이트 보기
+  const handleViewSite = () => {
+    if (currentStore?.siteLink) {
+      window.open(`https://chefriend.kr/${currentStore.siteLink}`, "_blank");
+    }
+  };
+
+  // 프로필 이미지 업로드
+  const handleProfileImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !storeId) {
+      console.log("No file or storeId:", { file: !!file, storeId });
+      return;
+    }
+
+    setIsUploadingImage(true);
+    try {
+      console.log("Starting image upload for store:", storeId);
+
+      // 1. Presigned URL 생성
+      const presignedResponse = await photoApi.getPresignedUrl(file.name);
+      const { presignedUrl, s3Key } = presignedResponse.result;
+      console.log("Got presigned URL, s3Key:", s3Key);
+
+      // 2. S3에 파일 업로드
+      await photoApi.uploadToS3(presignedUrl, file);
+      console.log("Uploaded to S3");
+
+      // 3. 서버에 사진 정보 등록 (foodItemId 없이)
+      const registerResponse = await photoApi.registerPhoto({
+        s3Key,
+        fileName: file.name,
+        fileSize: file.size,
+      });
+
+      const imageUrl = registerResponse.result.imageUrl;
+      console.log("Registered photo, imageUrl:", imageUrl);
+
+      // 4. 가게 대표 사진 설정 API 호출
+      const updateResult = await storeApi.updateStoreThumbnail(storeId, imageUrl);
+      console.log("Store thumbnail updated, result:", updateResult);
+
+      // 5. 캐시 무효화하여 UI 업데이트
+      queryClient.invalidateQueries({ queryKey: storeKeys.detail(storeId) });
+      queryClient.invalidateQueries({ queryKey: storeKeys.lists() });
+
+      toast.success("대표 사진이 변경되었습니다!");
+      setIsProfileImageDialogOpen(false);
+    } catch (error) {
+      console.error("Profile image upload failed:", error);
+      toast.error("사진 업로드에 실패했습니다.");
+    } finally {
+      setIsUploadingImage(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
   };
 
   // const handleCampaignView = () => {
@@ -130,32 +220,72 @@ export default function Page() {
     <div className="bg-white w-full mx-auto py-3">
       {/* Header */}
       <div className="flex items-center justify-between px-4 h-full">
-        <Image src="/logo_small.png" alt="Logo" width={88} height={27} />
+        <Image
+          src="/logo_small.png"
+          alt="Logo"
+          width={88}
+          height={27}
+          quality={100}
+          priority
+        />
         <button className="" onClick={handleSettings}>
-          <Image src="/setting_icon.png" alt="setting" width={20} height={20} />
+          <Image
+            src="/setting_icon.png"
+            alt="setting"
+            width={20}
+            height={20}
+            quality={100}
+          />
         </button>
       </div>
 
       {/* Store Profile Section */}
-      <div className="px-4 py-5 h-21 mt-6 mb-5">
-        <div className="flex items-center justify-between h-full">
+      <div className="px-4 py-5 mt-6 mb-5">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gray-200">
-              <Image
-                src="/store_icon.png"
-                alt="Profile"
-                width={48}
-                height={48}
-                className="rounded-full"
-              />
-            </div>
-            <div className="flex flex-col">
+            {/* 프로필 이미지 - 클릭하여 미리보기 */}
+            <button
+              onClick={() => setIsProfileImageDialogOpen(true)}
+              className="flex items-center justify-center w-16 h-16 rounded-full bg-gray-200 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+            >
+              {currentStore?.thumbnailUrl ? (
+                <Image
+                  src={currentStore.thumbnailUrl}
+                  alt="Profile"
+                  width={64}
+                  height={64}
+                  className="w-full h-full object-cover"
+                  quality={95}
+                  sizes="64px"
+                  unoptimized={currentStore.thumbnailUrl.startsWith('http')}
+                />
+              ) : (
+                <Image
+                  src="/store_icon.png"
+                  alt="Profile"
+                  width={64}
+                  height={64}
+                  quality={100}
+                  className="w-full h-full object-cover"
+                />
+              )}
+            </button>
+            <div className="flex flex-col gap-1">
               <h2 className="text-sub-title-b text-gray-800">
                 {currentStore?.storeName || mockStoreProfile.name}
               </h2>
-              <p className="text-sub-body-r text-gray-800 mt-1">
+              <p className="text-sub-body-r text-gray-800">
                 안녕하세요 사장님 👨‍🌾
               </p>
+              {/* 사이트 주소 - 클릭하여 Dialog 오픈 */}
+              {currentStore?.siteLink && (
+                <button
+                  onClick={() => setIsSiteLinkDialogOpen(true)}
+                  className="text-caption-r text-purple-700 flex items-center gap-1 hover:underline text-left"
+                >
+                  chefriend.kr/{currentStore.siteLink} 🔗
+                </button>
+              )}
             </div>
           </div>
           {storeId && (
@@ -171,10 +301,10 @@ export default function Page() {
 
       {/* 캠페인 Section */}
       {/* <div className="mb-6"> */}
-        {/* Campaign Items with 3 conditional states */}
-        {/* {campaigns.length === 0 ? ( */}
-          {/* Empty state */}
-          {/* <div className="mx-4 h-48 bg-purple-50 rounded-[12px] flex flex-col items-center justify-center gap-3.5">
+      {/* Campaign Items with 3 conditional states */}
+      {/* {campaigns.length === 0 ? ( */}
+      {/* Empty state */}
+      {/* <div className="mx-4 h-48 bg-purple-50 rounded-[12px] flex flex-col items-center justify-center gap-3.5">
             <p className="text-body-r text-black text-center">
               캠페인을 등록한 메뉴는
               <br />
@@ -187,9 +317,9 @@ export default function Page() {
               캠페인 등록하기
             </Button>
           </div> */}
-        {/* ) : ( */}
-          {/* Multiple campaigns with horizontal scroll */}
-          {/* <>
+      {/* ) : ( */}
+      {/* Multiple campaigns with horizontal scroll */}
+      {/* <>
             <div
               className="flex items-center px-4 justify-between mb-5"
               onClick={handleCampaignView}
@@ -206,8 +336,8 @@ export default function Page() {
 
             <div className="w-full overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400">
               <div className="flex w-max pb-2"> */}
-                {/* Campaign items with padding on first item */}
-                {/* {campaigns.map((campaign, index) => (
+      {/* Campaign items with padding on first item */}
+      {/* {campaigns.map((campaign, index) => (
                   <div
                     key={campaign.id}
                     className={`${index === 0 ? "ml-4" : ""} ${
@@ -221,8 +351,8 @@ export default function Page() {
                   </div>
                 ))} */}
 
-                {/* Add card - always show */}
-                {/* <div
+      {/* Add card - always show */}
+      {/* <div
                   className="flex flex-col items-center justify-center cursor-pointer flex-shrink-0 w-18 h-[194px] bg-purple-50 rounded-[12px] mr-4"
                   onClick={handleAddCampaign}
                 >
@@ -281,6 +411,9 @@ export default function Page() {
                         src={menu.image}
                         width={64}
                         height={64}
+                        quality={95}
+                        sizes="64px"
+                        unoptimized={menu.image.startsWith('http')}
                       />
                     </div>
                     {/* {menu.hasCampaign && (
@@ -321,6 +454,7 @@ export default function Page() {
                       alt="more"
                       width={28}
                       height={28}
+                      quality={100}
                     />
                   </div>
                   <p className="text-body-r text-gray-800 mt-2 text-center">
@@ -332,9 +466,19 @@ export default function Page() {
           </div>
         )}
       </div>
-
-      {/* Recent Reviews Section */}
-      <div className="px-4 py-6">
+      <div className="flex flex-col items-center justify-center w-full h-24">
+            
+            <Button
+              onClick={() => {
+                window.open("https://open.kakao.com/o/sCpB58Hh", "_blank");
+              }}
+              className="w-40 h-9 bg-purple-700 text-sub-body-sb text-white rounded-[8px]"
+            >
+              개발자에게 문의하기
+            </Button>
+          </div>
+      {/* 최근 손님 평가 섹션 - 추후 사용 예정 */}
+      {/* <div className="px-4 py-6">
         <h2 className="text-sub-title-b text-gray-800 mb-5">최근 손님 평가</h2>
 
         {reviews.length === 0 ? (
@@ -357,7 +501,6 @@ export default function Page() {
           <div className="space-y-6">
             {reviews.map((review, index) => (
               <div key={`review-${review.id || index}`} className="py-4">
-                {/* Review Header */}
                 <div className="flex items-start gap-3 mb-3">
                   <Image
                     src={review.avatar || "/user_profile.png"}
@@ -375,7 +518,6 @@ export default function Page() {
                         {review.date}
                       </span>
                     </div>
-                    {/* 맛 프로필 */}
                     <div className="flex items-center gap-3 mt-2 text-body-r text-gray-700">
                       <div className="flex items-center gap-1">
                         <span>🍽️ {review.servings}</span>
@@ -390,7 +532,6 @@ export default function Page() {
                   </div>
                 </div>
 
-                {/* Review Content */}
                 <div className="mt-4">
                   <h3 className="text-headline-b text-gray-800 mb-2">
                     {review.menuName}
@@ -403,7 +544,94 @@ export default function Page() {
             ))}
           </div>
         )}
-      </div>
+      </div> */}
+
+      {/* 사이트 주소 Dialog */}
+      <Dialog open={isSiteLinkDialogOpen} onOpenChange={setIsSiteLinkDialogOpen}>
+        <DialogContent className="max-w-[360px]">
+          <DialogHeader>
+            <DialogTitle className="text-title-2 text-gray-800">
+              우리 가게 사이트 주소
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="bg-gray-100 rounded-lg p-4">
+              <p className="text-body-r text-gray-800 break-all">
+                https://chefriend.kr/{currentStore?.siteLink}
+              </p>
+            </div>
+            <DialogFooter className="flex gap-2 sm:justify-center">
+              <Button
+                onClick={handleCopySiteLink}
+                className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300"
+              >
+                복사하기
+              </Button>
+              <Button
+                onClick={handleViewSite}
+                className="flex-1 bg-purple-700 text-white hover:bg-purple-800"
+              >
+                사이트 보기
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 프로필 이미지 미리보기 Dialog */}
+      <Dialog open={isProfileImageDialogOpen} onOpenChange={setIsProfileImageDialogOpen}>
+        <DialogContent className="max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="text-title-2 text-gray-800">
+              대표 사진
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {/* 이미지 미리보기 - cdn에서 가져오는 이미지는 최적화 불필요*/}
+            <div className="w-full aspect-square rounded-lg overflow-hidden bg-gray-100">
+              {currentStore?.thumbnailUrl ? (
+                <img
+                  src={currentStore.thumbnailUrl}
+                  alt="대표 사진"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <Image
+                  src="/store_icon.png"
+                  alt="대표 사진"
+                  width={400}
+                  height={400}
+                  className="w-full h-full object-cover"
+                  quality={100}
+                />
+              )}
+            </div>
+            {/* 히든 파일 input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleProfileImageUpload}
+              className="hidden"
+            />
+            <DialogFooter className="flex gap-2 sm:justify-center">
+              <Button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploadingImage}
+                className="flex-1 bg-purple-700 text-white hover:bg-purple-800"
+              >
+                {isUploadingImage ? "업로드 중..." : "사진 변경하기"}
+              </Button>
+              <Button
+                onClick={() => setIsProfileImageDialogOpen(false)}
+                className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300"
+              >
+                닫기
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

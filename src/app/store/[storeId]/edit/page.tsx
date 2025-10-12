@@ -85,7 +85,7 @@ export default function Page({
 
   // 커스텀 URL 유효성 검사
   const validateSiteLink = (value: string) => {
-    return /^[가-힣a-zA-Z0-9-]+$/.test(value);
+    return /^[가-힣a-zA-Z0-9-_]+$/.test(value);
   };
 
   const handleSiteLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -115,7 +115,7 @@ export default function Page({
     }
 
     if (!validateSiteLink(siteLink)) {
-      setSiteLinkError("한글, 영문, 숫자, 하이픈(-)만 사용 가능합니다");
+      setSiteLinkError("한글, 영문, 숫자, 하이픈(-), 언더바(_) 사용 가능합니다");
       return;
     }
 

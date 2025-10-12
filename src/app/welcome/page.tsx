@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import Image from "next/image";
 import { CustomButton } from "@/components/ui/custom-button";
-import { useCreateStore, useCheckSiteLink } from "@/lib/hooks/useStore";
+import { useCreateStore, useCheckSiteLink, useMyStores } from "@/lib/hooks/useStore";
 import { useRouter } from "next/navigation";
 import { AddressSearch } from "@/components/address-search";
 import { LinkSelectorDialog, PlatformType } from "@/components/link-selector-dialog";
@@ -47,6 +47,14 @@ export default function Page() {
   const router = useRouter();
   const createStoreMutation = useCreateStore();
   const checkSiteLinkMutation = useCheckSiteLink();
+  const { data: myStores } = useMyStores({ page: 0, size: 1 });
+
+  // 이미 가게가 등록되어 있으면 홈으로 리다이렉트
+  useEffect(() => {
+    if (myStores?.content && myStores.content.length > 0) {
+      router.replace("/home");
+    }
+  }, [myStores, router]);
 
   // 커스텀 URL 유효성 검사 (한글/영문/숫자/하이픈만 허용, 공백/특수문자 불가)
   const validateSiteLink = (value: string) => {
