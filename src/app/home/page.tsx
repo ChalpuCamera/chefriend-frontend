@@ -557,7 +557,7 @@ export default function Page() {
           <div className="space-y-4">
             <div className="bg-gray-100 rounded-lg p-4">
               <p className="text-body-r text-gray-800 break-all">
-                https://chefriend.kr/{currentStore?.siteLink}
+                chefriend.kr/{currentStore?.siteLink}
               </p>
             </div>
             <DialogFooter className="flex gap-2 sm:justify-center">
