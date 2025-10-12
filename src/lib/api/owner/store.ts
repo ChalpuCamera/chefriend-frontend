@@ -38,6 +38,13 @@ export const storeApi = {
   updateStore: (storeId: number, data: StoreRequest) =>
     apiClient.put<ApiResponse<StoreResponse>>(`/api/stores/${storeId}`, data),
 
+  // 매장 대표 사진 설정
+  updateStoreThumbnail: (storeId: number, photoUrl: string) =>
+    apiClient.put<ApiResponse<StoreResponse>>(
+      `/api/stores/${storeId}/thumbnail?photoUrl=${encodeURIComponent(photoUrl)}`,
+      null
+    ),
+
   // 매장 삭제
   deleteStore: (storeId: number) =>
     apiClient.delete<ApiResponse<void>>(`/api/stores/${storeId}`),

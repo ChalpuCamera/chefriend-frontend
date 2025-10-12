@@ -153,7 +153,7 @@ export default function Page() {
 
     try {
       // API 호출하여 메뉴 등록
-      const result = await createMenuWithPhotosAsync({
+      await createMenuWithPhotosAsync({
         storeId,
         menuData: {
           name: menuName,
@@ -163,12 +163,7 @@ export default function Page() {
         images: menuImages,
       });
 
-      // 메뉴 상세 페이지로 이동
-      if (result.food.foodItemId) {
-        router.push(`/menu/${result.food.foodItemId}`);
-      } else {
-        router.push("/menu");
-      }
+      router.push("/menu");
     } catch (error) {
       console.error("Menu creation failed:", error);
       // 에러는 hook 내부에서 toast로 처리됨

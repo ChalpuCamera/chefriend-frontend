@@ -12,6 +12,7 @@ export interface StoreRequest {
   instagramLink?: string;
   kakaoTalkLink?: string;
   siteLink?: string;
+  thumbnailUrl?: string;
 }
 
 export interface StoreResponse {
