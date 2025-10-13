@@ -116,14 +116,9 @@ export default function MyPage() {
               className="w-full h-full object-cover"
             />
           </div>
-          <div className="ml-[20px] flex-1">
-            <p className="text-sub-title-b text-gray-800">
+            <p className="ml-[20px] text-sub-title-b text-gray-800">
               {userNickname}
             </p>
-            <p className="text-sub-body-r text-gray-800">
-              {user?.email || "owner@test.com"}
-            </p>
-          </div>
         </div>
       </div>
 
