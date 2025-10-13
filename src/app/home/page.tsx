@@ -246,14 +246,14 @@ export default function Page() {
             {/* 프로필 이미지 - 클릭하여 미리보기 */}
             <button
               onClick={() => setIsProfileImageDialogOpen(true)}
-              className="flex items-center justify-center w-16 h-16 rounded-full bg-gray-200 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+              className="flex items-center justify-center w-20 h-20 rounded-full bg-gray-200 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
             >
               {currentStore?.thumbnailUrl ? (
                 <Image
                   src={currentStore.thumbnailUrl}
                   alt="Profile"
-                  width={64}
-                  height={64}
+                  width={80}
+                  height={80}
                   className="w-full h-full object-cover"
                   quality={95}
                   sizes="64px"
@@ -263,8 +263,8 @@ export default function Page() {
                 <Image
                   src="/store_icon.png"
                   alt="Profile"
-                  width={64}
-                  height={64}
+                  width={80}
+                  height={80}
                   quality={100}
                   className="w-full h-full object-cover"
                 />
@@ -274,16 +274,16 @@ export default function Page() {
               <h2 className="text-sub-title-b text-gray-800">
                 {currentStore?.storeName || mockStoreProfile.name}
               </h2>
-              <p className="text-sub-body-r text-gray-800">
+              <p className="text-caption-r text-gray-800">
                 안녕하세요 사장님 👨‍🌾
               </p>
               {/* 사이트 주소 - 클릭하여 Dialog 오픈 */}
               {currentStore?.siteLink && (
                 <button
                   onClick={() => setIsSiteLinkDialogOpen(true)}
-                  className="text-caption-r text-purple-700 flex items-center gap-1 hover:underline text-left"
+                  className="text-body-r text-purple-700 flex items-center gap-1 hover:underline text-left"
                 >
-                  chefriend.kr/{currentStore.siteLink} 🔗
+                  chefriend.kr/{currentStore.siteLink}🔗
                 </button>
               )}
             </div>
@@ -291,7 +291,7 @@ export default function Page() {
           {storeId && (
             <button
               onClick={() => router.push(`/store/${storeId}/edit`)}
-              className="text-sub-body-sb text-purple-700 px-3 py-2 min-w-[48px] min-h-[44px] flex items-center justify-center"
+              className="text-body-sb text-purple-700 px-3 py-2 min-w-[48px] min-h-[44px] flex items-center justify-center"
             >
               수정
             </button>
@@ -472,7 +472,7 @@ export default function Page() {
               onClick={() => {
                 window.open("https://open.kakao.com/o/sCpB58Hh", "_blank");
               }}
-              className="w-40 h-9 bg-purple-700 text-sub-body-sb text-white rounded-[8px]"
+              className="w-40 h-9 bg-purple-600 text-sub-body-sb text-white rounded-[8px]"
             >
               개발자에게 문의하기
             </Button>
