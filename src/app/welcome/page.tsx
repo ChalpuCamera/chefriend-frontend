@@ -116,17 +116,43 @@ export default function Page() {
     address.trim().length >= 1 &&
     description.trim().length >= 1;
 
+  // URL 추출 함수
+  const extractUrl = (text: string): string | null => {
+    const urlRegex = /(https:\/\/[^\s]+)/;
+    const match = text.match(urlRegex);
+    return match ? match[1] : null;
+  };
+
   const handleSubmit = async () => {
     if (!isValid) {
       return;
     }
+
+    // 서버 전송 시 URL만 파싱하여 전송
+    const parsedLinks: Partial<Record<PlatformType, string>> = {};
+    (Object.keys(externalLinks) as PlatformType[]).forEach((type) => {
+      const value = externalLinks[type];
+      if (value) {
+        if (type === "instagramLink") {
+          // 인스타그램은 원본 그대로
+          parsedLinks[type] = value;
+        } else {
+          // 다른 플랫폼은 URL 추출
+          const extractedUrl = extractUrl(value);
+          if (extractedUrl) {
+            parsedLinks[type] = extractedUrl;
+          }
+        }
+      }
+    });
+
     try {
       const response = await createStoreMutation.mutateAsync({
         siteLink,
         storeName,
         address,
         description,
-        ...externalLinks,
+        ...parsedLinks,
       });
       if (response.storeId) {
         router.push(`/home`);
