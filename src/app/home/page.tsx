@@ -227,6 +227,7 @@ export default function Page() {
           height={27}
           quality={100}
           priority
+          style={{ width: 'auto', height: 'auto' }}
         />
         <button className="" onClick={handleSettings}>
           <Image
@@ -266,6 +267,7 @@ export default function Page() {
                   width={80}
                   height={80}
                   quality={100}
+                  priority
                   className="w-full h-full object-cover"
                 />
               )}
@@ -603,6 +605,7 @@ export default function Page() {
                   height={400}
                   className="w-full h-full object-cover"
                   quality={100}
+                  priority
                 />
               )}
             </div>
