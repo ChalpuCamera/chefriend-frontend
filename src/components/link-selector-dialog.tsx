@@ -51,7 +51,7 @@ export function LinkSelectorDialog({
 
   // URL 추출 함수
   const extractUrl = (text: string): string | null => {
-    const urlRegex = /(https:\/\/[^\s]+)/;
+    const urlRegex = /(https?:\/\/[^\s]+)/;
     const match = text.match(urlRegex);
     return match ? match[1] : null;
   };
@@ -77,11 +77,11 @@ export function LinkSelectorDialog({
       return;
     }
 
-    // 인스타그램 제외한 모든 플랫폼은 https:// 포함 여부 검증
+    // 인스타그램 제외한 모든 플랫폼은 http:// 또는 https:// 포함 여부 검증
     if (selectedPlatform.key !== "instagramLink") {
       const extractedUrl = extractUrl(linkUrl.trim());
       if (!extractedUrl) {
-        setUrlError("올바른 URL을 찾을 수 없습니다. https://로 시작하는 링크를 포함해주세요.");
+        setUrlError("올바른 URL을 찾을 수 없습니다. http:// 또는 https://로 시작하는 링크를 포함해주세요.");
         return;
       }
     }

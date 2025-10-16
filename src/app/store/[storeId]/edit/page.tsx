@@ -158,7 +158,7 @@ export default function Page({
 
   // URL 추출 함수
   const extractUrl = (text: string): string | null => {
-    const urlRegex = /(https:\/\/[^\s]+)/;
+    const urlRegex = /(https?:\/\/[^\s]+)/;
     const match = text.match(urlRegex);
     return match ? match[1] : null;
   };
