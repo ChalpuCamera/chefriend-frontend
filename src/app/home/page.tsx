@@ -10,8 +10,10 @@ import { useFoodsByStore } from "@/lib/hooks/useFood";
 import { useMyStores, storeKeys } from "@/lib/hooks/useStore";
 import { photoApi } from "@/lib/api/owner/photo";
 import { storeApi } from "@/lib/api/owner/store";
+import { inquiryApi } from "@/lib/api/landing/inquiry";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -52,8 +54,12 @@ export default function Page() {
 
   // Dialog states
   const [isSiteLinkDialogOpen, setIsSiteLinkDialogOpen] = useState(false);
-  const [isProfileImageDialogOpen, setIsProfileImageDialogOpen] = useState(false);
+  const [isProfileImageDialogOpen, setIsProfileImageDialogOpen] =
+    useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isInquiryDialogOpen, setIsInquiryDialogOpen] = useState(false);
+  const [inquiryContent, setInquiryContent] = useState("");
+  const [isSubmittingInquiry, setIsSubmittingInquiry] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Get user's stores (첫 번째 가게 우선)
@@ -135,7 +141,9 @@ export default function Page() {
   const handleCopySiteLink = async () => {
     if (currentStore?.siteLink) {
       try {
-        await navigator.clipboard.writeText(`https://chefriend.kr/${currentStore.siteLink}`);
+        await navigator.clipboard.writeText(
+          `https://chefriend.kr/${currentStore.siteLink}`
+        );
         toast.success("사이트 주소가 복사되었습니다!");
       } catch (error) {
         console.error("Failed to copy:", error);
@@ -152,7 +160,9 @@ export default function Page() {
   };
 
   // 프로필 이미지 업로드
-  const handleProfileImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfileImageUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0];
     if (!file || !storeId) {
       console.log("No file or storeId:", { file: !!file, storeId });
@@ -183,7 +193,10 @@ export default function Page() {
       console.log("Registered photo, imageUrl:", imageUrl);
 
       // 4. 가게 대표 사진 설정 API 호출
-      const updateResult = await storeApi.updateStoreThumbnail(storeId, imageUrl);
+      const updateResult = await storeApi.updateStoreThumbnail(
+        storeId,
+        imageUrl
+      );
       console.log("Store thumbnail updated, result:", updateResult);
 
       // 5. 캐시 무효화하여 UI 업데이트
@@ -200,6 +213,27 @@ export default function Page() {
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
+    }
+  };
+
+  // 문의하기 제출
+  const handleInquirySubmit = async () => {
+    if (!inquiryContent.trim()) {
+      toast.error("문의 내용을 입력해주세요.");
+      return;
+    }
+
+    setIsSubmittingInquiry(true);
+    try {
+      await inquiryApi.saveInquiry({ content: inquiryContent.trim() });
+      toast.success("문의가 접수되었습니다!");
+      setInquiryContent("");
+      setIsInquiryDialogOpen(false);
+    } catch (error) {
+      console.error("Inquiry submit failed:", error);
+      toast.error("문의 전송에 실패했습니다.");
+    } finally {
+      setIsSubmittingInquiry(false);
     }
   };
 
@@ -227,7 +261,7 @@ export default function Page() {
           height={27}
           quality={100}
           priority
-          style={{ width: 'auto', height: 'auto' }}
+          style={{ width: "auto", height: "auto" }}
         />
         <button className="" onClick={handleSettings}>
           <Image
@@ -258,7 +292,7 @@ export default function Page() {
                   className="w-full h-full object-cover"
                   quality={95}
                   sizes="64px"
-                  unoptimized={currentStore.thumbnailUrl.startsWith('http')}
+                  unoptimized={currentStore.thumbnailUrl.startsWith("http")}
                 />
               ) : (
                 <Image
@@ -396,45 +430,11 @@ export default function Page() {
         ) : (
           <div className="w-full overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400">
             <div className="flex w-max pb-2">
-              {/* Menu items with padding on first item */}
-              {menus.slice(0, 7).map((menu, index) => (
-                <div
-                  key={menu.id}
-                  className={`flex flex-col items-center cursor-pointer flex-shrink-0 w-[77px] ${
-                    index === 0 ? "ml-4" : ""
-                  } ${index < 6 ? "mr-2" : ""}`}
-                  onClick={() => handleMenuClick(menu.id!)}
-                >
-                  <div className="relative">
-                    <div className="w-16 h-16 rounded-full overflow-hidden">
-                      <Image
-                        alt={menu.name}
-                        className="w-full h-full object-cover"
-                        src={menu.image}
-                        width={64}
-                        height={64}
-                        quality={95}
-                        sizes="64px"
-                        unoptimized={menu.image.startsWith('http')}
-                      />
-                    </div>
-                    {/* {menu.hasCampaign && (
-                      <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-purple-700 rounded-full flex items-center justify-center">
-                        <span className="text-white text-caption-b">C</span>
-                      </div>
-                    )} */}
-                  </div>
-                  <p className="text-body-r text-gray-800 mt-2 text-center truncate w-full">
-                    {menu.name}
-                  </p>
-                </div>
-              ))}
-
-              {/* Add button or More button */}
+              {/* Add button or More button - 맨 앞에 위치 */}
               {menus.length < 7 ? (
                 // Add button
                 <div
-                  className="flex flex-col items-center cursor-pointer flex-shrink-0 w-[77px] mr-4 ml-2"
+                  className="flex flex-col items-center cursor-pointer flex-shrink-0 w-[77px] ml-4 mr-2"
                   onClick={() => router.push("/menu/add")}
                 >
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
@@ -447,7 +447,7 @@ export default function Page() {
               ) : menus.length >= 7 ? (
                 // More button (when there are 7 or more items)
                 <div
-                  className="flex flex-col items-center cursor-pointer flex-shrink-0 w-[77px] mr-4 ml-2"
+                  className="flex flex-col items-center cursor-pointer flex-shrink-0 w-[77px] ml-4 mr-2"
                   onClick={handleMenuView}
                 >
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
@@ -464,21 +464,52 @@ export default function Page() {
                   </p>
                 </div>
               ) : null}
+
+              {/* Menu items */}
+              {menus.slice(0, 7).map((menu, index) => (
+                <div
+                  key={menu.id}
+                  className={`flex flex-col items-center cursor-pointer flex-shrink-0 w-[77px] ${
+                    index < 6 ? "mr-2" : "mr-4"
+                  }`}
+                  onClick={() => handleMenuClick(menu.id!)}
+                >
+                  <div className="relative">
+                    <div className="w-16 h-16 rounded-full overflow-hidden">
+                      <Image
+                        alt={menu.name}
+                        className="w-full h-full object-cover"
+                        src={menu.image}
+                        width={64}
+                        height={64}
+                        quality={95}
+                        sizes="64px"
+                        unoptimized={menu.image.startsWith("http")}
+                      />
+                    </div>
+                    {/* {menu.hasCampaign && (
+                      <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-purple-700 rounded-full flex items-center justify-center">
+                        <span className="text-white text-caption-b">C</span>
+                      </div>
+                    )} */}
+                  </div>
+                  <p className="text-body-r text-gray-800 mt-2 text-center truncate w-full">
+                    {menu.name}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
         )}
       </div>
       <div className="flex flex-col items-center justify-center w-full h-24">
-            
-            <Button
-              onClick={() => {
-                window.open("https://open.kakao.com/o/sCpB58Hh", "_blank");
-              }}
-              className="w-40 h-9 bg-purple-600 text-sub-body-sb text-white rounded-[8px]"
-            >
-              개발자에게 문의하기
-            </Button>
-          </div>
+        <Button
+          onClick={() => setIsInquiryDialogOpen(true)}
+          className="w-40 h-9 bg-purple-600 text-sub-body-sb text-white rounded-[8px]"
+        >
+          개발자에게 문의하기
+        </Button>
+      </div>
       {/* 최근 손님 평가 섹션 - 추후 사용 예정 */}
       {/* <div className="px-4 py-6">
         <h2 className="text-sub-title-b text-gray-800 mb-5">최근 손님 평가</h2>
@@ -549,7 +580,10 @@ export default function Page() {
       </div> */}
 
       {/* 사이트 주소 Dialog */}
-      <Dialog open={isSiteLinkDialogOpen} onOpenChange={setIsSiteLinkDialogOpen}>
+      <Dialog
+        open={isSiteLinkDialogOpen}
+        onOpenChange={setIsSiteLinkDialogOpen}
+      >
         <DialogContent className="max-w-[360px]">
           <DialogHeader>
             <DialogTitle className="text-title-2 text-gray-800">
@@ -581,7 +615,10 @@ export default function Page() {
       </Dialog>
 
       {/* 프로필 이미지 미리보기 Dialog */}
-      <Dialog open={isProfileImageDialogOpen} onOpenChange={setIsProfileImageDialogOpen}>
+      <Dialog
+        open={isProfileImageDialogOpen}
+        onOpenChange={setIsProfileImageDialogOpen}
+      >
         <DialogContent className="max-w-[400px]">
           <DialogHeader>
             <DialogTitle className="text-title-2 text-gray-800">
@@ -630,6 +667,41 @@ export default function Page() {
                 className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300"
               >
                 닫기
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 문의하기 Dialog */}
+      <Dialog open={isInquiryDialogOpen} onOpenChange={setIsInquiryDialogOpen}>
+        <DialogContent className="max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="text-title-2 text-gray-800">
+              개발자에게 문의하기
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Textarea
+              value={inquiryContent}
+              onChange={(e) => setInquiryContent(e.target.value)}
+              placeholder="문의 내용을 입력해주세요"
+              className="min-h-[120px] bg-gray-200 rounded-[12px] p-4 text-body-r placeholder:text-gray-500 resize-none"
+              rows={5}
+            />
+            <DialogFooter className="flex gap-2 sm:justify-center">
+              <Button
+                onClick={handleInquirySubmit}
+                disabled={!inquiryContent.trim() || isSubmittingInquiry}
+                className="flex-1 bg-purple-700 text-white hover:bg-purple-800"
+              >
+                {isSubmittingInquiry ? "전송 중..." : "보내기"}
+              </Button>
+              <Button
+                onClick={() => setIsInquiryDialogOpen(false)}
+                className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300"
+              >
+                취소
               </Button>
             </DialogFooter>
           </div>

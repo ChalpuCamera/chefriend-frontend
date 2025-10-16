@@ -74,7 +74,7 @@ export default function Page() {
     if (!customItems.includes(item)) {
       setCustomItems([...customItems, item]);
       toast.success(`"${item}" 항목이 추가되었습니다.`, {
-        duration: 1500,
+        duration: 800,
       });
     }
   };
@@ -83,7 +83,7 @@ export default function Page() {
     const removedItem = customItems[index];
     setCustomItems(customItems.filter((_, i) => i !== index));
     toast.success(`"${removedItem}" 항목이 제거되었습니다.`, {
-      duration: 1500,
+      duration: 800,
     });
   };
 
