@@ -5,3 +5,4 @@ export { feedbackApi } from './feedback';
 export { photoApi } from './photo';
 export { analysisApi } from './analysis';
 export { rewardApi } from './reward';
+export { couponApi } from './coupon';

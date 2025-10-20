@@ -166,12 +166,6 @@ export default function Page() {
       return false;
     }
 
-    if (imagePreviewUrls.length === 0) {
-      setErrorMessage("메뉴 사진을 최소 1개 이상 등록해주세요.");
-      setShowErrorDialog(true);
-      return false;
-    }
-
     return true;
   };
 
