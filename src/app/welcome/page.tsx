@@ -43,6 +43,7 @@ export default function Page() {
   const [storeName, setStoreName] = useState("");
   const [address, setAddress] = useState("");
   const [description, setDescription] = useState("");
+  const [requiredStamps, setRequiredStamps] = useState<number | string>(10);
   const [externalLinks, setExternalLinks] = useState<Partial<Record<PlatformType, string>>>({});
 
   const [siteLinkChecked, setSiteLinkChecked] = useState(false);
@@ -158,6 +159,7 @@ export default function Page() {
         storeName,
         address,
         description,
+        requiredStampsForCoupon: typeof requiredStamps === 'string' ? 10 : requiredStamps,
         ...parsedLinks,
       });
       if (response.storeId) {
@@ -273,6 +275,47 @@ export default function Page() {
             placeholder="가게에 대한 간단한 소개를 작성해주세요"
             rows={4}
           />
+        </div>
+
+        {/* 쿠폰 완성 스탬프 개수 */}
+        <div className="space-y-1.5">
+          <Label htmlFor="requiredStamps" className="text-sub-body-sb text-black">
+            쿠폰 스탬프 개수
+          </Label>
+          <div className="flex items-center gap-2">
+            <Input
+              id="requiredStamps"
+              type="number"
+              min="1"
+              max="20"
+              value={requiredStamps}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === '') {
+                  setRequiredStamps(''); // 빈 값 허용
+                  return;
+                }
+                const numValue = parseInt(value);
+                if (!isNaN(numValue)) {
+                  if (numValue > 20) {
+                    setRequiredStamps(20);
+                  } else if (numValue >= 1) {
+                    setRequiredStamps(numValue);
+                  }
+                }
+              }}
+              onBlur={(e) => {
+                // 포커스를 잃을 때 빈 값이거나 0 이하면 1로 설정
+                const value = e.target.value;
+                if (value === '' || parseInt(value) < 1) {
+                  setRequiredStamps(10);
+                }
+              }}
+              className="h-11 bg-gray-200 rounded-[10px] placeholder:text-gray-500 w-16 text-center text-sub-body-r"
+            />
+            <span className="text-sub-body-r text-gray-600">개</span>
+            <span className="text-caption-r text-gray-500">최대 20개</span>
+          </div>
         </div>
 
         {/* 외부 링크 */}

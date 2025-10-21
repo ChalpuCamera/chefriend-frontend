@@ -16,6 +16,7 @@ export interface StoreRequest {
   daangnLink?: string;
   siteLink?: string;
   thumbnailUrl?: string;
+  requiredStampsForCoupon?: number;
 }
 
 export interface StoreResponse {
@@ -37,6 +38,7 @@ export interface StoreResponse {
   feedbackCount?: number;
   menuCount?: number;
   thumbnailUrl?: string;
+  requiredStampsForCoupon?: number;
 }
 
 export interface StoreIdResponse {
