@@ -20,6 +20,9 @@ const platformIcons: Record<PlatformType, string> = {
   coupangeatsLink: "/coupangeats.png",
   kakaoTalkLink: "/kakaotalk.png",
   instagramLink: "/instagram.png",
+  ddangyoLink: "/ddangyo.png",
+  googleMapsLink: "/googlemaps.png",
+  daangnLink: "/daangn.png",
 };
 
 const platformNames: Record<PlatformType, string> = {
@@ -30,6 +33,9 @@ const platformNames: Record<PlatformType, string> = {
   coupangeatsLink: "쿠팡이츠",
   kakaoTalkLink: "카카오톡",
   instagramLink: "인스타그램",
+  ddangyoLink: "땡겨요",
+  googleMapsLink: "구글맵",
+  daangnLink: "당근마켓",
 };
 
 export default function Page() {

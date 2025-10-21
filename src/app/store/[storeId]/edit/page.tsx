@@ -21,6 +21,9 @@ const platformIcons: Record<PlatformType, string> = {
   coupangeatsLink: "/coupangeats.png",
   kakaoTalkLink: "/kakaotalk.png",
   instagramLink: "/instagram.png",
+  ddangyoLink: "/ddangyo.png",
+  googleMapsLink: "/googlemaps.png",
+  daangnLink: "/daangn.png",
 };
 
 const platformNames: Record<PlatformType, string> = {
@@ -31,6 +34,9 @@ const platformNames: Record<PlatformType, string> = {
   coupangeatsLink: "쿠팡이츠",
   kakaoTalkLink: "카카오톡",
   instagramLink: "인스타그램",
+  ddangyoLink: "땡겨요",
+  googleMapsLink: "구글맵",
+  daangnLink: "당근마켓",
 };
 
 export default function Page({
@@ -77,8 +83,11 @@ export default function Page({
       if (storeData.yogiyoLink) links.yogiyoLink = storeData.yogiyoLink;
       if (storeData.baeminLink) links.baeminLink = storeData.baeminLink;
       if (storeData.coupangEatsLink) links.coupangeatsLink = storeData.coupangEatsLink;
+      if (storeData.ddangyoLink) links.ddangyoLink = storeData.ddangyoLink;
       if (storeData.kakaoTalkLink) links.kakaoTalkLink = storeData.kakaoTalkLink;
       if (storeData.instagramLink) links.instagramLink = storeData.instagramLink;
+      if (storeData.googleMapsLink) links.googleMapsLink = storeData.googleMapsLink;
+      if (storeData.daangnLink) links.daangnLink = storeData.daangnLink;
       setExternalLinks(links);
     }
   }, [storeData]);

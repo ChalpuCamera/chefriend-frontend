@@ -13,7 +13,10 @@ export type PlatformType =
   | "baeminLink"
   | "coupangeatsLink"
   | "kakaoTalkLink"
-  | "instagramLink";
+  | "instagramLink"
+  | "ddangyoLink"
+  | "googleMapsLink"
+  | "daangnLink";
 
 interface Platform {
   key: PlatformType;
@@ -25,11 +28,14 @@ interface Platform {
 const platforms: Platform[] = [
   { key: "naverLink", name: "네이버 지도", icon: "/naver.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
   { key: "kakaoLink", name: "카카오맵", icon: "/kakaomap.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
+  { key: "googleMapsLink", name: "구글맵", icon: "/googlemaps.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
   { key: "yogiyoLink", name: "요기요", icon: "/yogiyo.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
   { key: "baeminLink", name: "배달의민족", icon: "/baemin.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
   { key: "coupangeatsLink", name: "쿠팡이츠", icon: "/coupangeats.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
+  { key: "ddangyoLink", name: "땡겨요", icon: "/ddangyo.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
   { key: "kakaoTalkLink", name: "카카오톡 채널", icon: "/kakaotalk.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
   { key: "instagramLink", name: "인스타그램", icon: "/instagram.png", placeholder: "인스타 아이디를 입력해주세요" },
+  { key: "daangnLink", name: "당근마켓", icon: "/daangn.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
 ];
 
 interface LinkSelectorDialogProps {
@@ -54,6 +60,25 @@ export function LinkSelectorDialog({
     const urlRegex = /(https?:\/\/[^\s]+)/;
     const match = text.match(urlRegex);
     return match ? match[1] : null;
+  };
+
+  // 플랫폼별 도메인 검증 함수
+  const validatePlatformUrl = (platformKey: PlatformType, url: string): boolean => {
+    const platformDomains: Record<PlatformType, string> = {
+      baeminLink: "s.baemin.com",
+      yogiyoLink: "yogiyo.onelink.me",
+      coupangeatsLink: "web.coupangeats.com",
+      ddangyoLink: "fdofd.ddangyo.com",
+      naverLink: "naver.me",
+      kakaoLink: "kko.kakao.com",
+      googleMapsLink: "maps.app.goo.gl",
+      instagramLink: "www.instagram.com",
+      kakaoTalkLink: "pf.kakao.com",
+      daangnLink: "www.daangn.com",
+    };
+
+    const expectedDomain = platformDomains[platformKey];
+    return url.includes(expectedDomain);
   };
 
   const handlePlatformClick = (platform: Platform) => {
@@ -82,6 +107,25 @@ export function LinkSelectorDialog({
       const extractedUrl = extractUrl(linkUrl.trim());
       if (!extractedUrl) {
         setUrlError("올바른 URL을 찾을 수 없습니다. http:// 또는 https://로 시작하는 링크를 포함해주세요.");
+        return;
+      }
+
+      // 플랫폼별 도메인 검증
+      if (!validatePlatformUrl(selectedPlatform.key, extractedUrl)) {
+        const platformDomainNames: Record<PlatformType, string> = {
+          baeminLink: "s.baemin.com",
+          yogiyoLink: "yogiyo.onelink.me",
+          coupangeatsLink: "web.coupangeats.com",
+          ddangyoLink: "fdofd.ddangyo.com",
+          naverLink: "naver.me",
+          kakaoLink: "kko.kakao.com",
+          googleMapsLink: "maps.app.goo.gl",
+          instagramLink: "www.instagram.com",
+          kakaoTalkLink: "pf.kakao.com",
+          daangnLink: "www.daangn.com",
+        };
+        const expectedDomain = platformDomainNames[selectedPlatform.key];
+        setUrlError(`${selectedPlatform.name} 링크가 아닙니다. ${expectedDomain}을(를) 포함하는 링크를 입력해주세요.`);
         return;
       }
     }
