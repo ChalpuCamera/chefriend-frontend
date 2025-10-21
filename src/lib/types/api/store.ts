@@ -7,12 +7,16 @@ export interface StoreRequest {
   baeminLink?: string;
   yogiyoLink?: string;
   coupangeatsLink?: string;
+  ddangyoLink?: string;
   naverLink?: string;
   kakaoLink?: string;
+  googleMapsLink?: string;
   instagramLink?: string;
   kakaoTalkLink?: string;
+  daangnLink?: string;
   siteLink?: string;
   thumbnailUrl?: string;
+  requiredStampsForCoupon?: number;
 }
 
 export interface StoreResponse {
@@ -23,14 +27,18 @@ export interface StoreResponse {
   baeminLink?: string;
   yogiyoLink?: string;
   coupangEatsLink?: string;
+  ddangyoLink?: string;
   naverLink?: string;
   kakaoLink?: string;
+  googleMapsLink?: string;
   instagramLink?: string;
   kakaoTalkLink?: string;
+  daangnLink?: string;
   siteLink?: string;
   feedbackCount?: number;
   menuCount?: number;
   thumbnailUrl?: string;
+  requiredStampsForCoupon?: number;
 }
 
 export interface StoreIdResponse {
