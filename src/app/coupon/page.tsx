@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { CustomButton } from "@/components/ui/custom-button";
 import { CustomHeader } from "@/components/ui/custom-header";
+import { ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { couponApi } from "@/lib/api/owner";
 import { ApiError } from "@/lib/api/client";
@@ -99,6 +100,17 @@ export default function CouponStationPage() {
 
       {/* Main Content - with top padding for fixed header */}
       <div className="max-w-[430px] mx-auto pt-[107px] px-4 pb-4">
+        {/* Guide Link Banner */}
+        <button
+          onClick={() => router.push("/coupon/guide")}
+          className="w-full bg-purple-50 hover:bg-purple-100 transition-colors rounded-[12px] p-3 mb-4 flex items-center justify-between group"
+        >
+          <span className="text-sub-body-sb text-[#7C3BC6]">
+            처음 사용하시나요? 쿠폰 시스템 안내 보기
+          </span>
+          <ChevronRight className="w-5 h-5 text-[#7C3BC6] group-hover:translate-x-1 transition-transform" />
+        </button>
+
         {/* Subtitle */}
         <div className="mb-3">
           <p className="text-body-r text-gray-600">
@@ -107,7 +119,7 @@ export default function CouponStationPage() {
         </div>
 
         {/* Stamp Count Adjustment */}
-        <div className="mb-3">
+        <div className="mb-3 p-3">
           <label className="block text-sub-body-sb text-gray-700 mb-2">
             적립 개수
           </label>
@@ -140,7 +152,7 @@ export default function CouponStationPage() {
         </div>
 
         {/* Quick Preset Buttons */}
-        <div className="mb-3 flex gap-2">
+        <div className="mb-3 flex gap-2 p-3">
           <Button
             onClick={() => setStamps(1)}
             variant="outline"
@@ -191,16 +203,20 @@ export default function CouponStationPage() {
               PIN 번호
             </label>
             <div className="flex justify-center gap-3">
-              <div className={`w-16 h-20 bg-white border-2 rounded-[12px] flex items-center justify-center transition-colors ${
-                pin[0] ? 'border-[#7C3BC6]' : 'border-gray-300'
-              }`}>
+              <div
+                className={`w-16 h-20 bg-white border-2 rounded-[12px] flex items-center justify-center transition-colors ${
+                  pin[0] ? "border-[#7C3BC6]" : "border-gray-300"
+                }`}
+              >
                 <span className="text-[40px] font-bold text-gray-900">
                   {pin[0] || ""}
                 </span>
               </div>
-              <div className={`w-16 h-20 bg-white border-2 rounded-[12px] flex items-center justify-center transition-colors ${
-                pin[1] ? 'border-[#7C3BC6]' : 'border-gray-300'
-              }`}>
+              <div
+                className={`w-16 h-20 bg-white border-2 rounded-[12px] flex items-center justify-center transition-colors ${
+                  pin[1] ? "border-[#7C3BC6]" : "border-gray-300"
+                }`}
+              >
                 <span className="text-[40px] font-bold text-gray-900">
                   {pin[1] || ""}
                 </span>
@@ -244,16 +260,16 @@ export default function CouponStationPage() {
               ←
             </Button>
           </div>
-
         </Card>
-        
-          {/* Submit Button */}
-          <CustomButton
-            onClick={handleSubmit}
-            disabled={pin.length !== 2 || stamps === 0 || isSubmitting}
-          >
-            {isSubmitting ? "처리 중..." : "적립하기"}
-          </CustomButton>
+
+        {/* Submit Button */}
+        <CustomButton
+          onClick={handleSubmit}
+          disabled={pin.length !== 2 || stamps === 0 || isSubmitting}
+        >
+          {isSubmitting ? "처리 중..." : "적립하기"}
+        </CustomButton>
+
       </div>
     </div>
   );
