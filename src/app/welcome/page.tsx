@@ -13,16 +13,16 @@ import { LinkSelectorDialog, PlatformType } from "@/components/link-selector-dia
 import { X } from "lucide-react";
 
 const platformIcons: Record<PlatformType, string> = {
-  naverLink: "/platfrom_icons/naver.png",
-  kakaoLink: "/platfrom_icons/kakaomap.png",
-  yogiyoLink: "/platfrom_icons/yogiyo.png",
+  naverLink: "/platform_icons/naver.png",
+  kakaoLink: "/platform_icons/kakaomap.png",
+  yogiyoLink: "/platform_icons/yogiyo.png",
   baeminLink: "/platform_icons/baemin.png",
   coupangeatsLink: "/platform_icons/coupangeats.png",
   kakaoTalkLink: "/platform_icons/kakaotalk.png",
-  instagramLink: "/platfrom_icons/instagram.png",
+  instagramLink: "/platform_icons/instagram.png",
   ddangyoLink: "/platform_icons/ddangyo.png",
-  googleMapsLink: "/platfrom_icons/googlemaps.png",
-  daangnLink: "/platfrom_icons/daangn.png",
+  googleMapsLink: "/platform_icons/googlemaps.png",
+  daangnLink: "/platform_icons/daangn.png",
 };
 
 const platformNames: Record<PlatformType, string> = {
@@ -45,6 +45,7 @@ export default function Page() {
   const [description, setDescription] = useState("");
   const [requiredStamps, setRequiredStamps] = useState<number | string>(10);
   const [externalLinks, setExternalLinks] = useState<Partial<Record<PlatformType, string>>>({});
+  const [displayTemplate, setDisplayTemplate] = useState<number>(1);
 
   const [siteLinkChecked, setSiteLinkChecked] = useState(false);
   const [siteLinkError, setSiteLinkError] = useState("");
@@ -160,6 +161,7 @@ export default function Page() {
         address,
         description,
         requiredStampsForCoupon: typeof requiredStamps === 'string' ? 10 : requiredStamps,
+        displayTemplate,
         ...parsedLinks,
       });
       if (response.storeId) {
@@ -316,6 +318,57 @@ export default function Page() {
             <span className="text-sub-body-r text-gray-600">개</span>
             <span className="text-caption-r text-gray-500">최대 20개</span>
           </div>
+        </div>
+
+        {/* 웹사이트 템플릿 선택 */}
+        <div className="space-y-2.5">
+          <Label className="text-body-sb text-black">웹사이트 템플릿</Label>
+          <div className="grid grid-cols-2 gap-3">
+            {/* 템플릿 1 */}
+            <button
+              type="button"
+              onClick={() => setDisplayTemplate(1)}
+              className={`relative p-4 rounded-[12px] border-2 transition-all ${
+                displayTemplate === 1
+                  ? "border-purple-700 bg-purple-50"
+                  : "border-gray-300 bg-gray-100 hover:border-gray-400"
+              }`}
+            >
+              <div className="aspect-[9/16] bg-gray-300 rounded-lg mb-2 flex items-center justify-center">
+                <span className="text-xs text-gray-500">템플릿 1</span>
+              </div>
+              <p className="text-sub-body-sb text-gray-700">기본 템플릿</p>
+              {displayTemplate === 1 && (
+                <div className="absolute top-2 right-2 w-5 h-5 bg-purple-700 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs">✓</span>
+                </div>
+              )}
+            </button>
+
+            {/* 템플릿 2 */}
+            <button
+              type="button"
+              onClick={() => setDisplayTemplate(2)}
+              className={`relative p-4 rounded-[12px] border-2 transition-all ${
+                displayTemplate === 2
+                  ? "border-purple-700 bg-purple-50"
+                  : "border-gray-300 bg-gray-100 hover:border-gray-400"
+              }`}
+            >
+              <div className="aspect-[9/16] bg-gray-300 rounded-lg mb-2 flex items-center justify-center">
+                <span className="text-xs text-gray-500">템플릿 2</span>
+              </div>
+              <p className="text-sub-body-sb text-gray-700">모던 템플릿</p>
+              {displayTemplate === 2 && (
+                <div className="absolute top-2 right-2 w-5 h-5 bg-purple-700 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs">✓</span>
+                </div>
+              )}
+            </button>
+          </div>
+          <p className="text-xs text-gray-500">
+            * 템플릿 디자인은 피그마 작업 후 업데이트 예정입니다
+          </p>
         </div>
 
         {/* 외부 링크 */}

@@ -14,16 +14,16 @@ import { LinkSelectorDialog, PlatformType } from "@/components/link-selector-dia
 import { X } from "lucide-react";
 
 const platformIcons: Record<PlatformType, string> = {
-  naverLink: "/platfrom_icons/naver.png",
-  kakaoLink: "/platfrom_icons/kakaomap.png",
-  yogiyoLink: "/platfrom_icons/yogiyo.png",
+  naverLink: "/platform_icons/naver.png",
+  kakaoLink: "/platform_icons/kakaomap.png",
+  yogiyoLink: "/platform_icons/yogiyo.png",
   baeminLink: "/platform_icons/baemin.png",
   coupangeatsLink: "/platform_icons/coupangeats.png",
   kakaoTalkLink: "/platform_icons/kakaotalk.png",
-  instagramLink: "/platfrom_icons/instagram.png",
+  instagramLink: "/platform_icons/instagram.png",
   ddangyoLink: "/platform_icons/ddangyo.png",
-  googleMapsLink: "/platfrom_icons/googlemaps.png",
-  daangnLink: "/platfrom_icons/daangn.png",
+  googleMapsLink: "/platform_icons/googlemaps.png",
+  daangnLink: "/platform_icons/daangn.png",
 };
 
 const platformNames: Record<PlatformType, string> = {
@@ -58,6 +58,7 @@ export default function Page({
   const [description, setDescription] = useState("");
   const [requiredStamps, setRequiredStamps] = useState<number | string>(10);
   const [externalLinks, setExternalLinks] = useState<Partial<Record<PlatformType, string>>>({});
+  const [displayTemplate, setDisplayTemplate] = useState<number>(1);
 
   const [siteLinkChecked, setSiteLinkChecked] = useState(false);
   const [siteLinkError, setSiteLinkError] = useState("");
@@ -77,6 +78,7 @@ export default function Page({
       setAddress(storeData.address || "");
       setDescription(storeData.description || "");
       setRequiredStamps(storeData.requiredStampsForCoupon || 10);
+      setDisplayTemplate(storeData.displayTemplate || 1);
 
       // 외부 링크 초기화
       const links: Partial<Record<PlatformType, string>> = {};
@@ -206,6 +208,7 @@ export default function Page({
           address,
           description,
           requiredStampsForCoupon: typeof requiredStamps === 'string' ? 10 : requiredStamps,
+          displayTemplate,
           ...parsedLinks,
         },
       });
@@ -234,7 +237,7 @@ export default function Page({
 
       <div className="px-4 pt-30 pb-6">
         {/* Form Section */}
-        <div className="space-y-10">
+        <div className="space-y-6">
           {/* 사이트 주소 (커스텀 URL) */}
           <div className="space-y-2.5">
             <Label htmlFor="siteLink" className="text-body-sb text-black">
@@ -272,6 +275,54 @@ export default function Page({
               ) : (
                 <p className="text-xs text-gray-500">사용하실 사이트 주소를 입력해주세요</p>
               )}
+            </div>
+          </div>
+
+          {/* 웹사이트 템플릿 선택 */}
+          <div className="space-y-2.5">
+            <Label className="text-body-sb text-black">웹사이트 템플릿</Label>
+            <div className="grid grid-cols-2 gap-3">
+              {/* 템플릿 1 */}
+              <button
+                type="button"
+                onClick={() => setDisplayTemplate(1)}
+                className={`relative p-4 rounded-[12px] border-2 transition-all ${
+                  displayTemplate === 1
+                    ? "border-purple-700 bg-purple-50"
+                    : "border-gray-300 bg-gray-100 hover:border-gray-400"
+                }`}
+              >
+                <div className="aspect-[9/16] rounded-lg mb-2 flex items-center justify-center">
+                  <Image src="/templates/template1.png" alt="기본 템플릿" width={100} height={100} />
+                </div>
+                <p className="text-sub-body-sb text-gray-700">기본 템플릿</p>
+                {displayTemplate === 1 && (
+                  <div className="absolute top-2 right-2 w-5 h-5 bg-purple-700 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs">✓</span>
+                  </div>
+                )}
+              </button>
+
+              {/* 템플릿 2 */}
+              <button
+                type="button"
+                onClick={() => setDisplayTemplate(2)}
+                className={`relative p-4 rounded-[12px] border-2 transition-all ${
+                  displayTemplate === 2
+                    ? "border-purple-700 bg-purple-50"
+                    : "border-gray-300 bg-gray-100 hover:border-gray-400"
+                }`}
+              >
+                <div className="aspect-[9/16] bg-gray-300 rounded-lg mb-2 flex items-center justify-center">
+                  <span className="text-xs text-gray-500">템플릿 2</span>
+                </div>
+                <p className="text-sub-body-sb text-gray-700">모던 템플릿</p>
+                {displayTemplate === 2 && (
+                  <div className="absolute top-2 right-2 w-5 h-5 bg-purple-700 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs">✓</span>
+                  </div>
+                )}
+              </button>
             </div>
           </div>
 

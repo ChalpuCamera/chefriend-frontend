@@ -17,6 +17,7 @@ export interface StoreRequest {
   siteLink?: string;
   thumbnailUrl?: string;
   requiredStampsForCoupon?: number;
+  displayTemplate?: number;
 }
 
 export interface StoreResponse {
@@ -39,6 +40,7 @@ export interface StoreResponse {
   menuCount?: number;
   thumbnailUrl?: string;
   requiredStampsForCoupon?: number;
+  displayTemplate?: number;
 }
 
 export interface StoreIdResponse {
