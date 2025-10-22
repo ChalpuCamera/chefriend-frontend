@@ -13,16 +13,16 @@ import { LinkSelectorDialog, PlatformType } from "@/components/link-selector-dia
 import { X } from "lucide-react";
 
 const platformIcons: Record<PlatformType, string> = {
-  naverLink: "/naver.png",
-  kakaoLink: "/kakaomap.png",
-  yogiyoLink: "/yogiyo.png",
-  baeminLink: "/baemin.png",
-  coupangeatsLink: "/coupangeats.png",
-  kakaoTalkLink: "/kakaotalk.png",
-  instagramLink: "/instagram.png",
-  ddangyoLink: "/ddangyo.png",
-  googleMapsLink: "/googlemaps.png",
-  daangnLink: "/daangn.png",
+  naverLink: "/platfrom_icons/naver.png",
+  kakaoLink: "/platfrom_icons/kakaomap.png",
+  yogiyoLink: "/platfrom_icons/yogiyo.png",
+  baeminLink: "/platform_icons/baemin.png",
+  coupangeatsLink: "/platform_icons/coupangeats.png",
+  kakaoTalkLink: "/platform_icons/kakaotalk.png",
+  instagramLink: "/platfrom_icons/instagram.png",
+  ddangyoLink: "/platform_icons/ddangyo.png",
+  googleMapsLink: "/platfrom_icons/googlemaps.png",
+  daangnLink: "/platfrom_icons/daangn.png",
 };
 
 const platformNames: Record<PlatformType, string> = {

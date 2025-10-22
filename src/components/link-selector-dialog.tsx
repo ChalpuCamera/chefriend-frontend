@@ -26,16 +26,16 @@ interface Platform {
 }
 
 const platforms: Platform[] = [
-  { key: "naverLink", name: "네이버 지도", icon: "/naver.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
-  { key: "kakaoLink", name: "카카오맵", icon: "/kakaomap.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
-  { key: "googleMapsLink", name: "구글맵", icon: "/googlemaps.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
-  { key: "yogiyoLink", name: "요기요", icon: "/yogiyo.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
-  { key: "baeminLink", name: "배달의민족", icon: "/baemin.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
-  { key: "coupangeatsLink", name: "쿠팡이츠", icon: "/coupangeats.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
-  { key: "ddangyoLink", name: "땡겨요", icon: "/ddangyo.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
-  { key: "kakaoTalkLink", name: "카카오톡 채널", icon: "/kakaotalk.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
-  { key: "instagramLink", name: "인스타그램", icon: "/instagram.png", placeholder: "인스타 아이디를 입력해주세요" },
-  { key: "daangnLink", name: "당근마켓", icon: "/daangn.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
+  { key: "naverLink", name: "네이버 지도", icon: "/platfrom_icons/naver.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
+  { key: "kakaoLink", name: "카카오맵", icon: "/platfrom_icons/kakaomap.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
+  { key: "googleMapsLink", name: "구글맵", icon: "/platfrom_icons/googlemaps.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
+  { key: "yogiyoLink", name: "요기요", icon: "/platfrom_icons/yogiyo.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
+  { key: "baeminLink", name: "배달의민족", icon: "/platfrom_icons/baemin.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
+  { key: "coupangeatsLink", name: "쿠팡이츠", icon: "/platfrom_icons/coupangeats.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
+  { key: "ddangyoLink", name: "땡겨요", icon: "/platfrom_icons/ddangyo.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
+  { key: "kakaoTalkLink", name: "카카오톡 채널", icon: "/platfrom_icons/kakaotalk.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
+  { key: "instagramLink", name: "인스타그램", icon: "/platfrom_icons/instagram.png", placeholder: "인스타 아이디를 입력해주세요" },
+  { key: "daangnLink", name: "당근마켓", icon: "/platfrom_icons/daangn.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
 ];
 
 interface LinkSelectorDialogProps {
