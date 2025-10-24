@@ -10,13 +10,25 @@ import { ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { couponApi } from "@/lib/api/owner";
 import { ApiError } from "@/lib/api/client";
+import { useMyStores } from "@/lib/hooks/useStore";
 
 export default function CouponStationPage() {
   const router = useRouter();
   const [pin, setPin] = useState("");
   const [stamps, setStamps] = useState(1);
-  const [storeId] = useState<number>(1); // TODO: Get from auth/context
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Get user's stores (첫 번째 가게 우선)
+  const { data: storesData } = useMyStores({ size: 10 });
+  const stores = storesData?.content || [];
+  // storeId가 가장 작은 가게 (첫 번째 가게) 선택
+  const currentStore =
+    stores.length > 0
+      ? stores.reduce((first, store) =>
+          store.storeId < first.storeId ? store : first
+        )
+      : null;
+  const storeId = currentStore?.storeId;
 
   const handleBack = () => {
     router.push("/home");
@@ -44,13 +56,8 @@ export default function CouponStationPage() {
   };
 
   const handleSubmit = async () => {
-    if (pin.length !== 2) {
-      toast.error("2자리 PIN을 입력해주세요");
-      return;
-    }
-
-    if (stamps === 0) {
-      toast.error("적립할 스탬프 개수를 설정해주세요");
+    if (!storeId) {
+      toast.error("매장 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
       return;
     }
 
