@@ -18,6 +18,7 @@ export interface StoreRequest {
   thumbnailUrl?: string;
   requiredStampsForCoupon?: number;
   displayTemplate?: number;
+  autoCreateMenus?: boolean;
 }
 
 export interface StoreResponse {

@@ -11,6 +11,15 @@ import { useRouter } from "next/navigation";
 import { AddressSearch } from "@/components/address-search";
 import { LinkSelectorDialog, PlatformType } from "@/components/link-selector-dialog";
 import { X } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 const platformIcons: Record<PlatformType, string> = {
   naverLink: "/platform_icons/naver.png",
@@ -45,12 +54,12 @@ export default function Page() {
   const [description, setDescription] = useState("");
   const [requiredStamps, setRequiredStamps] = useState<number | string>(10);
   const [externalLinks, setExternalLinks] = useState<Partial<Record<PlatformType, string>>>({});
-  const [displayTemplate, setDisplayTemplate] = useState<number>(1);
 
   const [siteLinkChecked, setSiteLinkChecked] = useState(false);
   const [siteLinkError, setSiteLinkError] = useState("");
   const [isAddressSearchOpen, setIsAddressSearchOpen] = useState(false);
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
+  const [isAutoMenuDialogOpen, setIsAutoMenuDialogOpen] = useState(false);
 
   const router = useRouter();
   const createStoreMutation = useCreateStore();
@@ -136,11 +145,20 @@ export default function Page() {
     return match ? match[1] : null;
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!isValid) {
       return;
     }
 
+    // 외부 링크가 있으면 팝업 표시, 없으면 바로 제출
+    if (Object.keys(externalLinks).length > 0) {
+      setIsAutoMenuDialogOpen(true);
+    } else {
+      handleFinalSubmit(false);
+    }
+  };
+
+  const handleFinalSubmit = async (shouldAutoCreate: boolean) => {
     // 서버 전송 시 URL만 파싱하여 전송
     const parsedLinks: Partial<Record<PlatformType, string>> = {};
     (Object.keys(externalLinks) as PlatformType[]).forEach((type) => {
@@ -166,10 +184,12 @@ export default function Page() {
         address,
         description,
         requiredStampsForCoupon: typeof requiredStamps === 'string' ? 10 : requiredStamps,
-        displayTemplate,
+        displayTemplate: 1, // 기본 템플릿으로 고정
+        autoCreateMenus: shouldAutoCreate, // 메뉴 자동 생성 옵션
         ...parsedLinks,
       });
       if (response.storeId) {
+        setIsAutoMenuDialogOpen(false);
         router.push(`/home`);
       }
     } catch (err) {
@@ -325,57 +345,6 @@ export default function Page() {
           </div>
         </div>
 
-        {/* 웹사이트 템플릿 선택 */}
-        <div className="space-y-2.5">
-          <Label className="text-body-sb text-black">웹사이트 템플릿</Label>
-          <div className="grid grid-cols-2 gap-3">
-            {/* 템플릿 1 */}
-            <button
-              type="button"
-              onClick={() => setDisplayTemplate(1)}
-              className={`relative p-4 rounded-[12px] border-2 transition-all ${
-                displayTemplate === 1
-                  ? "border-purple-700 bg-purple-50"
-                  : "border-gray-300 bg-gray-100 hover:border-gray-400"
-              }`}
-            >
-              <div className="aspect-[9/16] bg-gray-300 rounded-lg mb-2 flex items-center justify-center">
-                <span className="text-xs text-gray-500">템플릿 1</span>
-              </div>
-              <p className="text-sub-body-sb text-gray-700">기본 템플릿</p>
-              {displayTemplate === 1 && (
-                <div className="absolute top-2 right-2 w-5 h-5 bg-purple-700 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs">✓</span>
-                </div>
-              )}
-            </button>
-
-            {/* 템플릿 2 */}
-            <button
-              type="button"
-              onClick={() => setDisplayTemplate(2)}
-              className={`relative p-4 rounded-[12px] border-2 transition-all ${
-                displayTemplate === 2
-                  ? "border-purple-700 bg-purple-50"
-                  : "border-gray-300 bg-gray-100 hover:border-gray-400"
-              }`}
-            >
-              <div className="aspect-[9/16] bg-gray-300 rounded-lg mb-2 flex items-center justify-center">
-                <span className="text-xs text-gray-500">템플릿 2</span>
-              </div>
-              <p className="text-sub-body-sb text-gray-700">모던 템플릿</p>
-              {displayTemplate === 2 && (
-                <div className="absolute top-2 right-2 w-5 h-5 bg-purple-700 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs">✓</span>
-                </div>
-              )}
-            </button>
-          </div>
-          <p className="text-xs text-gray-500">
-            * 템플릿 디자인은 피그마 작업 후 업데이트 예정입니다
-          </p>
-        </div>
-
         {/* 외부 링크 */}
         <div className="space-y-2.5">
           <Label className="text-body-sb text-black">외부 링크 (선택)</Label>
@@ -443,6 +412,41 @@ export default function Page() {
         existingLinks={externalLinks}
         onLinkAdd={handleLinkAdd}
       />
+
+      {/* 메뉴 자동 생성 확인 Dialog */}
+      <Dialog open={isAutoMenuDialogOpen} onOpenChange={setIsAutoMenuDialogOpen}>
+        <DialogContent className="max-w-[360px]">
+          <DialogHeader>
+            <DialogTitle className="text-title-2 text-gray-800">
+              메뉴 자동 생성
+            </DialogTitle>
+            <DialogDescription className="text-body-r text-gray-600 pt-2">
+              추가하신 외부 링크를 기반으로 메뉴를 자동으로 생성할까요?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            <p className="text-sub-body-r text-gray-500">
+              네이버/카카오맵 링크가 있으면 메뉴 정보를 자동으로 불러옵니다.
+            </p>
+          </div>
+          <DialogFooter className="flex gap-2 sm:justify-center">
+            <Button
+              onClick={() => handleFinalSubmit(false)}
+              disabled={createStoreMutation.isPending}
+              className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300"
+            >
+              아니오
+            </Button>
+            <Button
+              onClick={() => handleFinalSubmit(true)}
+              disabled={createStoreMutation.isPending}
+              className="flex-1 bg-purple-700 text-white hover:bg-purple-800"
+            >
+              {createStoreMutation.isPending ? "등록 중..." : "예, 자동 생성하기"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

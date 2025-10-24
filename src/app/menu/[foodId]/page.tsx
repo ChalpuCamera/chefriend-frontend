@@ -105,7 +105,7 @@ export default function Page({
       .map((photo) => ({ url: photo.imageUrl, id: photo.photoId })),
   ].slice(0, 3); // 최대 3개까지만
 
-  const reviews = getFlattenedReviews(reviewsData);
+  // const reviews = getFlattenedReviews(reviewsData);
 
   // // 캠페인 데이터 처리
   // const hasCampaign = !!activeCampaign;
