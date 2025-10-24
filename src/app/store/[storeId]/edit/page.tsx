@@ -318,8 +318,8 @@ export default function Page({
                     : "border-gray-300 bg-gray-100 hover:border-gray-400"
                 }`}
               >
-                <div className="aspect-[9/16] bg-gray-300 rounded-lg mb-2 flex items-center justify-center">
-                  <span className="text-xs text-gray-500">템플릿 2</span>
+                <div className="aspect-[9/16] rounded-lg mb-2 flex items-center justify-center">
+                  <Image src="/templates/template2.png" alt="모던 템플릿" width={100} height={100} />
                 </div>
                 <p className="text-sub-body-sb text-gray-700">모던 템플릿</p>
                 {displayTemplate === 2 && (
