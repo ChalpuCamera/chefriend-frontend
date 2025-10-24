@@ -10,10 +10,9 @@ import { useFoodsByStore } from "@/lib/hooks/useFood";
 import { useMyStores, storeKeys } from "@/lib/hooks/useStore";
 import { photoApi } from "@/lib/api/owner/photo";
 import { storeApi } from "@/lib/api/owner/store";
-import { inquiryApi } from "@/lib/api/landing/inquiry";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { Textarea } from "@/components/ui/textarea";
+import { InquiryButton } from "@/components/inquiry-button";
 import {
   Dialog,
   DialogContent,
@@ -57,9 +56,6 @@ export default function Page() {
   const [isProfileImageDialogOpen, setIsProfileImageDialogOpen] =
     useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [isInquiryDialogOpen, setIsInquiryDialogOpen] = useState(false);
-  const [inquiryContent, setInquiryContent] = useState("");
-  const [isSubmittingInquiry, setIsSubmittingInquiry] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Get user's stores (첫 번째 가게 우선)
@@ -216,26 +212,6 @@ export default function Page() {
     }
   };
 
-  // 문의하기 제출
-  const handleInquirySubmit = async () => {
-    if (!inquiryContent.trim()) {
-      toast.error("문의 내용을 입력해주세요.");
-      return;
-    }
-
-    setIsSubmittingInquiry(true);
-    try {
-      await inquiryApi.saveInquiry({ content: (inquiryContent + " [from home page]").trim() });
-      toast.success("문의가 접수되었습니다!");
-      setInquiryContent("");
-      setIsInquiryDialogOpen(false);
-    } catch (error) {
-      console.error("Inquiry submit failed:", error);
-      toast.error("문의 전송에 실패했습니다.");
-    } finally {
-      setIsSubmittingInquiry(false);
-    }
-  };
 
   // const handleCampaignView = () => {
   //   router.push("/campaign");
@@ -521,12 +497,13 @@ export default function Page() {
           </div>
         )}
       </div>
-      <div className="flex flex-col items-center justify-center w-full h-24">
+      <div className="flex flex-col items-center justify-center w-full h-24 gap-3">
+        <InquiryButton source="home page" variant="primary" />
         <Button
-          onClick={() => setIsInquiryDialogOpen(true)}
-          className="w-40 h-9 bg-purple-600 text-sub-body-sb text-white rounded-[8px]"
+          onClick={() => router.push("/faq")}
+          className="w-40 h-9 bg-gray-200 text-sub-body-sb text-gray-800 rounded-[8px] hover:bg-gray-300"
         >
-          개발자에게 문의하기
+          자주 묻는 질문
         </Button>
       </div>
       {/* 최근 손님 평가 섹션 - 추후 사용 예정 */}
@@ -692,40 +669,6 @@ export default function Page() {
         </DialogContent>
       </Dialog>
 
-      {/* 문의하기 Dialog */}
-      <Dialog open={isInquiryDialogOpen} onOpenChange={setIsInquiryDialogOpen}>
-        <DialogContent className="max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle className="text-title-2 text-gray-800">
-              개발자에게 문의하기
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Textarea
-              value={inquiryContent}
-              onChange={(e) => setInquiryContent(e.target.value)}
-              placeholder="문의 내용을 입력해주세요"
-              className="min-h-[120px] bg-gray-200 rounded-[12px] p-4 text-body-r placeholder:text-gray-500 resize-none"
-              rows={5}
-            />
-            <DialogFooter className="flex gap-2 sm:justify-center">
-              <Button
-                onClick={handleInquirySubmit}
-                disabled={!inquiryContent.trim() || isSubmittingInquiry}
-                className="flex-1 bg-purple-700 text-white hover:bg-purple-800"
-              >
-                {isSubmittingInquiry ? "전송 중..." : "보내기"}
-              </Button>
-              <Button
-                onClick={() => setIsInquiryDialogOpen(false)}
-                className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300"
-              >
-                취소
-              </Button>
-            </DialogFooter>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

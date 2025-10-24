@@ -81,6 +81,10 @@ export default function MyPage() {
       onClick: () => window.open("https://open.kakao.com/o/sCpB58Hh", "_blank"),
     },
     {
+      label: "자주 묻는 질문 (FAQ)",
+      onClick: () => router.push("/faq"),
+    },
+    {
       label: "운영약관",
       onClick: () => window.open("https://chefriend.kr/operation", "_blank"),
     },
