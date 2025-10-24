@@ -10,12 +10,22 @@ import {
   useUpdateThumbnail,
 } from "@/lib/hooks/useFood";
 import { usePhotosByFoodItem } from "@/lib/hooks/usePhoto";
-import { useJARAnalysis } from "@/lib/hooks/useJAR";
+//import { useJARAnalysis } from "@/lib/hooks/useJAR";
 import {
   useFoodReviews,
   getFlattenedReviews,
 } from "@/lib/hooks/useFoodReviews";
+import { inquiryApi } from "@/lib/api/landing/inquiry";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 // import { useGetActiveCampaignByFood, calculateRemainingDays } from "@/lib/hooks/useCampaign";
 // import { useMyStores } from "@/lib/hooks/useStore";
 
@@ -27,13 +37,16 @@ export default function Page({
   const resolvedParams = use(params);
   const router = useRouter();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [isInquiryDialogOpen, setIsInquiryDialogOpen] = useState(false);
+  const [inquiryContent, setInquiryContent] = useState("");
+  const [isSubmittingInquiry, setIsSubmittingInquiry] = useState(false);
   const foodId = parseInt(resolvedParams.foodId);
   const observerTarget = useRef<HTMLDivElement>(null);
 
   // API 데이터 가져오기
   const { data: menuData, isLoading } = useFood(foodId);
   const { data: photos = [] } = usePhotosByFoodItem(foodId);
-  const { data: jarData, isError: jarError } = useJARAnalysis(foodId);
+  // const { data: jarData, isError: jarError } = useJARAnalysis(foodId);
   const {
     data: reviewsData,
     fetchNextPage,
@@ -43,6 +56,26 @@ export default function Page({
 
   const deleteFood = useDeleteFood();
   const updateThumbnail = useUpdateThumbnail();
+
+  const handleInquirySubmit = async () => {
+    if (!inquiryContent.trim()) {
+      toast.error("문의 내용을 입력해주세요.");
+      return;
+    }
+
+    setIsSubmittingInquiry(true);
+    try {
+      await inquiryApi.saveInquiry({ content: (inquiryContent + " [from menu page]").trim() });
+      toast.success("문의가 접수되었습니다!");
+      setInquiryContent("");
+      setIsInquiryDialogOpen(false);
+    } catch (error) {
+      console.error("Inquiry submit failed:", error);
+      toast.error("문의 전송에 실패했습니다.");
+    } finally {
+      setIsSubmittingInquiry(false);
+    }
+  };
 
   // 사용자의 가게 정보 가져오기
   // const { data: storesData } = useMyStores({ size: 10 });
@@ -159,49 +192,52 @@ export default function Page({
     <div className="h-screen w-full mx-auto bg-white">
       {/* Header - 유지 */}
       <div className="fixed top-0 left-0 right-0 bg-white z-50">
-        <div className="flex items-center justify-between h-11 px-3.5">
-          <button
-            onClick={handleBack}
-            className="flex items-center justify-center"
-          >
-            <ArrowLeft size={24} className="text-foreground" />
-          </button>
-          <div className="flex items-center gap-5">
-            <button className="flex items-center justify-center" onClick={handleHome}>
-              <Image
-                src="/home_icon.png"
-                alt="home"
-                width={20}
-                height={20}
-              />
+        <div className="max-w-[430px] mx-auto">
+          <div className="flex items-center justify-between h-11 px-3.5">
+            <button
+              onClick={handleBack}
+              className="flex items-center justify-center"
+            >
+              <ArrowLeft size={24} className="text-foreground" />
             </button>
-            <button className="flex items-center justify-center" onClick={handleSettings}>
-              <Image
-                src="/setting_icon.png"
-                alt="settings"
-                width={20}
-                height={20}
-              />
-            </button>
+            <div className="flex items-center gap-5">
+              <button
+                className="flex items-center justify-center"
+                onClick={handleHome}
+              >
+                <Image src="/home_icon.png" alt="home" width={20} height={20} />
+              </button>
+              <button
+                className="flex items-center justify-center"
+                onClick={handleSettings}
+              >
+                <Image
+                  src="/setting_icon.png"
+                  alt="settings"
+                  width={20}
+                  height={20}
+                />
+              </button>
+            </div>
           </div>
-        </div>
 
-        {/* Title and Actions */}
-        <div className="flex items-center justify-between px-4 py-4">
-          <h1 className="text-title-2 text-gray-800">메뉴 상세보기</h1>
-          <div className="flex gap-1">
-            <button
-              onClick={handleDelete}
-              className="px-2 py-1 text-gray-800 text-body-r"
-            >
-              삭제
-            </button>
-            <button
-              onClick={handleEdit}
-              className="pl-2 py-1 text-gray-800 text-body-r"
-            >
-              수정
-            </button>
+          {/* Title and Actions */}
+          <div className="flex items-center justify-between px-4 py-4">
+            <h1 className="text-title-2 text-gray-800">메뉴 상세보기</h1>
+            <div className="flex gap-1">
+              <button
+                onClick={handleDelete}
+                className="px-2 py-1 text-gray-800 text-headline-m"
+              >
+                삭제
+              </button>
+              <button
+                onClick={handleEdit}
+                className="pl-2 py-1 text-gray-800 text-headline-m"
+              >
+                수정
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -250,7 +286,9 @@ export default function Page({
                       alt={`메뉴 이미지 ${index + 1}`}
                       width={38}
                       height={38}
-                      className={`w-full h-full object-cover ${allImages.length === 0 ? 'opacity-30' : ''}`}
+                      className={`w-full h-full object-cover ${
+                        allImages.length === 0 ? "opacity-30" : ""
+                      }`}
                     />
                   </div>
                   {selectedImageIndex === index && (
@@ -298,24 +336,24 @@ export default function Page({
           <h3 className="text-sub-title-b text-gray-800 mb-4">캠페인 현황</h3>
 
           {hasCampaign && campaignData ? ( */}
-            {/* 캠페인 진행 중 상태 - Figma 디자인 기반 */}
-            {/* <div className="bg-white border border-purple-700 rounded-[8px] relative overflow-hidden h-[140px]">
+        {/* 캠페인 진행 중 상태 - Figma 디자인 기반 */}
+        {/* <div className="bg-white border border-purple-700 rounded-[8px] relative overflow-hidden h-[140px]">
               <div className="flex h-full">
                 <div className="flex-1 p-4 pr-[135px]"> */}
-                  {/* 메뉴 이름 */}
-                  {/* <h4 className="text-headline-b text-gray-700 mb-2">
+        {/* 메뉴 이름 */}
+        {/* <h4 className="text-headline-b text-gray-700 mb-2">
                     {campaignData.foodItemName || campaignData.name}
                   </h4> */}
 
-                  {/* 남은 기간 */}
-                  {/* <p className="text-body-sb text-purple-700 mb-4">
+        {/* 남은 기간 */}
+        {/* <p className="text-body-sb text-purple-700 mb-4">
                     {campaignData.daysRemaining > 0
                       ? `${campaignData.daysRemaining}일 남음`
                       : '오늘 종료'}
                   </p> */}
 
-                  {/* 평가 수 정보 */}
-                  {/* <div className="space-y-2">
+        {/* 평가 수 정보 */}
+        {/* <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="text-sub-body-r text-gray-700">고객 평가 수</span>
                       <span className="text-sub-body-r text-gray-700">
@@ -323,8 +361,8 @@ export default function Page({
                       </span>
                     </div> */}
 
-                    {/* 진행률 바 */}
-                    {/* <div className="h-[9px] bg-gray-300 rounded-[20px] overflow-hidden">
+        {/* 진행률 바 */}
+        {/* <div className="h-[9px] bg-gray-300 rounded-[20px] overflow-hidden">
                       <div
                         className="h-full bg-purple-700 rounded-[20px] transition-all"
                         style={{ width: `${campaignData.progressPercent}%` }}
@@ -333,8 +371,8 @@ export default function Page({
                   </div>
                 </div> */}
 
-                {/* 오른쪽 이미지 */}
-                {/* <div className="absolute right-0 top-0 h-[140px] w-[131px]">
+        {/* 오른쪽 이미지 */}
+        {/* <div className="absolute right-0 top-0 h-[140px] w-[131px]">
                   <Image
                     src={campaignData.imageUrl}
                     alt="캠페인 메뉴"
@@ -347,8 +385,8 @@ export default function Page({
               </div>
             </div>
           ) : ( */}
-            {/* 캠페인 미등록 상태 */}
-            {/* <div className="bg-[#f7f4fe] rounded-[12px] p-6 flex flex-col items-center justify-center">
+        {/* 캠페인 미등록 상태 */}
+        {/* <div className="bg-[#f7f4fe] rounded-[12px] p-6 flex flex-col items-center justify-center">
               <p className="text-body-r text-black text-center mb-4 leading-[24px]">
                 캠페인을 등록한 메뉴는
                 <br />
@@ -375,7 +413,7 @@ export default function Page({
         </div> */}
 
         {/* Menu Stats */}
-        <div className="px-4 mb-4">
+        {/* <div className="px-4 mb-4">
           <h3 className="text-sub-title-b text-gray-800 mb-4">
             메뉴 평가 리포트
           </h3>
@@ -410,13 +448,13 @@ export default function Page({
               </p>
             </div>
           </div>
-        </div>
+        </div> */}
         {/* 그래프 Section */}
-        <div className="px-4 py-6 flex flex-col gap-4">
-          {/* 맛 평가 시각화 */}
+        {/* <div className="px-4 py-6 flex flex-col gap-4">
+      
           <div className="relative bg-white rounded-[8px] overflow-hidden">
             <div className={jarError ? "opacity-20" : ""}>
-              {/* 맛 속성별 평가 */}
+
               <div className="divide-y divide-gray-100">
                 {(() => {
                   // 에러 시 더미 데이터 사용
@@ -554,7 +592,6 @@ export default function Page({
               </div>
             </div>
 
-            {/* 에러 오버레이 */}
             {jarError && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="bg-[#f7f4fe] border border-gray-700 rounded-[12px] px-8 py-4 mx-6">
@@ -567,7 +604,6 @@ export default function Page({
             )}
           </div>
 
-          {/* NPS 추천 비율 */}
           <div
             className={`bg-white rounded-[8px] border border-gray-300 p-4 ${
               jarError ? "opacity-20" : ""
@@ -610,10 +646,10 @@ export default function Page({
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Recent Reviews Section */}
-        <div className="px-4 py-6">
+        {/* <div className="px-4 py-6">
           <h2 className="text-sub-title-b text-gray-800 mb-5">
             손님의 솔직한 평가
           </h2>
@@ -638,7 +674,7 @@ export default function Page({
             <div className="space-y-6">
               {reviews.map((review) => (
                 <div key={review.id} className="py-4">
-                  {/* Review Header */}
+                
                   <div className="flex items-start gap-3 mb-3">
                     <Image
                       src={review.avatar || "/user_profile.png"}
@@ -656,7 +692,7 @@ export default function Page({
                           {review.date}
                         </span>
                       </div>
-                      {/* 맛 프로필 */}
+                      
                       <div className="flex items-center gap-3 mt-2 text-body-r text-gray-700">
                         <span>🍽️ {review.servings}</span>
                         <span>🌶️ {review.spiciness}</span>
@@ -665,7 +701,6 @@ export default function Page({
                     </div>
                   </div>
 
-                  {/* Review Content */}
                   <div className="mt-4">
                     <p className="text-body-r text-gray-700 whitespace-pre-line">
                       {review.reviewText}
@@ -674,7 +709,6 @@ export default function Page({
                 </div>
               ))}
 
-              {/* 무한 스크롤 Observer Target */}
               {hasNextPage && (
                 <div ref={observerTarget} className="py-4 text-center">
                   {isFetchingNextPage ? (
@@ -686,8 +720,50 @@ export default function Page({
               )}
             </div>
           )}
-        </div>
+        </div> */}
+        <div className="flex flex-col items-center justify-center w-full h-24">
+        <Button
+          onClick={() => setIsInquiryDialogOpen(true)}
+          className="w-40 h-9 bg-purple-600 text-sub-body-sb text-white rounded-[8px]"
+        >
+          개발자에게 문의하기
+        </Button>
       </div>
+      </div>
+      {/* 문의하기 Dialog */}
+      <Dialog open={isInquiryDialogOpen} onOpenChange={setIsInquiryDialogOpen}>
+        <DialogContent className="max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="text-title-2 text-gray-800">
+              개발자에게 문의하기
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Textarea
+              value={inquiryContent}
+              onChange={(e) => setInquiryContent(e.target.value)}
+              placeholder="문의 내용을 입력해주세요"
+              className="min-h-[120px] bg-gray-200 rounded-[12px] p-4 text-body-r placeholder:text-gray-500 resize-none"
+              rows={5}
+            />
+            <DialogFooter className="flex gap-2 sm:justify-center">
+              <Button
+                onClick={handleInquirySubmit}
+                disabled={!inquiryContent.trim() || isSubmittingInquiry}
+                className="flex-1 bg-purple-700 text-white hover:bg-purple-800"
+              >
+                {isSubmittingInquiry ? "전송 중..." : "보내기"}
+              </Button>
+              <Button
+                onClick={() => setIsInquiryDialogOpen(false)}
+                className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300"
+              >
+                취소
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

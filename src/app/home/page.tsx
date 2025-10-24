@@ -225,7 +225,7 @@ export default function Page() {
 
     setIsSubmittingInquiry(true);
     try {
-      await inquiryApi.saveInquiry({ content: inquiryContent.trim() });
+      await inquiryApi.saveInquiry({ content: (inquiryContent + " [from home page]").trim() });
       toast.success("문의가 접수되었습니다!");
       setInquiryContent("");
       setIsInquiryDialogOpen(false);
