@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, use } from "react";
+import { useState, use } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
@@ -11,11 +11,11 @@ import {
 } from "@/lib/hooks/useFood";
 import { usePhotosByFoodItem } from "@/lib/hooks/usePhoto";
 //import { useJARAnalysis } from "@/lib/hooks/useJAR";
-import {
-  useFoodReviews,
-  getFlattenedReviews,
-} from "@/lib/hooks/useFoodReviews";
+// import {
+//   useFoodReviews,
+// } from "@/lib/hooks/useFoodReviews";
 import { inquiryApi } from "@/lib/api/landing/inquiry";
+
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -41,18 +41,18 @@ export default function Page({
   const [inquiryContent, setInquiryContent] = useState("");
   const [isSubmittingInquiry, setIsSubmittingInquiry] = useState(false);
   const foodId = parseInt(resolvedParams.foodId);
-  const observerTarget = useRef<HTMLDivElement>(null);
+  // const observerTarget = useRef<HTMLDivElement>(null);
 
   // API 데이터 가져오기
   const { data: menuData, isLoading } = useFood(foodId);
   const { data: photos = [] } = usePhotosByFoodItem(foodId);
   // const { data: jarData, isError: jarError } = useJARAnalysis(foodId);
-  const {
-    data: reviewsData,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useFoodReviews(foodId);
+  // const {
+  //   data: reviewsData,
+  //   fetchNextPage,
+  //   hasNextPage,
+  //   isFetchingNextPage,
+  // } = useFoodReviews(foodId);
 
   const deleteFood = useDeleteFood();
   const updateThumbnail = useUpdateThumbnail();
@@ -65,7 +65,7 @@ export default function Page({
 
     setIsSubmittingInquiry(true);
     try {
-      await inquiryApi.saveInquiry({ content: (inquiryContent + " [from menu page]").trim() });
+      await inquiryApi.saveInquiry({ content: (inquiryContent + " [from menu page foodId: " + foodId + "]").trim() });
       toast.success("문의가 접수되었습니다!");
       setInquiryContent("");
       setIsInquiryDialogOpen(false);
@@ -120,22 +120,22 @@ export default function Page({
   // } : null;
 
   // 무한 스크롤 설정
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
-        }
-      },
-      { threshold: 0.5 }
-    );
+  // useEffect(() => {
+  //   const observer = new IntersectionObserver(
+  //     (entries) => {
+  //       if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+  //         fetchNextPage();
+  //       }
+  //     },
+  //     { threshold: 0.5 }
+  //   );
 
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
-    }
+  //   if (observerTarget.current) {
+  //     observer.observe(observerTarget.current);
+  //   }
 
-    return () => observer.disconnect();
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+  //   return () => observer.disconnect();
+  // }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const handleBack = () => {
     router.push("/menu");
