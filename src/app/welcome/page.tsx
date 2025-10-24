@@ -82,6 +82,11 @@ export default function Page() {
       return;
     }
 
+    if (siteLink.trim().length < 4) {
+      setSiteLinkError("사이트 주소는 최소 4글자 이상이어야 합니다");
+      return;
+    }
+
     if (!validateSiteLink(siteLink)) {
       setSiteLinkError("한글, 영문, 숫자, 하이픈(-)만 사용 가능합니다");
       return;

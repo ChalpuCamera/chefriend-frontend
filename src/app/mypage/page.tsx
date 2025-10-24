@@ -107,16 +107,7 @@ export default function MyPage() {
       {/* Profile Section - Figma Design */}
       <div className="w-full bg-white mt-[24px]">
         <div className="flex items-center">
-          <div className="w-[54px] h-[54px] rounded-full overflow-hidden flex-shrink-0">
-            <Image
-              src="/logo.png"
-              alt="logo"
-              width={54}
-              height={54}
-              className="w-full h-full object-cover"
-            />
-          </div>
-            <p className="ml-[20px] text-sub-title-b text-gray-800">
+            <p className="text-sub-title-b text-gray-800">
               {userNickname}
             </p>
         </div>
