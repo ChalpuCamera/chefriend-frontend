@@ -9,57 +9,16 @@ import { CustomButton } from "@/components/ui/custom-button";
 import { useCreateStore, useCheckSiteLink, useMyStores } from "@/lib/hooks/useStore";
 import { useRouter } from "next/navigation";
 import { AddressSearch } from "@/components/address-search";
-import { LinkSelectorDialog, PlatformType } from "@/components/link-selector-dialog";
-import { X } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-
-const platformIcons: Record<PlatformType, string> = {
-  naverLink: "/platform_icons/naver.png",
-  kakaoLink: "/platform_icons/kakaomap.png",
-  yogiyoLink: "/platform_icons/yogiyo.png",
-  baeminLink: "/platform_icons/baemin.png",
-  coupangeatsLink: "/platform_icons/coupangeats.png",
-  kakaoTalkLink: "/platform_icons/kakaotalk.png",
-  instagramLink: "/platform_icons/instagram.png",
-  ddangyoLink: "/platform_icons/ddangyo.png",
-  googleMapsLink: "/platform_icons/googlemaps.png",
-  daangnLink: "/platform_icons/daangn.png",
-};
-
-const platformNames: Record<PlatformType, string> = {
-  naverLink: "네이버 지도",
-  kakaoLink: "카카오맵",
-  yogiyoLink: "요기요",
-  baeminLink: "배달의민족",
-  coupangeatsLink: "쿠팡이츠",
-  kakaoTalkLink: "카카오톡",
-  instagramLink: "인스타그램",
-  ddangyoLink: "땡겨요",
-  googleMapsLink: "구글맵",
-  daangnLink: "당근마켓",
-};
 
 export default function Page() {
   const [siteLink, setSiteLink] = useState("");
   const [storeName, setStoreName] = useState("");
   const [address, setAddress] = useState("");
   const [description, setDescription] = useState("");
-  const [requiredStamps, setRequiredStamps] = useState<number | string>(10);
-  const [externalLinks, setExternalLinks] = useState<Partial<Record<PlatformType, string>>>({});
 
   const [siteLinkChecked, setSiteLinkChecked] = useState(false);
   const [siteLinkError, setSiteLinkError] = useState("");
   const [isAddressSearchOpen, setIsAddressSearchOpen] = useState(false);
-  const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
-  const [isAutoMenuDialogOpen, setIsAutoMenuDialogOpen] = useState(false);
 
   const router = useRouter();
   const createStoreMutation = useCreateStore();
@@ -120,62 +79,16 @@ export default function Page() {
     setAddress(selectedAddress);
   };
 
-  const handleLinkAdd = (type: PlatformType, url: string) => {
-    setExternalLinks((prev) => ({ ...prev, [type]: url }));
-  };
-
-  const handleLinkRemove = (type: PlatformType) => {
-    setExternalLinks((prev) => {
-      const newLinks = { ...prev };
-      delete newLinks[type];
-      return newLinks;
-    });
-  };
-
   const isValid =
     siteLinkChecked &&
     storeName.trim().length >= 1 &&
     address.trim().length >= 1 &&
     description.trim().length >= 1;
 
-  // URL 추출 함수
-  const extractUrl = (text: string): string | null => {
-    const urlRegex = /(https?:\/\/[^\s]+)/;
-    const match = text.match(urlRegex);
-    return match ? match[1] : null;
-  };
-
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!isValid) {
       return;
     }
-
-    // 외부 링크가 있으면 팝업 표시, 없으면 바로 제출
-    if (Object.keys(externalLinks).length > 0) {
-      setIsAutoMenuDialogOpen(true);
-    } else {
-      handleFinalSubmit(false);
-    }
-  };
-
-  const handleFinalSubmit = async (shouldAutoCreate: boolean) => {
-    // 서버 전송 시 URL만 파싱하여 전송
-    const parsedLinks: Partial<Record<PlatformType, string>> = {};
-    (Object.keys(externalLinks) as PlatformType[]).forEach((type) => {
-      const value = externalLinks[type];
-      if (value) {
-        if (type === "instagramLink") {
-          // 인스타그램은 원본 그대로
-          parsedLinks[type] = value;
-        } else {
-          // 다른 플랫폼은 URL 추출
-          const extractedUrl = extractUrl(value);
-          if (extractedUrl) {
-            parsedLinks[type] = extractedUrl;
-          }
-        }
-      }
-    });
 
     try {
       const response = await createStoreMutation.mutateAsync({
@@ -183,13 +96,11 @@ export default function Page() {
         storeName,
         address,
         description,
-        requiredStampsForCoupon: typeof requiredStamps === 'string' ? 10 : requiredStamps,
-        displayTemplate: 1, // 기본 템플릿으로 고정
-        autoCreateMenus: shouldAutoCreate, // 메뉴 자동 생성 옵션
-        ...parsedLinks,
+        requiredStampsForCoupon: 10,  // 기본값으로 고정
+        displayTemplate: 1,            // 기본 템플릿으로 고정
+        links: [],                     // 빈 배열
       });
       if (response.storeId) {
-        setIsAutoMenuDialogOpen(false);
         router.push(`/home`);
       }
     } catch (err) {
@@ -289,100 +200,19 @@ export default function Page() {
           </div>
         </div>
 
-        {/* 가게 설명 */}
+        {/* 공지사항 */}
         <div className="space-y-2.5">
           <Label htmlFor="description" className="text-body-sb text-black">
-            가게 설명
+            공지사항
           </Label>
           <Textarea
             id="description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="min-h-27 bg-gray-200 rounded-[12px] p-4 text-body-r placeholder:text-gray-500 resize-none"
-            placeholder="가게에 대한 간단한 소개를 작성해주세요"
+            placeholder="공지사항을 입력해주세요"
             rows={4}
           />
-        </div>
-
-        {/* 쿠폰 완성 스탬프 개수 */}
-        <div className="space-y-1.5">
-          <Label htmlFor="requiredStamps" className="text-sub-body-sb text-black">
-            쿠폰 스탬프 개수
-          </Label>
-          <div className="flex items-center gap-2">
-            <Input
-              id="requiredStamps"
-              type="number"
-              min="1"
-              max="20"
-              value={requiredStamps}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (value === '') {
-                  setRequiredStamps(''); // 빈 값 허용
-                  return;
-                }
-                const numValue = parseInt(value);
-                if (!isNaN(numValue)) {
-                  if (numValue > 20) {
-                    setRequiredStamps(20);
-                  } else if (numValue >= 1) {
-                    setRequiredStamps(numValue);
-                  }
-                }
-              }}
-              onBlur={(e) => {
-                // 포커스를 잃을 때 빈 값이거나 0 이하면 1로 설정
-                const value = e.target.value;
-                if (value === '' || parseInt(value) < 1) {
-                  setRequiredStamps(10);
-                }
-              }}
-              className="h-11 bg-gray-200 rounded-[10px] placeholder:text-gray-500 w-16 text-center text-sub-body-r"
-            />
-            <span className="text-sub-body-r text-gray-600">개</span>
-            <span className="text-caption-r text-gray-500">최대 20개</span>
-          </div>
-        </div>
-
-        {/* 외부 링크 */}
-        <div className="space-y-2.5">
-          <Label className="text-body-sb text-black">외부 링크 (선택)</Label>
-
-          {/* 추가된 링크 목록 */}
-          {Object.keys(externalLinks).length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3">
-              {(Object.keys(externalLinks) as PlatformType[]).map((type) => (
-                <div
-                  key={type}
-                  className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg"
-                >
-                  <Image
-                    src={platformIcons[type]}
-                    alt={platformNames[type]}
-                    width={20}
-                    height={20}
-                    className="object-contain"
-                  />
-                  <span className="text-xs text-gray-700">{type === "instagramLink" ? externalLinks[type] : platformNames[type]}</span>
-                  <button
-                    onClick={() => handleLinkRemove(type)}
-                    className="ml-1 text-gray-500 hover:text-gray-700"
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* 링크 추가 버튼 */}
-          <button
-            onClick={() => setIsLinkDialogOpen(true)}
-            className="w-full h-13 bg-gray-200 rounded-[12px] text-body-r text-gray-600 hover:bg-gray-300 transition-colors"
-          >
-            + 링크 추가하기
-          </button>
         </div>
       </div>
 
@@ -404,49 +234,6 @@ export default function Page() {
         onOpenChange={setIsAddressSearchOpen}
         onAddressSelect={handleAddressSelect}
       />
-
-      {/* 링크 선택 Dialog */}
-      <LinkSelectorDialog
-        open={isLinkDialogOpen}
-        onOpenChange={setIsLinkDialogOpen}
-        existingLinks={externalLinks}
-        onLinkAdd={handleLinkAdd}
-      />
-
-      {/* 메뉴 자동 생성 확인 Dialog */}
-      <Dialog open={isAutoMenuDialogOpen} onOpenChange={setIsAutoMenuDialogOpen}>
-        <DialogContent className="max-w-[360px]">
-          <DialogHeader>
-            <DialogTitle className="text-title-2 text-gray-800">
-              메뉴 자동 생성
-            </DialogTitle>
-            <DialogDescription className="text-body-r text-gray-600 pt-2">
-              추가하신 외부 링크를 기반으로 메뉴를 자동으로 생성할까요?
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-2">
-            <p className="text-sub-body-r text-gray-500">
-              네이버/카카오맵 링크가 있으면 메뉴 정보를 자동으로 불러옵니다.
-            </p>
-          </div>
-          <DialogFooter className="flex gap-2 sm:justify-center">
-            <Button
-              onClick={() => handleFinalSubmit(false)}
-              disabled={createStoreMutation.isPending}
-              className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300"
-            >
-              아니오
-            </Button>
-            <Button
-              onClick={() => handleFinalSubmit(true)}
-              disabled={createStoreMutation.isPending}
-              className="flex-1 bg-purple-700 text-white hover:bg-purple-800"
-            >
-              {createStoreMutation.isPending ? "등록 중..." : "예, 자동 생성하기"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

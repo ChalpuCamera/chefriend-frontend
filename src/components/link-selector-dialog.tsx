@@ -5,44 +5,35 @@ import Image from "next/image";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-
-export type PlatformType =
-  | "naverLink"
-  | "kakaoLink"
-  | "yogiyoLink"
-  | "baeminLink"
-  | "coupangeatsLink"
-  | "kakaoTalkLink"
-  | "instagramLink"
-  | "ddangyoLink"
-  | "googleMapsLink"
-  | "daangnLink";
+import { LinkType, LinkItem } from "@/lib/types/api/store";
 
 interface Platform {
-  key: PlatformType;
+  key: LinkType;
   name: string;
   icon: string;
   placeholder: string;
+  domainToCheck?: string;  // 도메인 검증용
 }
 
 const platforms: Platform[] = [
-  { key: "naverLink", name: "네이버 지도", icon: "/platform_icons/naver.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
-  { key: "kakaoLink", name: "카카오맵", icon: "/platform_icons/kakaomap.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
-  { key: "googleMapsLink", name: "구글맵", icon: "/platform_icons/googlemaps.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
-  { key: "yogiyoLink", name: "요기요", icon: "/platform_icons/yogiyo.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
-  { key: "baeminLink", name: "배달의민족", icon: "/platform_icons/baemin.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
-  { key: "coupangeatsLink", name: "쿠팡이츠", icon: "/platform_icons/coupangeats.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
-  { key: "ddangyoLink", name: "땡겨요", icon: "/platform_icons/ddangyo.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
-  { key: "kakaoTalkLink", name: "카카오톡 채널", icon: "/platform_icons/kakaotalk.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
-  { key: "instagramLink", name: "인스타그램", icon: "/platform_icons/instagram.png", placeholder: "인스타 아이디를 입력해주세요" },
-  { key: "daangnLink", name: "당근마켓", icon: "/platform_icons/daangn.png", placeholder: "복사한 링크를 바로 붙여넣으세요" },
+  { key: "NAVER_MAP", name: "네이버 지도", icon: "/platform_icons/naver.png", placeholder: "복사한 링크를 바로 붙여넣으세요", domainToCheck: "naver.me" },
+  { key: "KAKAO_MAP", name: "카카오맵", icon: "/platform_icons/kakaomap.png", placeholder: "복사한 링크를 바로 붙여넣으세요", domainToCheck: "kko.kakao.com" },
+  { key: "GOOGLE_MAPS", name: "구글맵", icon: "/platform_icons/googlemaps.png", placeholder: "복사한 링크를 바로 붙여넣으세요", domainToCheck: "maps.app.goo.gl" },
+  { key: "YOGIYO", name: "요기요", icon: "/platform_icons/yogiyo.png", placeholder: "복사한 링크를 바로 붙여넣으세요", domainToCheck: "yogiyo.onelink.me" },
+  { key: "BAEMIN", name: "배달의민족", icon: "/platform_icons/baemin.png", placeholder: "복사한 링크를 바로 붙여넣으세요", domainToCheck: "s.baemin.com" },
+  { key: "COUPANGEATS", name: "쿠팡이츠", icon: "/platform_icons/coupangeats.png", placeholder: "복사한 링크를 바로 붙여넣으세요", domainToCheck: "web.coupangeats.com" },
+  { key: "DDANGYO", name: "땡겨요", icon: "/platform_icons/ddangyo.png", placeholder: "복사한 링크를 바로 붙여넣으세요", domainToCheck: "fdofd.ddangyo.com" },
+  { key: "KAKAO_TALK", name: "카카오톡 채널", icon: "/platform_icons/kakaotalk.png", placeholder: "복사한 링크를 바로 붙여넣으세요", domainToCheck: "pf.kakao.com" },
+  { key: "INSTAGRAM", name: "인스타그램", icon: "/platform_icons/instagram.png", placeholder: "인스타 아이디를 입력해주세요", domainToCheck: "www.instagram.com" },
+  { key: "DAANGN", name: "당근마켓", icon: "/platform_icons/daangn.png", placeholder: "복사한 링크를 바로 붙여넣으세요", domainToCheck: "www.daangn.com" },
+  { key: "CUSTOM", name: "커스텀 링크", icon: "/platform_icons/link.png", placeholder: "링크 URL을 입력해주세요" },
 ];
 
 interface LinkSelectorDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  existingLinks: Partial<Record<PlatformType, string>>;
-  onLinkAdd: (type: PlatformType, url: string) => void;
+  existingLinks: LinkItem[];
+  onLinkAdd: (linkItem: LinkItem) => void;
 }
 
 export function LinkSelectorDialog({
@@ -53,48 +44,51 @@ export function LinkSelectorDialog({
 }: LinkSelectorDialogProps) {
   const [selectedPlatform, setSelectedPlatform] = useState<Platform | null>(null);
   const [linkUrl, setLinkUrl] = useState("");
+  const [customLabel, setCustomLabel] = useState("");
   const [urlError, setUrlError] = useState("");
 
-  // URL 추출 함수
-  const extractUrl = (text: string): string | null => {
-    const urlRegex = /(https?:\/\/[^\s]+)/;
+  // 텍스트에서 특정 플랫폼의 URL 추출 함수 (프로토콜 제거)
+  const extractUrlForPlatform = (text: string, domain: string): string | null => {
+    // 도메인을 포함한 URL 찾기 (프로토콜 선택적, 공백 전까지)
+    const urlRegex = new RegExp(`(https?:\\/\\/)?${domain.replace(/\./g, '\\.')}[^\\s]*`, 'i');
     const match = text.match(urlRegex);
-    return match ? match[1] : null;
+
+    if (!match) return null;
+
+    let url = match[0];
+
+    // 프로토콜 제거
+    url = url.replace(/^https?:\/\//, '');
+
+    return url;
   };
 
-  // 플랫폼별 도메인 검증 함수
-  const validatePlatformUrl = (platformKey: PlatformType, url: string): boolean => {
-    const platformDomains: Record<PlatformType, string> = {
-      baeminLink: "s.baemin.com",
-      yogiyoLink: "yogiyo.onelink.me",
-      coupangeatsLink: "web.coupangeats.com",
-      ddangyoLink: "fdofd.ddangyo.com",
-      naverLink: "naver.me",
-      kakaoLink: "kko.kakao.com",
-      googleMapsLink: "maps.app.goo.gl",
-      instagramLink: "www.instagram.com",
-      kakaoTalkLink: "pf.kakao.com",
-      daangnLink: "www.daangn.com",
-    };
-
-    const expectedDomain = platformDomains[platformKey];
-    return url.includes(expectedDomain);
+  // 플랫폼별 도메인 검증 함수 (도메인으로 시작하는지 확인)
+  const validatePlatformUrl = (url: string, domain: string): boolean => {
+    return url.toLowerCase().startsWith(domain.toLowerCase());
   };
 
   const handlePlatformClick = (platform: Platform) => {
-    // 이미 추가된 링크가 있으면 선택하지 않음
-    if (existingLinks[platform.key]) return;
+    // 일반 플랫폼은 중복 불가, CUSTOM은 중복 가능
+    if (platform.key !== "CUSTOM") {
+      const isAdded = existingLinks.some(link => link.linkType === platform.key);
+      if (isAdded) return;
+    }
 
     setSelectedPlatform(platform);
     setLinkUrl("");
+    setCustomLabel("");
     setUrlError("");
   };
 
   const handleLinkUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setUrlError("");
-    // 원본 텍스트 그대로 저장
     setLinkUrl(value);
+  };
+
+  const handleCustomLabelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCustomLabel(e.target.value);
   };
 
   const handleSubmit = () => {
@@ -102,38 +96,51 @@ export function LinkSelectorDialog({
       return;
     }
 
-    // 인스타그램 제외한 모든 플랫폼은 http:// 또는 https:// 포함 여부 검증
-    if (selectedPlatform.key !== "instagramLink") {
-      const extractedUrl = extractUrl(linkUrl.trim());
-      if (!extractedUrl) {
-        setUrlError("올바른 URL을 찾을 수 없습니다. http:// 또는 https://로 시작하는 링크를 포함해주세요.");
-        return;
-      }
-
-      // 플랫폼별 도메인 검증
-      if (!validatePlatformUrl(selectedPlatform.key, extractedUrl)) {
-        const platformDomainNames: Record<PlatformType, string> = {
-          baeminLink: "s.baemin.com",
-          yogiyoLink: "yogiyo.onelink.me",
-          coupangeatsLink: "web.coupangeats.com",
-          ddangyoLink: "fdofd.ddangyo.com",
-          naverLink: "naver.me",
-          kakaoLink: "kko.kakao.com",
-          googleMapsLink: "maps.app.goo.gl",
-          instagramLink: "www.instagram.com",
-          kakaoTalkLink: "pf.kakao.com",
-          daangnLink: "www.daangn.com",
-        };
-        const expectedDomain = platformDomainNames[selectedPlatform.key];
-        setUrlError(`${selectedPlatform.name} 링크가 아닙니다. ${expectedDomain}을(를) 포함하는 링크를 입력해주세요.`);
-        return;
-      }
+    // CUSTOM 타입일 때 customLabel 필수
+    if (selectedPlatform.key === "CUSTOM" && !customLabel.trim()) {
+      setUrlError("커스텀 링크는 이름을 입력해주세요");
+      return;
     }
 
-    // 원본 텍스트 그대로 전달
-    onLinkAdd(selectedPlatform.key, linkUrl.trim());
+    let finalUrl = linkUrl.trim();
+
+    // CUSTOM과 INSTAGRAM 제외한 플랫폼은 도메인 검증
+    if (selectedPlatform.key !== "CUSTOM" && selectedPlatform.key !== "INSTAGRAM" && selectedPlatform.domainToCheck) {
+      // 텍스트에서 해당 플랫폼의 URL 추출 (프로토콜 제거됨)
+      const extractedUrl = extractUrlForPlatform(linkUrl.trim(), selectedPlatform.domainToCheck);
+
+      if (!extractedUrl) {
+        setUrlError(`링크를 찾을 수 없습니다. ${selectedPlatform.domainToCheck}을(를) 포함하는 링크를 입력해주세요.`);
+        return;
+      }
+
+      // 도메인으로 시작하는지 검증
+      if (!validatePlatformUrl(extractedUrl, selectedPlatform.domainToCheck)) {
+        setUrlError(`올바른 ${selectedPlatform.name} 링크가 아닙니다. ${selectedPlatform.domainToCheck}(으)로 시작해야 합니다.`);
+        return;
+      }
+
+      finalUrl = extractedUrl;
+    } else if (selectedPlatform.key === "CUSTOM") {
+      // CUSTOM은 프로토콜 제거만
+      finalUrl = finalUrl.replace(/^https?:\/\//, '');
+    }
+
+    // LinkItem 생성
+    const linkItem: LinkItem = {
+      linkType: selectedPlatform.key,
+      url: finalUrl,
+    };
+
+    // CUSTOM이면 customLabel 추가
+    if (selectedPlatform.key === "CUSTOM") {
+      linkItem.customLabel = customLabel.trim();
+    }
+
+    onLinkAdd(linkItem);
     setSelectedPlatform(null);
     setLinkUrl("");
+    setCustomLabel("");
     setUrlError("");
     onOpenChange(false);
   };
@@ -141,12 +148,12 @@ export function LinkSelectorDialog({
   const handleCancel = () => {
     setSelectedPlatform(null);
     setLinkUrl("");
+    setCustomLabel("");
     setUrlError("");
   };
 
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
-      // Dialog가 닫힐 때 상태 초기화
       handleCancel();
     }
     onOpenChange(isOpen);
@@ -154,18 +161,16 @@ export function LinkSelectorDialog({
 
   const handleCloseClick = () => {
     if (selectedPlatform) {
-      // URL 입력 화면에서는 뒤로가기
       handleCancel();
     } else {
-      // 플랫폼 선택 화면에서는 Dialog 닫기
       onOpenChange(false);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-[400px]" showCloseButton={false}>
-        <DialogHeader>
+      <DialogContent className="max-w-[400px] max-h-[85vh] flex flex-col p-0 gap-0" showCloseButton={false}>
+        <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
           <DialogTitle>링크 추가</DialogTitle>
           {/* 커스텀 X 버튼 */}
           <button
@@ -179,85 +184,97 @@ export function LinkSelectorDialog({
           </button>
         </DialogHeader>
 
-        {!selectedPlatform ? (
-          // 플랫폼 선택 화면
-          <div className="space-y-3 mt-4">
-            {platforms.map((platform) => {
-              const isAdded = !!existingLinks[platform.key];
-              return (
-                <button
-                  key={platform.key}
-                  onClick={() => handlePlatformClick(platform)}
-                  disabled={isAdded}
-                  className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors ${
-                    isAdded
-                      ? 'bg-gray-100 border-gray-200 opacity-50 cursor-not-allowed'
-                      : 'hover:bg-gray-50 border-gray-200'
-                  }`}
-                >
-                  <div className="w-10 h-10 flex items-center justify-center">
-                    <Image
-                      src={platform.icon}
-                      alt={platform.name}
-                      width={40}
-                      height={40}
-                      className="object-contain"
-                    />
-                  </div>
-                  <span className="text-body-sb text-gray-800">{platform.name}</span>
-                  {isAdded && (
-                    <span className="ml-auto text-xs text-gray-500">추가됨</span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        ) : (
-          // URL 입력 화면
-          <div className="space-y-4 mt-4">
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <div className="w-10 h-10 flex items-center justify-center">
-                <Image
-                  src={selectedPlatform.icon}
-                  alt={selectedPlatform.name}
-                  width={40}
-                  height={40}
-                  className="object-contain"
-                />
+        <div className="overflow-y-auto px-6 pb-6">
+          {!selectedPlatform ? (
+            // 플랫폼 선택 화면
+            <div className="space-y-3">
+              {platforms.map((platform) => {
+                const isAdded = platform.key !== "CUSTOM" && existingLinks.some(link => link.linkType === platform.key);
+                return (
+                  <button
+                    key={platform.key}
+                    onClick={() => handlePlatformClick(platform)}
+                    disabled={isAdded}
+                    className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                      isAdded
+                        ? 'bg-gray-100 border-gray-200 opacity-50 cursor-not-allowed'
+                        : 'hover:bg-gray-50 border-gray-200'
+                    }`}
+                  >
+                    <div className="w-10 h-10 flex items-center justify-center">
+                      <Image
+                        src={platform.icon}
+                        alt={platform.name}
+                        width={40}
+                        height={40}
+                        className="object-contain"
+                      />
+                    </div>
+                    <span className="text-body-sb text-gray-800">{platform.name}</span>
+                    {isAdded && (
+                      <span className="ml-auto text-xs text-gray-500">추가됨</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            // URL 입력 화면
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="w-10 h-10 flex items-center justify-center">
+                  <Image
+                    src={selectedPlatform.icon}
+                    alt={selectedPlatform.name}
+                    width={40}
+                    height={40}
+                    className="object-contain"
+                  />
+                </div>
+                <span className="text-body-sb text-gray-800">{selectedPlatform.name}</span>
               </div>
-              <span className="text-body-sb text-gray-800">{selectedPlatform.name}</span>
-            </div>
 
-            <div className="space-y-2">
-              <Input
-                value={linkUrl}
-                onChange={handleLinkUrlChange}
-                placeholder={selectedPlatform.placeholder}
-                className="h-13 bg-gray-200 rounded-[12px]"
-              />
-              {urlError && (
-                <p className="text-xs text-red-500">{urlError}</p>
-              )}
-            </div>
+              <div className="space-y-2">
+                {selectedPlatform.key === "CUSTOM" && (
+                  <Input
+                    value={customLabel}
+                    onChange={handleCustomLabelChange}
+                    placeholder="링크 이름 (예: 공식 홈페이지)"
+                    className="h-13 bg-gray-200 rounded-[12px]"
+                  />
+                )}
 
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={handleCancel}
-                className="flex-1"
-              >
-                취소
-              </Button>
-              <Button
-                onClick={handleSubmit}
-                disabled={!linkUrl.trim()}
-                className="flex-1 bg-purple-700 text-white"
-              >
-                추가
-              </Button>
+                <Input
+                  value={linkUrl}
+                  onChange={handleLinkUrlChange}
+                  placeholder={selectedPlatform.placeholder}
+                  className="h-13 bg-gray-200 rounded-[12px]"
+                />
+
+                {urlError && (
+                  <p className="text-xs text-red-500">{urlError}</p>
+                )}
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleCancel}
+                  className="flex-1"
+                >
+                  취소
+                </Button>
+                <Button
+                  onClick={handleSubmit}
+                  disabled={!linkUrl.trim() || (selectedPlatform.key === "CUSTOM" && !customLabel.trim())}
+                  className="flex-1 bg-purple-700 text-white"
+                >
+                  추가
+                </Button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );

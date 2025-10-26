@@ -6,6 +6,7 @@ import { CustomButton } from "@/components/ui/custom-button";
 import { CustomHeader } from "@/components/ui/custom-header";
 import { useFoodsByStore } from "@/lib/hooks/useFood";
 import { useMyStores } from "@/lib/hooks/useStore";
+import { Home, UtensilsCrossed } from "lucide-react";
 
 export default function Page() {
   const router = useRouter();
@@ -70,7 +71,7 @@ export default function Page() {
           </div>
         </div>
       ) : (
-        <div className="space-y-2 pt-30 pb-25">
+        <div className="space-y-2 pt-30 pb-40">
           {menuItems &&
             menuItems.map((item) => (
               <div key={item.id} className="px-4 py-2.5">
@@ -129,10 +130,35 @@ export default function Page() {
         </div>
       )}
 
-      {/* Fixed Bottom Button */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white">
-        <div className="max-w-[430px] mx-auto pb-6 flex justify-center px-4">
+      {/* 메뉴 추가 버튼 - 플로팅 탭 위에 고정 */}
+      <div className="fixed bottom-28 left-0 right-0 bg-transparent pointer-events-none">
+        <div className="max-w-[430px] mx-auto pb-2 flex justify-center px-4 pointer-events-auto">
           <CustomButton onClick={handleAddMenu}>메뉴 추가하기</CustomButton>
+        </div>
+      </div>
+
+      {/* 플로팅 탭 네비게이션 */}
+      <div className="fixed bottom-6 left-0 right-0 z-50 px-4">
+        <div className="max-w-md mx-auto">
+          <div className="bg-white rounded-full shadow-2xl border border-gray-200 flex overflow-hidden">
+            {/* 홈페이지 관리 탭 */}
+            <button
+              onClick={() => router.push('/home')}
+              className="flex-1 flex flex-col items-center justify-center py-4 px-4 text-gray-600 hover:bg-gray-50 transition-all"
+            >
+              <Home className="w-5 h-5 mb-1" />
+              <span className="text-xs font-medium">홈페이지 관리</span>
+            </button>
+
+            {/* 메뉴 관리 탭 */}
+            <button
+              onClick={() => {/* 현재 페이지이므로 아무 동작 안함 */}}
+              className="flex-1 flex flex-col items-center justify-center py-4 px-4 bg-purple-700 text-white transition-all"
+            >
+              <UtensilsCrossed className="w-5 h-5 mb-1" />
+              <span className="text-xs font-medium">메뉴 관리</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

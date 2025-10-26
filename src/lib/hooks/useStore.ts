@@ -76,7 +76,7 @@ export function useUpdateStore() {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: storeKeys.detail(variables.storeId) });
       queryClient.invalidateQueries({ queryKey: storeKeys.lists() });
-      toast.success('매장 정보가 수정되었습니다');
+      // 토스트는 각 페이지에서 직접 관리
     },
   });
 }

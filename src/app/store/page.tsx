@@ -87,9 +87,9 @@ export default function StoreListPage() {
                           배달 연동
                         </p>
                         <p className="text-xs">
-                          {store.baeminLink ||
-                          store.yogiyoLink ||
-                          store.coupangEatsLink
+                          {store.links?.some(link =>
+                            ['BAEMIN', 'YOGIYO', 'COUPANGEATS'].includes(link.linkType)
+                          )
                             ? "연동됨"
                             : "미연동"}
                         </p>

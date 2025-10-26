@@ -19,12 +19,14 @@
   "tags": [
     { "name": "쿠폰(사장님)", "description": "사장님용 쿠폰 스탬프 API" },
     { "name": "Campaign", "description": "캠페인 관리 API" },
+    { "name": "구독", "description": "매장 구독 관리 API" },
     {
       "name": "고객 피드백",
       "description": "고객 음식 피드백 관리 API - 음식 리뷰, 사진 업로드, 설문 응답을 통합 관리합니다"
     },
     { "name": "FoodItem", "description": "음식 관련 API" },
-    { "name": "Store", "description": "매장 관리 API" }
+    { "name": "Store", "description": "매장 관리 API" },
+    { "name": "알림(사장님)", "description": "사장님용 구독자 알림 API" }
   ],
   "paths": {
     "/api/stores/{storeId}": {
@@ -426,6 +428,34 @@
         }
       }
     },
+    "/api/subscriptions/subscribe": {
+      "post": {
+        "tags": ["구독"],
+        "summary": "매장 구독",
+        "description": "매장을 구독하여 알림을 받습니다.",
+        "operationId": "subscribe",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SubscribeRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseSubscriptionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/stores": {
       "post": {
         "tags": ["Store"],
@@ -516,6 +546,81 @@
         }
       }
     },
+    "/api/owner/notifications": {
+      "post": {
+        "tags": ["알림(사장님)"],
+        "summary": "구독자에게 알림 발송",
+        "description": "매장 구독자들에게 특가, 이벤트 등의 알림을 발송합니다. 알림은 비동기로 처리되며 즉시 반환됩니다.",
+        "operationId": "createNotification",
+        "requestBody": {
+          "description": "알림 생성 요청",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateNotificationRequest"
+              },
+              "example": {
+                "storeId": 1,
+                "type": "SPECIAL_OFFER",
+                "title": "오늘의 특가 이벤트",
+                "message": "2025년 10월 22일 ~메뉴를 특가로 현장 방문 5분께 15000원에 드려요",
+                "scheduledAt": null,
+                "data": { "eventId": "123" }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "403": {
+            "description": "해당 매장에 대한 권한이 없습니다",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseCreateNotificationResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "매장을 찾을 수 없습니다",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseCreateNotificationResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "알림 생성 성공",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "API 요청이 성공했습니다.",
+                  "result": {
+                    "notificationId": 1,
+                    "targetSubscriberCount": 150,
+                    "message": "알림 생성 완료: 150명에게 발송 예정"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청 (구독자 없음, FCM 토큰 없음 등)",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseCreateNotificationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/owner/coupon/earn-stamps": {
       "post": {
         "tags": ["쿠폰(사장님)"],
@@ -565,6 +670,16 @@
               }
             }
           },
+          "403": {
+            "description": "해당 매장에 대한 권한이 없습니다",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseCouponEarnStampsByOwnerResponse"
+                }
+              }
+            }
+          },
           "200": {
             "description": "스탬프 적립 성공",
             "content": {
@@ -577,16 +692,6 @@
                     "currentStamps": 7,
                     "addedStamps": 2
                   }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "해당 매장에 대한 권한이 없습니다",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseCouponEarnStampsByOwnerResponse"
                 }
               }
             }
@@ -722,6 +827,34 @@
         }
       }
     },
+    "/api/subscriptions/{storeId}/notification": {
+      "patch": {
+        "tags": ["구독"],
+        "summary": "알림 설정 토글",
+        "description": "구독 중인 매장의 알림을 켜거나 끕니다.",
+        "operationId": "toggleNotification",
+        "parameters": [
+          {
+            "name": "storeId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseSubscriptionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/campaigns/status": {
       "patch": {
         "tags": ["Campaign"],
@@ -768,6 +901,86 @@
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/ApiResponseVoid" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/subscriptions/{storeId}": {
+      "get": {
+        "tags": ["구독"],
+        "summary": "구독 정보 조회",
+        "description": "특정 매장의 구독 정보를 조회합니다.",
+        "operationId": "getSubscription",
+        "parameters": [
+          {
+            "name": "storeId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseSubscriptionResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["구독"],
+        "summary": "구독 취소",
+        "description": "매장 구독을 취소합니다.",
+        "operationId": "unsubscribe",
+        "parameters": [
+          {
+            "name": "storeId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseSubscriptionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/subscriptions/{storeId}/status": {
+      "get": {
+        "tags": ["구독"],
+        "summary": "구독 여부 확인",
+        "description": "특정 매장의 구독 여부를 확인합니다.",
+        "operationId": "checkSubscriptionStatus",
+        "parameters": [
+          {
+            "name": "storeId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/ApiResponseBoolean" }
               }
             }
           }
@@ -996,16 +1209,6 @@
           }
         ],
         "responses": {
-          "404": {
-            "description": "매장을 찾을 수 없습니다",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponsePageResponseOwnerFeedbackResponse"
-                }
-              }
-            }
-          },
           "200": {
             "description": "매장 피드백 목록 조회 성공",
             "content": {
@@ -1033,6 +1236,16 @@
                     "hasNext": true,
                     "hasPrevious": false
                   }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "매장을 찾을 수 없습니다",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponsePageResponseOwnerFeedbackResponse"
                 }
               }
             }
@@ -1186,8 +1399,43 @@
   },
   "components": {
     "schemas": {
+      "StoreLinkRequest": {
+        "required": ["url"],
+        "type": "object",
+        "properties": {
+          "linkType": {
+            "type": "string",
+            "description": "링크 타입",
+            "example": "BAEMIN",
+            "enum": [
+              "BAEMIN",
+              "YOGIYO",
+              "COUPANGEATS",
+              "NAVER_MAP",
+              "KAKAO_MAP",
+              "INSTAGRAM",
+              "KAKAO_TALK",
+              "GOOGLE_MAPS",
+              "DDANGYO",
+              "DAANGN",
+              "CUSTOM"
+            ]
+          },
+          "customLabel": {
+            "type": "string",
+            "description": "커스텀 라벨",
+            "example": "전화 주문, 배민으로 주문하러 가기"
+          },
+          "url": {
+            "type": "string",
+            "description": "URL",
+            "example": "https://example.com"
+          }
+        },
+        "description": "매장 링크 생성/수정 요청"
+      },
       "StoreRequest": {
-        "required": ["storeName"],
+        "required": ["siteLink", "storeName"],
         "type": "object",
         "properties": {
           "storeName": {
@@ -1200,46 +1448,6 @@
             "description": "주소",
             "example": "서울시 강남구 테헤란로 123"
           },
-          "baeminLink": {
-            "type": "string",
-            "description": "배달의민족 링크",
-            "example": "https://baemin.com/store/12345"
-          },
-          "yogiyoLink": {
-            "type": "string",
-            "description": "요기요 링크",
-            "example": "https://yogiyo.com/store/12345"
-          },
-          "coupangeatsLink": {
-            "type": "string",
-            "description": "쿠팡이츠 링크",
-            "example": "https://coupangeats.com/store/12345"
-          },
-          "naverLink": {
-            "type": "string",
-            "description": "네이버 지도 링크",
-            "example": "https://map.naver.com/v5/entry/place/12345"
-          },
-          "kakaoLink": {
-            "type": "string",
-            "description": "카카오맵 링크",
-            "example": "https://place.map.kakao.com/12345"
-          },
-          "instagramLink": {
-            "type": "string",
-            "description": "인스타그램 링크",
-            "example": "https://instagram.com/store_account"
-          },
-          "kakaoTalkLink": {
-            "type": "string",
-            "description": "카카오톡 채널 링크",
-            "example": "https://pf.kakao.com/_store"
-          },
-          "siteLink": {
-            "type": "string",
-            "description": "사이트 링크 (URL 경로용)",
-            "example": "우리집냉면"
-          },
           "description": {
             "type": "string",
             "description": "가게 설명",
@@ -1250,6 +1458,26 @@
             "description": "쿠폰 사용 개수",
             "format": "int32",
             "example": 10
+          },
+          "displayTemplate": {
+            "type": "integer",
+            "description": "템플릿 유형",
+            "format": "int32",
+            "example": 1
+          },
+          "autoCreateMenus": {
+            "type": "boolean",
+            "description": "사장님의 메뉴가 자동으로 자신의 가게에 등록되는 기능 on/off"
+          },
+          "siteLink": {
+            "type": "string",
+            "description": "매장 고유 링크 (사이트 식별자)",
+            "example": "우리집냉면"
+          },
+          "links": {
+            "type": "array",
+            "description": "매장 링크 목록 (배민, 요기요, 인스타 등)",
+            "items": { "$ref": "#/components/schemas/StoreLinkRequest" }
           }
         },
         "description": "매장 생성/수정 요청"
@@ -1261,6 +1489,40 @@
           "message": { "type": "string" },
           "result": { "$ref": "#/components/schemas/StoreResponse" }
         }
+      },
+      "StoreLinkResponse": {
+        "type": "object",
+        "properties": {
+          "linkType": {
+            "type": "string",
+            "description": "링크 타입",
+            "example": "BAEMIN",
+            "enum": [
+              "BAEMIN",
+              "YOGIYO",
+              "COUPANGEATS",
+              "NAVER_MAP",
+              "KAKAO_MAP",
+              "INSTAGRAM",
+              "KAKAO_TALK",
+              "GOOGLE_MAPS",
+              "DDANGYO",
+              "DAANGN",
+              "CUSTOM"
+            ]
+          },
+          "label": {
+            "type": "string",
+            "description": "링크 라벨 (화면 표시용)",
+            "example": "배달의민족"
+          },
+          "url": {
+            "type": "string",
+            "description": "URL",
+            "example": "https://baemin.com/store/12345"
+          }
+        },
+        "description": "매장 링크 응답"
       },
       "StoreResponse": {
         "type": "object",
@@ -1280,46 +1542,6 @@
             "type": "string",
             "description": "주소",
             "example": "서울시 강남구 테헤란로 123"
-          },
-          "baeminLink": {
-            "type": "string",
-            "description": "배달의 민족 링크",
-            "example": "https://baemin.me/restaurant/12345"
-          },
-          "yogiyoLink": {
-            "type": "string",
-            "description": "요기요 링크",
-            "example": "https://www.yogiyo.co.kr/restaurant/12345"
-          },
-          "coupangEatsLink": {
-            "type": "string",
-            "description": "쿠팡이츠 링크",
-            "example": "https://www.coupang.com/restaurant/12345"
-          },
-          "naverLink": {
-            "type": "string",
-            "description": "네이버 지도 링크",
-            "example": "https://map.naver.com/v5/entry/place/12345"
-          },
-          "kakaoLink": {
-            "type": "string",
-            "description": "카카오맵 링크",
-            "example": "https://place.map.kakao.com/12345"
-          },
-          "instagramLink": {
-            "type": "string",
-            "description": "인스타그램 링크",
-            "example": "https://instagram.com/store_account"
-          },
-          "kakaoTalkLink": {
-            "type": "string",
-            "description": "카카오톡 채널 링크",
-            "example": "https://pf.kakao.com/_store"
-          },
-          "siteLink": {
-            "type": "string",
-            "description": "사이트 링크 (URL 경로용)",
-            "example": "우리집냉면"
           },
           "description": {
             "type": "string",
@@ -1348,6 +1570,26 @@
             "description": "쿠폰 사용 개수",
             "format": "int32",
             "example": 10
+          },
+          "displayTemplate": {
+            "type": "integer",
+            "description": "템플릿 유형",
+            "format": "int32",
+            "example": 1
+          },
+          "autoCreateMenus": {
+            "type": "boolean",
+            "description": "사장님의 메뉴가 자동으로 자신의 가게에 등록되는 기능 on/off"
+          },
+          "siteLink": {
+            "type": "string",
+            "description": "사이트 링크 (매장 고유 식별자)",
+            "example": "우리집냉면"
+          },
+          "links": {
+            "type": "array",
+            "description": "매장 링크 목록",
+            "items": { "$ref": "#/components/schemas/StoreLinkResponse" }
           }
         },
         "description": "매장 응답"
@@ -1520,6 +1762,28 @@
         },
         "description": "캠페인 수정 요청"
       },
+      "SubscribeRequest": {
+        "type": "object",
+        "properties": { "storeId": { "type": "integer", "format": "int64" } }
+      },
+      "ApiResponseSubscriptionResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "format": "int32" },
+          "message": { "type": "string" },
+          "result": { "$ref": "#/components/schemas/SubscriptionResponse" }
+        }
+      },
+      "SubscriptionResponse": {
+        "type": "object",
+        "properties": {
+          "subscriptionId": { "type": "integer", "format": "int64" },
+          "storeId": { "type": "integer", "format": "int64" },
+          "isActive": { "type": "boolean" },
+          "notificationEnabled": { "type": "boolean" },
+          "message": { "type": "string" }
+        }
+      },
       "MemberInviteRequest": {
         "required": ["roleType", "userId"],
         "type": "object",
@@ -1590,6 +1854,41 @@
           }
         },
         "description": "멤버 응답"
+      },
+      "CreateNotificationRequest": {
+        "type": "object",
+        "properties": {
+          "storeId": { "type": "integer", "format": "int64" },
+          "type": {
+            "type": "string",
+            "enum": ["SPECIAL_OFFER", "NEW_MENU", "EVENT", "ANNOUNCEMENT"]
+          },
+          "title": { "type": "string" },
+          "message": { "type": "string" },
+          "scheduledAt": { "type": "string", "format": "date-time" },
+          "data": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          }
+        }
+      },
+      "ApiResponseCreateNotificationResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "format": "int32" },
+          "message": { "type": "string" },
+          "result": {
+            "$ref": "#/components/schemas/CreateNotificationResponse"
+          }
+        }
+      },
+      "CreateNotificationResponse": {
+        "type": "object",
+        "properties": {
+          "notificationId": { "type": "integer", "format": "int64" },
+          "targetSubscriberCount": { "type": "integer", "format": "int32" },
+          "message": { "type": "string" }
+        }
       },
       "CouponEarnStampsByOwnerRequest": {
         "type": "object",
@@ -1923,6 +2222,14 @@
         },
         "description": "캠페인 상태 변경 요청"
       },
+      "ApiResponseBoolean": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "format": "int32" },
+          "message": { "type": "string" },
+          "result": { "type": "boolean" }
+        }
+      },
       "ApiResponseListMemberResponse": {
         "type": "object",
         "properties": {
@@ -2021,8 +2328,8 @@
           "overallMeanScore": { "type": "number", "format": "double" },
           "totalResponses": { "type": "integer", "format": "int32" },
           "totalPenalty": { "type": "number", "format": "double" },
-          "recommendation": { "type": "string" },
-          "priorityLevel": { "type": "string" }
+          "priorityLevel": { "type": "string" },
+          "recommendation": { "type": "string" }
         }
       },
       "JARGroup": {
