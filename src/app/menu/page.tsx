@@ -1,15 +1,23 @@
 "use client";
-import React from "react";
+import React, { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { CustomButton } from "@/components/ui/custom-button";
 import { CustomHeader } from "@/components/ui/custom-header";
-import { useFoodsByStore } from "@/lib/hooks/useFood";
+import { useFoodsByStore, foodKeys } from "@/lib/hooks/useFood";
 import { useMyStores } from "@/lib/hooks/useStore";
 import { Home, UtensilsCrossed } from "lucide-react";
+import { MenuAddMethodDialog } from "@/components/menu-add-method-dialog";
+import { MenuExtractionProgressDialog } from "@/components/menu-extraction-progress-dialog";
+import { useMenuExtraction } from "@/lib/hooks/useMenuExtraction";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function Page() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isMethodDialogOpen, setIsMethodDialogOpen] = useState(false);
 
   // Get user's stores (첫 번째 가게 우선)
   const { data: storesData } = useMyStores({ size: 10 });
@@ -25,9 +33,13 @@ export default function Page() {
 
   const { data: foodsData, isLoading } = useFoodsByStore(
     storeId!,
-    {},
+    { size: 100 }, // 최대 100개까지 표시
     { enabled: !!storeId }
   );
+
+  // 메뉴 추출 훅
+  const { startExtraction, isExtracting, progress, currentStep } =
+    useMenuExtraction(storeId!);
 
   const menuItems = foodsData?.content?.map((food) => ({
     id: food.id || food.foodItemId, // 새 필드명 우선, 구 필드명 폴백
@@ -50,7 +62,50 @@ export default function Page() {
   };
 
   const handleAddMenu = () => {
-    router.push("/menu/add");
+    setIsMethodDialogOpen(true);
+  };
+
+  const handleSelectMethod = (method: "ai" | "manual") => {
+    if (method === "ai") {
+      // 이미지 선택 input 트리거
+      fileInputRef.current?.click();
+    } else {
+      // 직접 추가 화면으로 이동
+      router.push("/menu/add");
+    }
+  };
+
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // input 초기화
+    e.target.value = "";
+
+    if (!storeId) {
+      toast.error("가게 정보를 불러올 수 없습니다");
+      return;
+    }
+
+    try {
+      await startExtraction(file);
+
+      // 완료 시
+      toast.success("메뉴가 추가되었습니다!");
+
+      // 메뉴 목록 캐시 무효화
+      queryClient.invalidateQueries({ queryKey: foodKeys.listByStore(storeId) });
+    } catch (error) {
+      // 에러 처리
+      const err = error as Error;
+      if (err.message === "TIMEOUT") {
+        toast.error("시간이 너무 오래 걸려요. 나중에 다시 시도해주세요");
+      } else if (err.message.includes("메뉴 추출")) {
+        toast.error(err.message);
+      } else {
+        toast.error("이미지 업로드에 실패했습니다");
+      }
+    }
   };
 
   return (
@@ -114,15 +169,6 @@ export default function Page() {
                     <div className="text-headline-m text-gray-600">
                       {item.price.toLocaleString()}원
                     </div>
-
-                    <div className="flex items-center gap-0.5">
-                      <span className="text-body-sb text-blue-700">
-                        ✨{item.reviewCount}개
-                      </span>
-                      <span className="text-body-r text-gray-800">
-                        의 평가가 있어요
-                      </span>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -161,6 +207,29 @@ export default function Page() {
           </div>
         </div>
       </div>
+
+      {/* 히든 파일 input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleImageSelect}
+        className="hidden"
+      />
+
+      {/* 메뉴 추가 방식 선택 Dialog */}
+      <MenuAddMethodDialog
+        open={isMethodDialogOpen}
+        onOpenChange={setIsMethodDialogOpen}
+        onSelectMethod={handleSelectMethod}
+      />
+
+      {/* 메뉴 추출 진행 Dialog */}
+      <MenuExtractionProgressDialog
+        open={isExtracting}
+        progress={progress}
+        currentStep={currentStep}
+      />
     </div>
   );
 }

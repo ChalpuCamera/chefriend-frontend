@@ -12,12 +12,12 @@ interface Platform {
   name: string;
   icon: string;
   placeholder: string;
-  domainToCheck?: string;  // 도메인 검증용
+  domainToCheck?: string | string[];  // 도메인 검증용 (단일 또는 배열)
 }
 
 const platforms: Platform[] = [
   { key: "NAVER_MAP", name: "네이버 지도", icon: "/platform_icons/naver.png", placeholder: "복사한 링크를 바로 붙여넣으세요", domainToCheck: "naver.me" },
-  { key: "KAKAO_MAP", name: "카카오맵", icon: "/platform_icons/kakaomap.png", placeholder: "복사한 링크를 바로 붙여넣으세요", domainToCheck: "kko.kakao.com" },
+  { key: "KAKAO_MAP", name: "카카오맵", icon: "/platform_icons/kakaomap.png", placeholder: "복사한 링크를 바로 붙여넣으세요", domainToCheck: ["kko.kakao.com", "place.map.kakao.com"] },
   { key: "GOOGLE_MAPS", name: "구글맵", icon: "/platform_icons/googlemaps.png", placeholder: "복사한 링크를 바로 붙여넣으세요", domainToCheck: "maps.app.goo.gl" },
   { key: "YOGIYO", name: "요기요", icon: "/platform_icons/yogiyo.png", placeholder: "복사한 링크를 바로 붙여넣으세요", domainToCheck: "yogiyo.onelink.me" },
   { key: "BAEMIN", name: "배달의민족", icon: "/platform_icons/baemin.png", placeholder: "복사한 링크를 바로 붙여넣으세요", domainToCheck: "s.baemin.com" },
@@ -75,10 +75,20 @@ export function LinkSelectorDialog({
       if (isAdded) return;
     }
 
-    setSelectedPlatform(platform);
-    setLinkUrl("");
-    setCustomLabel("");
-    setUrlError("");
+    // 즉시 빈 링크 아이템 추가 (URL은 나중에 입력)
+    const linkItem: LinkItem = {
+      linkType: platform.key,
+      url: "",  // 빈 URL로 추가
+      isVisible: true,  // 기본값 true
+    };
+
+    // CUSTOM이면 빈 customLabel도 추가
+    if (platform.key === "CUSTOM") {
+      linkItem.customLabel = "";
+    }
+
+    onLinkAdd(linkItem);
+    onOpenChange(false);
   };
 
   const handleLinkUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,17 +116,26 @@ export function LinkSelectorDialog({
 
     // CUSTOM과 INSTAGRAM 제외한 플랫폼은 도메인 검증
     if (selectedPlatform.key !== "CUSTOM" && selectedPlatform.key !== "INSTAGRAM" && selectedPlatform.domainToCheck) {
-      // 텍스트에서 해당 플랫폼의 URL 추출 (프로토콜 제거됨)
-      const extractedUrl = extractUrlForPlatform(linkUrl.trim(), selectedPlatform.domainToCheck);
+      const domainsToCheck = Array.isArray(selectedPlatform.domainToCheck)
+        ? selectedPlatform.domainToCheck
+        : [selectedPlatform.domainToCheck];
 
-      if (!extractedUrl) {
-        setUrlError(`링크를 찾을 수 없습니다. ${selectedPlatform.domainToCheck}을(를) 포함하는 링크를 입력해주세요.`);
-        return;
+      let extractedUrl: string | null = null;
+      let matchedDomain: string | null = null;
+
+      // 여러 도메인 중 하나라도 매칭되면 성공
+      for (const domain of domainsToCheck) {
+        const url = extractUrlForPlatform(linkUrl.trim(), domain);
+        if (url && validatePlatformUrl(url, domain)) {
+          extractedUrl = url;
+          matchedDomain = domain;
+          break;
+        }
       }
 
-      // 도메인으로 시작하는지 검증
-      if (!validatePlatformUrl(extractedUrl, selectedPlatform.domainToCheck)) {
-        setUrlError(`올바른 ${selectedPlatform.name} 링크가 아닙니다. ${selectedPlatform.domainToCheck}(으)로 시작해야 합니다.`);
+      if (!extractedUrl) {
+        const domainsText = domainsToCheck.join(' 또는 ');
+        setUrlError(`링크를 찾을 수 없습니다. ${domainsText}을(를) 포함하는 링크를 입력해주세요.`);
         return;
       }
 
@@ -130,6 +149,7 @@ export function LinkSelectorDialog({
     const linkItem: LinkItem = {
       linkType: selectedPlatform.key,
       url: finalUrl,
+      isVisible: true,
     };
 
     // CUSTOM이면 customLabel 추가

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import Image from "next/image";
 import { CustomButton } from "@/components/ui/custom-button";
 import { useCreateStore, useCheckSiteLink, useMyStores } from "@/lib/hooks/useStore";
@@ -15,6 +16,7 @@ export default function Page() {
   const [storeName, setStoreName] = useState("");
   const [address, setAddress] = useState("");
   const [description, setDescription] = useState("");
+  const [autoCreateMenus, setAutoCreateMenus] = useState(true);
 
   const [siteLinkChecked, setSiteLinkChecked] = useState(false);
   const [siteLinkError, setSiteLinkError] = useState("");
@@ -99,6 +101,7 @@ export default function Page() {
         requiredStampsForCoupon: 10,  // 기본값으로 고정
         displayTemplate: 1,            // 기본 템플릿으로 고정
         links: [],                     // 빈 배열
+        autoCreateMenus,               // 메뉴 자동 등록 옵션
       });
       if (response.storeId) {
         router.push(`/home`);
@@ -213,6 +216,29 @@ export default function Page() {
             placeholder="공지사항을 입력해주세요"
             rows={4}
           />
+        </div>
+
+        {/* 메뉴 자동 등록 */}
+        <div className="space-y-2.5">
+          <div className="flex items-start gap-3 p-4 bg-purple-50 rounded-[12px] border border-purple-200">
+            <Checkbox
+              id="autoCreateMenus"
+              checked={autoCreateMenus}
+              onCheckedChange={(checked) => setAutoCreateMenus(checked as boolean)}
+              className="mt-0.5"
+            />
+            <div className="flex-1">
+              <Label
+                htmlFor="autoCreateMenus"
+                className="text-body-sb text-gray-800 cursor-pointer"
+              >
+                메뉴 자동 등록 옵션
+              </Label>
+              <p className="text-caption-r text-gray-600 mt-1.5 leading-relaxed">
+                지도 링크를 하나라도 등록하시면 가게의 메뉴가 자동으로 추가됩니다.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 

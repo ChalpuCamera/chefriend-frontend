@@ -322,14 +322,16 @@ export default function Page({
           </span>
         </div>
 
-        {/* Description */}
-        <div className="px-4 mb-6">
-          <div className="bg-gray-100 rounded-xl p-4">
-            <p className="text-body-r text-gray-800 text-center whitespace-pre-line leading-relaxed">
-              {menuData?.description}
-            </p>
+        {/* Description - description이 있을 때만 렌더링 */}
+        {menuData?.description && menuData.description.trim() && (
+          <div className="px-4 mb-6">
+            <div className="bg-gray-100 rounded-xl p-4">
+              <p className="text-body-r text-gray-800 text-center whitespace-pre-line leading-relaxed">
+                {menuData.description}
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Campaign Section */}
         {/* <div className="px-4 mb-6">

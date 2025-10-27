@@ -4,7 +4,12 @@ import type {
   PageResponse,
   Pageable,
 } from "@/lib/types/api/common";
-import type { FoodItemRequest, FoodItemResponse } from "@/lib/types/api/food";
+import type {
+  FoodItemRequest,
+  FoodItemResponse,
+  FoodItemExtractionStartResponse,
+  FoodItemExtractionStatusResponse,
+} from "@/lib/types/api/food";
 
 export const foodApi = {
   // 매장별 음식 목록 조회
@@ -43,5 +48,22 @@ export const foodApi = {
   updateThumbnail: (foodId: number, photoUrl: string) =>
     apiClient.put<ApiResponse<FoodItemResponse>>(
       `/api/foods/${foodId}/thumbnail?photoUrl=${encodeURIComponent(photoUrl)}`
+    ),
+
+  // 메뉴판 사진으로 추출 시작
+  startMenuExtraction: (storeId: number, imageFile: File) => {
+    const formData = new FormData();
+    formData.append("image", imageFile);
+    return apiClient.post<ApiResponse<FoodItemExtractionStartResponse>>(
+      `/api/foods/menu/extract?storeId=${storeId}`,
+      formData
+      // Content-Type 헤더를 명시하지 않으면 axios가 자동으로 multipart/form-data + boundary 설정
+    );
+  },
+
+  // 메뉴 추출 상태 조회 (폴링용)
+  getExtractionStatus: (requestId: string) =>
+    apiClient.get<ApiResponse<FoodItemExtractionStatusResponse>>(
+      `/api/foods/menu/extract/status/${requestId}`
     ),
 };

@@ -13,7 +13,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Plus, GripVertical, X, Save, Eye, Home, UtensilsCrossed } from "lucide-react";
+import { Plus, GripVertical, X, Save, Eye, Home, UtensilsCrossed, Pencil, Check } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -73,14 +73,29 @@ const platformNames: Record<LinkType, string> = {
 function SortableLinkItem({
   id,
   linkType,
-  label,
+  link,
+  isEditing,
+  onEditChange,
+  onUpdate,
   onRemove,
 }: {
   id: number;
   linkType: LinkType;
-  label?: string;
+  link: LinkItem;
+  isEditing: boolean;
+  onEditChange: (editing: boolean) => void;
+  onUpdate: (updatedLink: LinkItem) => void;
   onRemove: () => void;
 }) {
+  const [editUrl, setEditUrl] = useState(link.url || "");
+  const [editCustomLabel, setEditCustomLabel] = useState(link.customLabel || "");
+
+  // link가 변경되면 input 상태도 동기화 (드래그로 순서가 바뀔 때)
+  useEffect(() => {
+    setEditUrl(link.url || "");
+    setEditCustomLabel(link.customLabel || "");
+  }, [link.url, link.customLabel]);
+
   const {
     attributes,
     listeners,
@@ -96,35 +111,165 @@ function SortableLinkItem({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const displayLabel = label || platformNames[linkType];
+  // 인스타그램의 경우 URL 필드에 저장된 아이디를 라벨로 표시
+  const getDisplayLabel = () => {
+    if (linkType === "INSTAGRAM" && link.url) {
+      // 인스타그램은 url 필드에 아이디만 저장되어 있음
+      return link.url.startsWith('@') ? link.url : `@${link.url}`;
+    }
+    return link.customLabel || link.label || platformNames[linkType];
+  };
+
+  const displayLabel = getDisplayLabel();
+
+  const handleSave = () => {
+    const trimmedUrl = editUrl.trim();
+    const trimmedLabel = editCustomLabel.trim();
+
+    // URL 필수 검증
+    if (!trimmedUrl) {
+      toast.error("URL을 입력해주세요");
+      return;
+    }
+
+    // CUSTOM 타입은 라벨도 필수
+    if (linkType === "CUSTOM" && !trimmedLabel) {
+      toast.error("링크 이름을 입력해주세요");
+      return;
+    }
+
+    onUpdate({
+      ...link,
+      url: trimmedUrl,
+      isVisible: link.isVisible === false ? false : true, // null/undefined도 true로
+      ...(linkType === "CUSTOM" && { customLabel: trimmedLabel }),
+    });
+    onEditChange(false);
+  };
+
+  const handleCancel = () => {
+    setEditUrl(link.url || "");
+    setEditCustomLabel(link.customLabel || "");
+    onEditChange(false);
+  };
+
+  const handleToggleVisible = () => {
+    // isVisible의 현재 상태 (null/undefined면 true로 간주)
+    const currentVisible = link.isVisible === false ? false : true;
+    onUpdate({
+      ...link,
+      isVisible: !currentVisible,
+    });
+  };
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-lg"
+      className="relative px-4 py-3 bg-white border border-gray-200 rounded-lg"
     >
-      <button
-        className="cursor-grab active:cursor-grabbing touch-none"
-        {...attributes}
-        {...listeners}
-      >
-        <GripVertical className="w-5 h-5 text-gray-400" />
-      </button>
-      <Image
-        src={platformIcons[linkType]}
-        alt={displayLabel}
-        width={24}
-        height={24}
-        className="flex-shrink-0"
-      />
-      <span className="flex-1 font-medium">{displayLabel}</span>
-      <button
-        onClick={onRemove}
-        className="text-red-500 hover:text-red-700 p-1"
-      >
-        <X className="w-5 h-5" />
-      </button>
+      <div className="flex items-center gap-3">
+        {/* 왼쪽: 드래그 핸들 + 아이콘 + 라벨 */}
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <button
+            className="cursor-grab active:cursor-grabbing touch-none flex-shrink-0"
+            {...attributes}
+            {...listeners}
+          >
+            <GripVertical className="w-5 h-5 text-gray-400" />
+          </button>
+
+          <Image
+            src={platformIcons[linkType]}
+            alt={displayLabel}
+            width={24}
+            height={24}
+            className="flex-shrink-0"
+          />
+
+          <div className="flex-1 font-medium text-gray-800 truncate min-w-0">{displayLabel}</div>
+        </div>
+
+        {/* 오른쪽: 토글 + 버튼들 */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Visible 토글 */}
+          <button
+            onClick={handleToggleVisible}
+            className={`w-10 h-6 rounded-full transition-colors ${
+              link.isVisible !== false ? "bg-purple-700" : "bg-gray-300"
+            }`}
+          >
+            <div
+              className={`w-4 h-4 bg-white rounded-full transition-transform ${
+                link.isVisible !== false ? "translate-x-5" : "translate-x-1"
+              }`}
+            />
+          </button>
+
+          {/* 버튼들 */}
+          {isEditing ? (
+            // 편집 모드 버튼
+            <>
+              <button
+                onClick={handleSave}
+                disabled={!editUrl.trim() || (linkType === "CUSTOM" && !editCustomLabel.trim())}
+                className="p-1.5 text-green-600 hover:text-green-700 hover:bg-green-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                title="저장"
+              >
+                <Check className="w-4 h-4" />
+              </button>
+              <button
+                onClick={handleCancel}
+                className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+                title="취소"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </>
+          ) : (
+            // 읽기 모드 버튼
+            <>
+              <button
+                onClick={() => onEditChange(true)}
+                className="p-1.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
+                title="수정"
+              >
+                <Pencil className="w-4 h-4" />
+              </button>
+              <button
+                onClick={onRemove}
+                className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                title="삭제"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* 편집 모드: URL 입력 필드 */}
+      {isEditing && (
+        <div className="mt-2 ml-8">
+          {linkType === "CUSTOM" && (
+            <input
+              type="text"
+              value={editCustomLabel}
+              onChange={(e) => setEditCustomLabel(e.target.value)}
+              placeholder="링크 이름"
+              className="w-full px-3 py-1.5 mb-2 border border-gray-300 rounded text-sm"
+            />
+          )}
+          <input
+            type="text"
+            value={editUrl}
+            onChange={(e) => setEditUrl(e.target.value)}
+            placeholder="URL을 입력하세요"
+            className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm"
+            autoFocus
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -140,6 +285,8 @@ export default function HomePage() {
   const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
   const [links, setLinks] = useState<LinkItem[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
+  const [newlyAddedIndex, setNewlyAddedIndex] = useState<number | null>(null);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   // Get user's stores (첫 번째 가게 우선)
   const { data: storesData } = useMyStores({ size: 10 });
@@ -168,6 +315,7 @@ export default function HomePage() {
         const converted: LinkItem = {
           linkType: link.linkType,
           url: link.url,
+          isVisible: link.isVisible === false ? false : true, // null/undefined도 true로
         };
 
         // CUSTOM 타입이고 label이 있으면 customLabel로 변환
@@ -197,9 +345,30 @@ export default function HomePage() {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
+      const oldIndex = Number(active.id);
+      const newIndex = Number(over.id);
+
+      // 편집 중인 항목의 인덱스를 드래그 후 위치로 업데이트
+      if (editingIndex !== null) {
+        if (editingIndex === oldIndex) {
+          // 편집 중인 항목이 직접 이동하는 경우
+          setEditingIndex(newIndex);
+        } else if (oldIndex < newIndex) {
+          // 위에서 아래로 이동 (oldIndex → newIndex)
+          // oldIndex와 newIndex 사이에 있는 항목들이 위로 한 칸씩 이동
+          if (editingIndex > oldIndex && editingIndex <= newIndex) {
+            setEditingIndex(editingIndex - 1);
+          }
+        } else {
+          // 아래에서 위로 이동 (oldIndex → newIndex)
+          // newIndex와 oldIndex 사이에 있는 항목들이 아래로 한 칸씩 이동
+          if (editingIndex >= newIndex && editingIndex < oldIndex) {
+            setEditingIndex(editingIndex + 1);
+          }
+        }
+      }
+
       setLinks((items) => {
-        const oldIndex = Number(active.id);
-        const newIndex = Number(over.id);
         const newOrder = arrayMove(items, oldIndex, newIndex);
         setHasChanges(true);
         return newOrder;
@@ -208,7 +377,17 @@ export default function HomePage() {
   };
 
   const handleLinkAdd = (linkItem: LinkItem) => {
-    setLinks(prev => [...prev, linkItem]);
+    setLinks(prev => {
+      const newIndex = prev.length;
+      setNewlyAddedIndex(newIndex);
+      setEditingIndex(newIndex); // 새로 추가된 링크를 편집 모드로
+      return [...prev, linkItem];
+    });
+    setHasChanges(true);
+  };
+
+  const handleUpdateLink = (index: number, updatedLink: LinkItem) => {
+    setLinks(prev => prev.map((link, i) => i === index ? updatedLink : link));
     setHasChanges(true);
   };
 
@@ -309,6 +488,13 @@ export default function HomePage() {
       return;
     }
 
+    // 빈 URL 검증
+    const emptyUrlLinks = links.filter(link => !link.url || !link.url.trim());
+    if (emptyUrlLinks.length > 0) {
+      toast.error("URL이 입력되지 않은 링크가 있습니다. 링크를 수정하거나 삭제해주세요.");
+      return;
+    }
+
     console.log('Saving with payload:', {
       storeId,
       data: {
@@ -320,6 +506,12 @@ export default function HomePage() {
     });
 
     try {
+      // isVisible을 명시적으로 true/false로 정리
+      const normalizedLinks = links.map(link => ({
+        ...link,
+        isVisible: link.isVisible === false ? false : true,
+      }));
+
       await updateStoreMutation.mutateAsync({
         storeId,
         data: {
@@ -330,7 +522,7 @@ export default function HomePage() {
           thumbnailUrl: currentStore.thumbnailUrl,
           requiredStampsForCoupon: currentStore.requiredStampsForCoupon,
           displayTemplate: currentStore.displayTemplate,
-          links: links,  // 전체 배열 전송
+          links: normalizedLinks,  // 정규화된 배열 전송
         },
       });
 
@@ -457,7 +649,12 @@ export default function HomePage() {
           </Button>
           <Button
             onClick={handleSave}
-            disabled={!hasChanges || updateStoreMutation.isPending}
+            size="sm"
+            disabled={
+              !hasChanges ||
+              updateStoreMutation.isPending ||
+              links.some(link => !link.url || !link.url.trim())
+            }
             className="bg-purple-700 hover:bg-purple-800"
           >
             <Save className="w-4 h-4 mr-2" />
@@ -500,7 +697,17 @@ export default function HomePage() {
                       key={index}
                       id={index}
                       linkType={link.linkType}
-                      label={link.label || link.customLabel}
+                      link={link}
+                      isEditing={editingIndex === index}
+                      onEditChange={(editing) => {
+                        setEditingIndex(editing ? index : null);
+                        if (editing && newlyAddedIndex === index) {
+                          setNewlyAddedIndex(null);
+                        }
+                      }}
+                      onUpdate={(updatedLink) => {
+                        handleUpdateLink(index, updatedLink);
+                      }}
                       onRemove={() => handleRemoveLink(index)}
                     />
                   ))}

@@ -4,6 +4,7 @@ import { StoreResponse } from "@/lib/types/api/store";
 import { LinkButton } from "./link-button";
 import { IoRestaurantOutline } from "react-icons/io5";
 import { Card, CardHeader } from "./ui/card";
+import { ChevronDown } from "lucide-react";
 
 interface CustomerViewProps {
   storeData: StoreResponse;
@@ -31,8 +32,8 @@ export function CustomerView({ storeData }: CustomerViewProps) {
         <div className="text-center mb-6">
           <p className="text-sub-body-r text-gray-500">공지사항</p>
           {storeData.description && (
-            <Card className="p-4 mt-4">
-              <CardHeader>
+            <Card className="p-4 mt-4 rounded-lg">
+              <CardHeader className="flex flex-col space-y-1.5 p-6">
                 <p className="text-sub-body-r text-gray-500">
                   {storeData.description}
                 </p>
@@ -51,15 +52,17 @@ export function CustomerView({ storeData }: CustomerViewProps) {
       {/* Links Section */}
       <div className="px-6 pb-6">
         <div className="flex flex-col gap-3">
-          {links.length > 0 ? (
-            links.map((link, index) => (
-              <LinkButton
-                key={index}
-                linkType={link.linkType}
-                url={link.url}
-                label={link.label || link.customLabel}
-              />
-            ))
+          {links.filter(link => link.isVisible !== false).length > 0 ? (
+            links
+              .filter(link => link.isVisible !== false)
+              .map((link, index) => (
+                <LinkButton
+                  key={index}
+                  linkType={link.linkType}
+                  url={link.url}
+                  label={link.label || link.customLabel}
+                />
+              ))
           ) : (
             <div className="text-center py-12 text-gray-500">
               <p>등록된 링크가 없습니다</p>
@@ -67,6 +70,18 @@ export function CustomerView({ storeData }: CustomerViewProps) {
           )}
         </div>
       </div>
+      <div className="px-6 pb-6">
+          <div className="border border-gray-200 rounded-lg overflow-hidden">
+            <button
+              className="w-full h-10 px-4 py-4 bg-white hover:bg-gray-50 transition-colors flex items-center justify-between"
+            >
+              <h2 className="text-lg font-semibold text-gray-800">메뉴</h2>
+              <ChevronDown
+                className="w-4 h-4 text-gray-600"
+              />
+            </button>
+          </div>
+        </div>
     </div>
   );
 }

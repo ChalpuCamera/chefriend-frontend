@@ -22,3 +22,20 @@ export interface FoodItemResponse {
   createdAt: string;
   updatedAt: string;
 }
+
+// 메뉴 추출 시작 응답
+export interface FoodItemExtractionStartResponse {
+  requestId: string;
+  message: string;
+}
+
+// 메뉴 추출 상태 응답
+export interface FoodItemExtractionStatusResponse {
+  requestId: string;
+  status: "PROCESSING" | "COMPLETED" | "FAILED";
+  progressPercentage: number; // 0-100
+  currentStep: string;
+  errorMessage?: string;
+  startedAt: string;
+  completedAt?: string;
+}

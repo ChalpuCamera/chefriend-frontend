@@ -32,11 +32,15 @@ class ApiClient {
       url += `?${searchParams.toString()}`;
     }
 
+    // FormData 감지 - FormData는 Content-Type을 브라우저가 자동으로 설정하도록 해야 함
+    const isFormData = options?.body instanceof FormData;
+
     const response = await fetch(url, {
       ...options,
       credentials: "include", // Always include cookies for refreshToken
       headers: {
-        "Content-Type": "application/json",
+        // FormData가 아닐 때만 Content-Type을 application/json으로 설정
+        ...(!isFormData && { "Content-Type": "application/json" }),
         ...(token && { Authorization: `Bearer ${token}` }),
         ...options?.headers,
       },
@@ -59,7 +63,7 @@ class ApiClient {
   post<T>(endpoint: string, data?: unknown, options?: RequestInit) {
     return this.request<T>(endpoint, {
       method: "POST",
-      body: data ? JSON.stringify(data) : undefined,
+      body: data instanceof FormData ? data : (data ? JSON.stringify(data) : undefined),
       ...options,
     });
   }
@@ -67,7 +71,7 @@ class ApiClient {
   put<T>(endpoint: string, data?: unknown, options?: RequestInit) {
     return this.request<T>(endpoint, {
       method: "PUT",
-      body: data ? JSON.stringify(data) : undefined,
+      body: data instanceof FormData ? data : (data ? JSON.stringify(data) : undefined),
       ...options,
     });
   }
@@ -75,7 +79,7 @@ class ApiClient {
   patch<T>(endpoint: string, data?: unknown, options?: RequestInit) {
     return this.request<T>(endpoint, {
       method: "PATCH",
-      body: data ? JSON.stringify(data) : undefined,
+      body: data instanceof FormData ? data : (data ? JSON.stringify(data) : undefined),
       ...options,
     });
   }
