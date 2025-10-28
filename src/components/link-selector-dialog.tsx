@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { LinkType, LinkItem } from "@/lib/types/api/store";
 
-interface Platform {
+export interface Platform {
   key: LinkType;
   name: string;
   icon: string;
@@ -15,7 +15,7 @@ interface Platform {
   domainToCheck?: string | string[];  // 도메인 검증용 (단일 또는 배열)
 }
 
-const platforms: Platform[] = [
+export const platforms: Platform[] = [
   { key: "NAVER_MAP", name: "네이버 지도", icon: "/platform_icons/naver.png", placeholder: "복사한 링크를 바로 붙여넣으세요", domainToCheck: "naver.me" },
   { key: "KAKAO_MAP", name: "카카오맵", icon: "/platform_icons/kakaomap.png", placeholder: "복사한 링크를 바로 붙여넣으세요", domainToCheck: ["kko.kakao.com", "place.map.kakao.com"] },
   { key: "GOOGLE_MAPS", name: "구글맵", icon: "/platform_icons/googlemaps.png", placeholder: "복사한 링크를 바로 붙여넣으세요", domainToCheck: "maps.app.goo.gl" },
@@ -28,6 +28,27 @@ const platforms: Platform[] = [
   { key: "DAANGN", name: "당근마켓", icon: "/platform_icons/daangn.png", placeholder: "복사한 링크를 바로 붙여넣으세요", domainToCheck: "www.daangn.com" },
   { key: "CUSTOM", name: "커스텀 링크", icon: "/platform_icons/link.png", placeholder: "링크 URL을 입력해주세요" },
 ];
+
+// 텍스트에서 특정 플랫폼의 URL 추출 함수 (프로토콜 제거)
+export const extractUrlForPlatform = (text: string, domain: string): string | null => {
+  // 도메인을 포함한 URL 찾기 (프로토콜 선택적, 공백 전까지)
+  const urlRegex = new RegExp(`(https?:\\/\\/)?${domain.replace(/\./g, '\\.')}[^\\s]*`, 'i');
+  const match = text.match(urlRegex);
+
+  if (!match) return null;
+
+  let url = match[0];
+
+  // 프로토콜 제거
+  url = url.replace(/^https?:\/\//, '');
+
+  return url;
+};
+
+// 플랫폼별 도메인 검증 함수 (도메인으로 시작하는지 확인)
+export const validatePlatformUrl = (url: string, domain: string): boolean => {
+  return url.toLowerCase().startsWith(domain.toLowerCase());
+};
 
 interface LinkSelectorDialogProps {
   open: boolean;
@@ -46,27 +67,6 @@ export function LinkSelectorDialog({
   const [linkUrl, setLinkUrl] = useState("");
   const [customLabel, setCustomLabel] = useState("");
   const [urlError, setUrlError] = useState("");
-
-  // 텍스트에서 특정 플랫폼의 URL 추출 함수 (프로토콜 제거)
-  const extractUrlForPlatform = (text: string, domain: string): string | null => {
-    // 도메인을 포함한 URL 찾기 (프로토콜 선택적, 공백 전까지)
-    const urlRegex = new RegExp(`(https?:\\/\\/)?${domain.replace(/\./g, '\\.')}[^\\s]*`, 'i');
-    const match = text.match(urlRegex);
-
-    if (!match) return null;
-
-    let url = match[0];
-
-    // 프로토콜 제거
-    url = url.replace(/^https?:\/\//, '');
-
-    return url;
-  };
-
-  // 플랫폼별 도메인 검증 함수 (도메인으로 시작하는지 확인)
-  const validatePlatformUrl = (url: string, domain: string): boolean => {
-    return url.toLowerCase().startsWith(domain.toLowerCase());
-  };
 
   const handlePlatformClick = (platform: Platform) => {
     // 일반 플랫폼은 중복 불가, CUSTOM은 중복 가능
@@ -121,14 +121,12 @@ export function LinkSelectorDialog({
         : [selectedPlatform.domainToCheck];
 
       let extractedUrl: string | null = null;
-      let matchedDomain: string | null = null;
 
       // 여러 도메인 중 하나라도 매칭되면 성공
       for (const domain of domainsToCheck) {
         const url = extractUrlForPlatform(linkUrl.trim(), domain);
         if (url && validatePlatformUrl(url, domain)) {
           extractedUrl = url;
-          matchedDomain = domain;
           break;
         }
       }
@@ -149,7 +147,7 @@ export function LinkSelectorDialog({
     const linkItem: LinkItem = {
       linkType: selectedPlatform.key,
       url: finalUrl,
-      isVisible: true,
+      isVisible: true,  // 기본값 true
     };
 
     // CUSTOM이면 customLabel 추가

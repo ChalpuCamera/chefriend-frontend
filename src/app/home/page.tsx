@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useMyStores, useUpdateStore } from "@/lib/hooks/useStore";
 import { CustomerView } from "@/components/customer-view";
 import { LinkType, LinkItem } from "@/lib/types/api/store";
-import { LinkSelectorDialog } from "@/components/link-selector-dialog";
+import { LinkSelectorDialog, platforms, extractUrlForPlatform, validatePlatformUrl } from "@/components/link-selector-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -90,11 +90,11 @@ function SortableLinkItem({
   const [editUrl, setEditUrl] = useState(link.url || "");
   const [editCustomLabel, setEditCustomLabel] = useState(link.customLabel || "");
 
-  // link가 변경되면 input 상태도 동기화 (드래그로 순서가 바뀔 때)
+  // link가 변경되면 input 상태도 동기화 (드래그로 순서가 바뀔 때, 링크 타입 변경 시)
   useEffect(() => {
     setEditUrl(link.url || "");
     setEditCustomLabel(link.customLabel || "");
-  }, [link.url, link.customLabel]);
+  }, [link.url, link.customLabel, linkType]);
 
   const {
     attributes,
@@ -138,13 +138,48 @@ function SortableLinkItem({
       return;
     }
 
+    let finalUrl = trimmedUrl;
+
+    // CUSTOM과 INSTAGRAM 제외한 플랫폼은 도메인 검증
+    if (linkType !== "CUSTOM" && linkType !== "INSTAGRAM") {
+      const platform = platforms.find(p => p.key === linkType);
+
+      if (platform?.domainToCheck) {
+        const domainsToCheck = Array.isArray(platform.domainToCheck)
+          ? platform.domainToCheck
+          : [platform.domainToCheck];
+
+        let extractedUrl: string | null = null;
+
+        // 여러 도메인 중 하나라도 매칭되면 성공
+        for (const domain of domainsToCheck) {
+          const url = extractUrlForPlatform(trimmedUrl, domain);
+          if (url && validatePlatformUrl(url, domain)) {
+            extractedUrl = url;
+            break;
+          }
+        }
+
+        if (!extractedUrl) {
+          const domainsText = domainsToCheck.join(' 또는 ');
+          toast.error(`링크를 찾을 수 없습니다. ${domainsText}을(를) 포함하는 링크를 입력해주세요.`);
+          return;
+        }
+
+        finalUrl = extractedUrl;
+      }
+    } else if (linkType === "CUSTOM") {
+      // CUSTOM은 프로토콜 제거만
+      finalUrl = finalUrl.replace(/^https?:\/\//, '');
+    }
+
     onUpdate({
       ...link,
-      url: trimmedUrl,
+      url: finalUrl,
       isVisible: link.isVisible === false ? false : true, // null/undefined도 true로
       ...(linkType === "CUSTOM" && { customLabel: trimmedLabel }),
     });
-    onEditChange(false);
+    // onEditChange(false) 제거: 부모의 handleUpdateLink에서 editingIndex를 null로 설정하여 자동으로 편집 모드 종료됨
   };
 
   const handleCancel = () => {
@@ -264,7 +299,7 @@ function SortableLinkItem({
             type="text"
             value={editUrl}
             onChange={(e) => setEditUrl(e.target.value)}
-            placeholder="URL을 입력하세요"
+            placeholder={`${linkType === "INSTAGRAM" ? "인스타 아이디를 입력하세요" : "URL을 입력하세요"}`}
             className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm"
             autoFocus
           />
@@ -292,7 +327,6 @@ export default function HomePage() {
   const { data: storesData } = useMyStores({ size: 10 });
   const stores = storesData?.content || [];
 
-  console.log('🏪 Stores data:', stores);
 
   const currentStore =
     stores.length > 0
@@ -301,9 +335,6 @@ export default function HomePage() {
         )
       : null;
   const storeId = currentStore?.storeId;
-
-  console.log('🎯 Selected store:', currentStore);
-  console.log('🔑 Store ID:', storeId);
 
   const updateStoreMutation = useUpdateStore();
 
@@ -377,6 +408,12 @@ export default function HomePage() {
   };
 
   const handleLinkAdd = (linkItem: LinkItem) => {
+    // 이전에 편집 중이던 새로 추가된 링크가 있으면 삭제
+    if (editingIndex !== null && newlyAddedIndex === editingIndex) {
+      setLinks(prev => prev.filter((_, i) => i !== editingIndex));
+      setNewlyAddedIndex(null);
+    }
+
     setLinks(prev => {
       const newIndex = prev.length;
       setNewlyAddedIndex(newIndex);
@@ -389,6 +426,14 @@ export default function HomePage() {
   const handleUpdateLink = (index: number, updatedLink: LinkItem) => {
     setLinks(prev => prev.map((link, i) => i === index ? updatedLink : link));
     setHasChanges(true);
+
+    // 체크 표시로 저장되면 편집 모드 종료
+    setEditingIndex(null);
+
+    // 새로 추가된 링크였다면 더 이상 새로 추가된 링크로 간주하지 않음
+    if (newlyAddedIndex === index) {
+      setNewlyAddedIndex(null);
+    }
   };
 
   const handleRemoveLink = (index: number) => {
@@ -700,6 +745,15 @@ export default function HomePage() {
                       link={link}
                       isEditing={editingIndex === index}
                       onEditChange={(editing) => {
+                        // 편집 모드 종료 시 체크
+                        if (!editing && newlyAddedIndex === index) {
+                          // 새로 추가된 링크가 체크 표시 없이 편집 모드를 벗어남
+                          // → 자동 삭제
+                          handleRemoveLink(index);
+                          setNewlyAddedIndex(null);
+                          return;
+                        }
+
                         setEditingIndex(editing ? index : null);
                         if (editing && newlyAddedIndex === index) {
                           setNewlyAddedIndex(null);
