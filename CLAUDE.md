@@ -1,4 +1,6 @@
-# Chalpu Frontend Platform - Design System Rules
+작업에서의 완료 기준이 뭔지, 그 기준을 충족하기 위해서는 어떤 테스트를 해봐야되는 지 알려줘
+
+# chefriend Frontend Platform - Design System Rules
 
 This document defines the design system rules and coding conventions for integrating Figma designs into the Chalpu Frontend Platform codebase using the Figma MCP (Model Context Protocol) server.
 

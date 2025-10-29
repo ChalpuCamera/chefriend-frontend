@@ -284,7 +284,7 @@ function SortableLinkItem({
       </div>
 
       {/* 편집 모드: URL 입력 필드 */}
-      {isEditing && (
+      <>
         <div className="mt-2 ml-8">
           {linkType === "CUSTOM" && (
             <input
@@ -292,7 +292,8 @@ function SortableLinkItem({
               value={editCustomLabel}
               onChange={(e) => setEditCustomLabel(e.target.value)}
               placeholder="링크 이름"
-              className="w-full px-3 py-1.5 mb-2 border border-gray-300 rounded text-sm"
+              disabled={!isEditing}
+              className="w-full px-3 py-1.5 mb-2 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             />
           )}
           <input
@@ -300,11 +301,11 @@ function SortableLinkItem({
             value={editUrl}
             onChange={(e) => setEditUrl(e.target.value)}
             placeholder={`${linkType === "INSTAGRAM" ? "인스타 아이디를 입력하세요" : "URL을 입력하세요"}`}
-            className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm"
-            autoFocus
+            className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!isEditing}
           />
         </div>
-      )}
+      </>
     </div>
   );
 }
@@ -412,6 +413,7 @@ export default function HomePage() {
     if (editingIndex !== null && newlyAddedIndex === editingIndex) {
       setLinks(prev => prev.filter((_, i) => i !== editingIndex));
       setNewlyAddedIndex(null);
+      toast.success("입력하지 않은 링크가 삭제되었습니다");
     }
 
     setLinks(prev => {
@@ -745,6 +747,19 @@ export default function HomePage() {
                       link={link}
                       isEditing={editingIndex === index}
                       onEditChange={(editing) => {
+                        // 편집 모드 진입 시 빈 URL 링크 자동 삭제
+                        if (editing) {
+                          if (
+                            editingIndex !== null &&
+                            newlyAddedIndex === editingIndex &&
+                            !links[editingIndex]?.url?.trim()
+                          ) {
+                            handleRemoveLink(editingIndex);
+                            setNewlyAddedIndex(null);
+                            toast.success("입력하지 않은 링크가 삭제되었습니다");
+                          }
+                        }
+
                         // 편집 모드 종료 시 체크
                         if (!editing && newlyAddedIndex === index) {
                           // 새로 추가된 링크가 체크 표시 없이 편집 모드를 벗어남
