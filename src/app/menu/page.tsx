@@ -182,7 +182,7 @@ export default function Page() {
                         {item.name}
                       </div>
                       <button
-                        className="px-3 py-1 text-sub-body-sb text-gray-800 border border-gray-800 rounded-[6px]"
+                        className="min-w-16 px-3 py-1 text-sub-body-sb text-gray-800 border border-gray-800 rounded-[6px]"
                         onClick={() => router.push(`/menu/${item.id!}`)}
                       >
                         자세히
