@@ -39,6 +39,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { useRouter } from "next/navigation";
 import { photoApi } from "@/lib/api/owner/photo";
 import { storeApi } from "@/lib/api/owner/store";
+import { FloatingNavBar } from "@/components/floating-nav-bar";
 
 // 플랫폼 정보 매핑
 const platformIcons: Record<LinkType, string> = {
@@ -903,29 +904,7 @@ export default function HomePage() {
       </Dialog>
 
       {/* 플로팅 탭 네비게이션 */}
-      <div className="fixed bottom-6 left-0 right-0 z-50 px-4">
-        <div className="max-w-md mx-auto">
-          <div className="bg-white rounded-full shadow-2xl border border-gray-200 flex overflow-hidden">
-            {/* 홈페이지 관리 탭 */}
-            <button
-              onClick={() => {/* 현재 페이지이므로 아무 동작 안함 */}}
-              className="flex-1 flex flex-col items-center justify-center py-4 px-4 bg-purple-700 text-white transition-all"
-            >
-              <Home className="w-5 h-5 mb-1" />
-              <span className="text-xs font-medium">홈페이지 관리</span>
-            </button>
-
-            {/* 메뉴 관리 탭 */}
-            <button
-              onClick={() => router.push('/menu')}
-              className="flex-1 flex flex-col items-center justify-center py-4 px-4 text-gray-600 hover:bg-gray-50 transition-all"
-            >
-              <UtensilsCrossed className="w-5 h-5 mb-1" />
-              <span className="text-xs font-medium">메뉴 관리</span>
-            </button>
-          </div>
-        </div>
-      </div>
+      <FloatingNavBar currentTab="home" />
     </div>
   );
 }

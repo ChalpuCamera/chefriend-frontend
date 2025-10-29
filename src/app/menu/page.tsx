@@ -2,12 +2,11 @@
 import React, { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { CustomButton } from "@/components/ui/custom-button";
-import { CustomHeader } from "@/components/ui/custom-header";
+import { ArrowLeft } from "lucide-react";
 import { useFoodsByStore, foodKeys } from "@/lib/hooks/useFood";
 import { useMyStores } from "@/lib/hooks/useStore";
-import { Home, UtensilsCrossed } from "lucide-react";
 import { MenuAddMethodDialog } from "@/components/menu-add-method-dialog";
+import { FloatingNavBar } from "@/components/floating-nav-bar";
 import { MenuExtractionProgressDialog } from "@/components/menu-extraction-progress-dialog";
 import { useMenuExtraction } from "@/lib/hooks/useMenuExtraction";
 import { toast } from "sonner";
@@ -94,7 +93,9 @@ export default function Page() {
       toast.success("메뉴가 추가되었습니다!");
 
       // 메뉴 목록 캐시 무효화
-      queryClient.invalidateQueries({ queryKey: foodKeys.listByStore(storeId) });
+      queryClient.invalidateQueries({
+        queryKey: foodKeys.listByStore(storeId),
+      });
     } catch (error) {
       // 에러 처리
       const err = error as Error;
@@ -111,8 +112,30 @@ export default function Page() {
   return (
     <div className="h-screen bg-white w-full mx-auto">
       {/* Header */}
-      <CustomHeader handleBack={handleBack} title="우리 가게 메뉴" />
+      <div className="fixed top-0 left-0 right-0 z-50 bg-white">
+        <div className="max-w-[430px] mx-auto">
+          <div className="flex items-center h-11 px-3.5">
+            <button
+              className="flex items-center justify-center"
+              onClick={handleBack}
+            >
+              <ArrowLeft size={24} className="text-foreground" />
+            </button>
+          </div>
 
+          {/* Title */}
+          <div className="p-4 flex justify-between items-center">
+            <div className="text-title-2 text-gray-800">우리 가게 메뉴</div>
+            {/* 메뉴 추가 버튼 - 플로팅 탭 위에 고정 */}
+            <button
+              onClick={handleAddMenu}
+              className="text-body-sb w-30 h-10 bg-[#7C3BC6] text-white rounded-[12px]"
+            >
+              메뉴 추가하기
+            </button>
+          </div>
+        </div>
+      </div>
       {/* Menu Items */}
       {menuItems && menuItems.length === 0 ? (
         <div className="fixed inset-0 pt-10 pb-60 flex items-center justify-center">
@@ -176,37 +199,8 @@ export default function Page() {
         </div>
       )}
 
-      {/* 메뉴 추가 버튼 - 플로팅 탭 위에 고정 */}
-      <div className="fixed bottom-28 left-0 right-0 bg-transparent pointer-events-none">
-        <div className="max-w-[430px] mx-auto pb-2 flex justify-center px-4 pointer-events-auto">
-          <CustomButton onClick={handleAddMenu}>메뉴 추가하기</CustomButton>
-        </div>
-      </div>
-
       {/* 플로팅 탭 네비게이션 */}
-      <div className="fixed bottom-6 left-0 right-0 z-50 px-4">
-        <div className="max-w-md mx-auto">
-          <div className="bg-white rounded-full shadow-2xl border border-gray-200 flex overflow-hidden">
-            {/* 홈페이지 관리 탭 */}
-            <button
-              onClick={() => router.push('/home')}
-              className="flex-1 flex flex-col items-center justify-center py-4 px-4 text-gray-600 hover:bg-gray-50 transition-all"
-            >
-              <Home className="w-5 h-5 mb-1" />
-              <span className="text-xs font-medium">홈페이지 관리</span>
-            </button>
-
-            {/* 메뉴 관리 탭 */}
-            <button
-              onClick={() => {/* 현재 페이지이므로 아무 동작 안함 */}}
-              className="flex-1 flex flex-col items-center justify-center py-4 px-4 bg-purple-700 text-white transition-all"
-            >
-              <UtensilsCrossed className="w-5 h-5 mb-1" />
-              <span className="text-xs font-medium">메뉴 관리</span>
-            </button>
-          </div>
-        </div>
-      </div>
+      <FloatingNavBar currentTab="menu" />
 
       {/* 히든 파일 input */}
       <input
