@@ -787,7 +787,7 @@ export default function HomePage() {
             <DialogTitle>손님이 보는 화면</DialogTitle>
           </DialogHeader>
           <div className="overflow-auto max-h-[70vh]">
-            <CustomerView storeData={previewStoreData} />
+            <CustomerView storeData={previewStoreData} isPreview={true} />
           </div>
         </DialogContent>
       </Dialog>
