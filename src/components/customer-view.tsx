@@ -8,10 +8,9 @@ import { ChevronDown } from "lucide-react";
 
 interface CustomerViewProps {
   storeData: StoreResponse;
-  isPreview?: boolean;
 }
 
-export function CustomerView({ storeData, isPreview = false }: CustomerViewProps) {
+export function CustomerView({ storeData }: CustomerViewProps) {
   const links = storeData.links || [];
 
   return (
@@ -60,9 +59,7 @@ export function CustomerView({ storeData, isPreview = false }: CustomerViewProps
                 <LinkButton
                   key={index}
                   linkType={link.linkType}
-                  url={link.url}
                   label={link.label || link.customLabel}
-                  onClick={isPreview ? () => {} : undefined}
                 />
               ))
           ) : (

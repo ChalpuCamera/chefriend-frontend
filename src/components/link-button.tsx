@@ -31,26 +31,15 @@ const defaultLabels: Record<LinkType, string> = {
 
 interface LinkButtonProps {
   linkType: LinkType;
-  url: string;
   label?: string;  // 백엔드에서 받은 label 또는 customLabel
-  onClick?: () => void;
   className?: string;
 }
 
-export function LinkButton({ linkType, url, label, onClick, className = "" }: LinkButtonProps) {
+export function LinkButton({ linkType, label, className = "" }: LinkButtonProps) {
   const displayLabel = label || defaultLabels[linkType];
-
-  const handleClick = () => {
-    if (onClick) {
-      onClick();
-    } else if (url) {
-      window.open(url.startsWith("http") ? url : `https://${url}`, "_blank");
-    }
-  };
 
   return (
     <button
-      onClick={handleClick}
       className={`w-full flex items-center gap-3 px-4 py-3 bg-[#7790AC] text-white rounded-lg hover:opacity-90 transition-opacity ${className}`}
     >
       <Image
