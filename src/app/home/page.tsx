@@ -314,10 +314,12 @@ function SortableLinkItem({
 export default function HomePage() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [isSiteLinkDialogOpen, setIsSiteLinkDialogOpen] = useState(false);
+  // const [isSiteLinkDialogOpen, setIsSiteLinkDialogOpen] = useState(false); // 드롭다운으로 변경
+  const [showSiteLinkDropdown, setShowSiteLinkDropdown] = useState(false);
   const [isProfileImageDialogOpen, setIsProfileImageDialogOpen] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const siteLinkDropdownRef = useRef<HTMLDivElement>(null);
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
   const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
   const [links, setLinks] = useState<LinkItem[]>([]);
@@ -364,6 +366,30 @@ export default function HomePage() {
       setLinks(convertedLinks);
     }
   }, [currentStore]);
+
+  // 외부 클릭 감지로 사이트링크 드롭다운 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (
+        siteLinkDropdownRef.current &&
+        !siteLinkDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowSiteLinkDropdown(false);
+      }
+    };
+
+    if (showSiteLinkDropdown) {
+      setTimeout(() => {
+        document.addEventListener("click", handleClickOutside);
+        document.addEventListener("touchend", handleClickOutside);
+      }, 0);
+    }
+
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+      document.removeEventListener("touchend", handleClickOutside);
+    };
+  }, [showSiteLinkDropdown]);
 
   // Drag and drop sensors (모바일 터치 지원)
   const sensors = useSensors(
@@ -663,14 +689,38 @@ export default function HomePage() {
               <p className="text-caption-r text-gray-800">
                 {currentStore?.description && currentStore.description.length > 0 ? currentStore.description : "안녕하세요 사장님 👨‍🌾"}
               </p>
-              {/* 사이트 주소 - 클릭하여 Dialog 오픈 */}
+              {/* 사이트 주소 - 드롭다운 메뉴로 변경 */}
               {currentStore?.siteLink && (
-                <button
-                  onClick={() => setIsSiteLinkDialogOpen(true)}
-                  className="text-body-r text-purple-700 flex items-center gap-1 hover:underline text-left"
-                >
-                  chefriend.kr/{currentStore.siteLink}🔗
-                </button>
+                <div ref={siteLinkDropdownRef} className="relative">
+                  <button
+                    onClick={() => setShowSiteLinkDropdown(!showSiteLinkDropdown)}
+                    className="text-body-r text-purple-700 flex items-center gap-1 hover:underline text-left"
+                  >
+                    chefriend.kr/{currentStore.siteLink}🔗
+                  </button>
+                  {showSiteLinkDropdown && (
+                    <div className="absolute top-full mt-2 w-48 bg-white border-2 border-gray-200 rounded-2xl shadow-lg overflow-hidden z-10">
+                      <button
+                        onClick={() => {
+                          handleCopySiteLink();
+                          setShowSiteLinkDropdown(false);
+                        }}
+                        className="w-full px-4 py-3 text-body-sb text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                      >
+                        주소 복사하기
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleViewSite();
+                          setShowSiteLinkDropdown(false);
+                        }}
+                        className="w-full px-4 py-3 text-body-sb text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 border-t border-gray-200"
+                      >
+                        사이트 보기
+                      </button>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -803,13 +853,13 @@ export default function HomePage() {
             <DialogTitle>손님이 보는 화면</DialogTitle>
           </DialogHeader>
           <div className="overflow-auto max-h-[70vh]">
-            <CustomerView storeData={previewStoreData} />
+            <CustomerView storeData={previewStoreData} isPreview={true} />
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* 사이트 주소 Dialog */}
-      <Dialog
+      {/* 사이트 주소 Dialog - 드롭다운으로 변경됨 */}
+      {/* <Dialog
         open={isSiteLinkDialogOpen}
         onOpenChange={setIsSiteLinkDialogOpen}
       >
@@ -841,7 +891,7 @@ export default function HomePage() {
             </DialogFooter>
           </div>
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
 
       {/* 프로필 이미지 미리보기 Dialog */}
       <Dialog
