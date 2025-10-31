@@ -1,24 +1,34 @@
 "use client";
 
 import { StoreResponse } from "@/lib/types/api/store";
+import type { StoreNoticeResponse } from "@/lib/types/api/notice";
 import { LinkButton } from "./link-button";
 import { IoRestaurantOutline } from "react-icons/io5";
-import { Card, CardHeader } from "./ui/card";
+import { Card, CardContent } from "./ui/card";
 import { ChevronDown } from "lucide-react";
 
 interface CustomerViewProps {
   storeData: StoreResponse;
+  notices?: StoreNoticeResponse[];
 }
 
-export function CustomerView({ storeData }: CustomerViewProps) {
+export function CustomerView({ storeData, notices = [] }: CustomerViewProps) {
   const links = storeData.links || [];
+
+  // 최신순 정렬
+  const sortedNotices = notices.length > 0
+    ? [...notices].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+    : [];
+  const latestNotice = sortedNotices[0];
 
   return (
     <div className="bg-white w-full mx-auto min-h-screen max-w-[430px]">
       {/* Header Section */}
       <div className="px-6 pt-6 pb-4">
         <div className="text-center mb-6">
-          <div className="flex justify-center mb-3">
+          <div className="mb-3">
             <div className="flex gap-4 items-center">
               <div className="w-8 h-8 bg-[#7790AC] rounded-lg flex items-center justify-center">
                 <IoRestaurantOutline className="w-5 h-5 text-white" />
@@ -29,18 +39,44 @@ export function CustomerView({ storeData }: CustomerViewProps) {
             </div>
           </div>
         </div>
-        <div className="text-center mb-6">
-          <p className="text-sub-body-r text-gray-500">공지사항</p>
-          {storeData.description && (
-            <Card className="p-4 mt-4 rounded-lg">
-              <CardHeader className="flex flex-col space-y-1.5 p-6">
-                <p className="text-sub-body-r text-gray-500">
-                  {storeData.description}
-                </p>
-              </CardHeader>
-            </Card>
-          )}
-        </div>
+
+        {/* 공지사항 섹션 */}
+        {latestNotice && (
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-gray-800 mb-3">공지사항</h2>
+            <div className="space-y-3">
+              {/* 최신 공지사항 1개 */}
+              <Card className="rounded-lg border border-gray-200 h-[110px] flex flex-col overflow-hidden py-0">
+                <CardContent className="!p-4 h-full flex flex-col">
+                  <h3 className="font-semibold text-gray-900 mb-2 text-base flex-shrink-0 truncate">
+                    {latestNotice.title}
+                  </h3>
+                  <div className="flex-1 overflow-hidden flex flex-col min-h-0">
+                    <div className="flex items-start gap-2">
+                      <p className="text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis flex-1">
+                        {latestNotice.body}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-2 flex-shrink-0">
+                    {new Date(latestNotice.createdAt).toLocaleDateString("ko-KR")}
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* 나머지 공지사항들 표시 */}
+              {sortedNotices.length > 1 && (
+                <details className="group">
+                  <summary className="cursor-pointer text-sm text-gray-600 hover:text-gray-800 font-medium list-none flex items-center justify-center py-2">
+                    <span>
+                      이전 공지사항 {sortedNotices.length - 1}개 더보기
+                    </span>
+                  </summary>
+                </details>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Share Button */}
         <div className="mb-6">

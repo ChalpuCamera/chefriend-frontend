@@ -2,9 +2,11 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useMyStores, useUpdateStore } from "@/lib/hooks/useStore";
+import { useNotices, useCreateNotice, useUpdateNotice, useDeleteNotices } from "@/lib/hooks/useNotice";
 import { CustomerView } from "@/components/customer-view";
 import { LinkType, LinkItem } from "@/lib/types/api/store";
 import { LinkSelectorDialog, platforms, extractUrlForPlatform, validatePlatformUrl } from "@/components/link-selector-dialog";
+import { NoticeManagerDialog } from "@/components/notice-manager-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,11 +15,13 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Plus, GripVertical, X, Save, Eye, Home, UtensilsCrossed, Pencil, Check } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Plus, GripVertical, X, Save, Eye, Pencil, Check, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { storeKeys } from "@/lib/hooks/useStore";
+import type { StoreNoticeResponse } from "@/lib/types/api/notice";
 import {
   DndContext,
   closestCenter,
@@ -327,6 +331,11 @@ export default function HomePage() {
   const [newlyAddedIndex, setNewlyAddedIndex] = useState<number | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
+  // 공지사항 관련 상태
+  const [isNoticeDialogOpen, setIsNoticeDialogOpen] = useState(false);
+  const [noticeMode, setNoticeMode] = useState<"create" | "edit">("create");
+  const [editingNotice, setEditingNotice] = useState<StoreNoticeResponse | undefined>(undefined);
+
   // Get user's stores (첫 번째 가게 우선)
   const { data: storesData } = useMyStores({ size: 10 });
   const stores = storesData?.content || [];
@@ -341,6 +350,13 @@ export default function HomePage() {
   const storeId = currentStore?.storeId;
 
   const updateStoreMutation = useUpdateStore();
+
+  // 공지사항 hooks
+  const { data: noticesData } = useNotices(storeId || 0, { page: 0, size: 20 });
+  const notices = noticesData?.content || [];
+  const createNoticeMutation = useCreateNotice();
+  const updateNoticeMutation = useUpdateNotice();
+  const deleteNoticesMutation = useDeleteNotices();
 
   // 기존 데이터로 state 초기화
   useEffect(() => {
@@ -553,6 +569,55 @@ export default function HomePage() {
     router.push("/mypage");
   };
 
+  // 공지사항 핸들러
+  const handleCreateNotice = () => {
+    setNoticeMode("create");
+    setEditingNotice(undefined);
+    setIsNoticeDialogOpen(true);
+  };
+
+  const handleEditNotice = (notice: StoreNoticeResponse) => {
+    setNoticeMode("edit");
+    setEditingNotice(notice);
+    setIsNoticeDialogOpen(true);
+  };
+
+  const handleNoticeSubmit = async (data: { title: string; body: string }) => {
+    if (!storeId) return;
+
+    try {
+      if (noticeMode === "create") {
+        await createNoticeMutation.mutateAsync({ storeId, data });
+      } else if (noticeMode === "edit" && editingNotice) {
+        await updateNoticeMutation.mutateAsync({
+          noticeId: editingNotice.id,
+          data,
+        });
+      }
+      setIsNoticeDialogOpen(false);
+      setEditingNotice(undefined);
+    } catch (error) {
+      console.error("Notice submission failed:", error);
+    }
+  };
+
+  const handleDeleteNotice = async (noticeId: number) => {
+    if (!storeId) return;
+
+    if (!confirm("이 공지사항을 삭제하시겠습니까?")) {
+      return;
+    }
+
+    try {
+      await deleteNoticesMutation.mutateAsync({
+        storeId,
+        deleteIds: [noticeId],
+      });
+    } catch (error) {
+      console.error("Notice deletion failed:", error);
+    }
+  };
+
   const handleSave = async () => {
     console.log('handleSave called - storeId:', storeId, 'currentStore:', currentStore);
 
@@ -760,7 +825,125 @@ export default function HomePage() {
           </Button>
         </div>
 
-        {/* 편집 섹션 */}
+        {/* 공지사항 섹션 */}
+        <div className="bg-white rounded-lg p-4 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-semibold">공지사항</h2>
+            <Button
+              onClick={handleCreateNotice}
+              size="sm"
+              className="bg-purple-700 hover:bg-purple-800"
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              공지사항 추가
+            </Button>
+          </div>
+
+          {notices.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <p>아직 공지사항이 없습니다</p>
+              <p className="text-sm mt-2">공지사항 추가 버튼을 눌러 시작하세요</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {/* 기본적으로 최신 1개만 표시 */}
+              {[...notices]
+                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                .slice(0, 1)
+                .map((notice) => (
+                <Card key={notice.id} className="border border-gray-200 py-2">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-gray-900 mb-2 truncate">
+                          {notice.title}
+                        </h3>
+                        <p className="text-sm text-gray-600 whitespace-pre-wrap break-words line-clamp-3">
+                          {notice.body}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-2">
+                          {new Date(notice.createdAt).toLocaleDateString("ko-KR")}
+                        </p>
+                      </div>
+                      <div className="flex gap-1 flex-shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditNotice(notice)}
+                          className="h-8 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteNotice(notice.id)}
+                          className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+
+              {/* 나머지 공지사항들 표시 */}
+              {notices.length > 1 && (
+                <details className="group">
+                  <summary className="cursor-pointer text-sm text-purple-700 hover:text-purple-800 font-medium list-none flex items-center justify-center py-2">
+                    <span className="group-open:hidden">이전 공지사항 {notices.length - 1}개 더보기</span>
+                    <span className="hidden group-open:inline">접기</span>
+                  </summary>
+                  <div className="space-y-3 mt-3">
+                    {[...notices]
+                      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                      .slice(1)
+                      .map((notice) => (
+                      <Card key={notice.id} className="border border-gray-200 py-2">
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-gray-900 mb-2 truncate">
+                                {notice.title}
+                              </h3>
+                              <p className="text-sm text-gray-600 whitespace-pre-wrap break-words line-clamp-3">
+                                {notice.body}
+                              </p>
+                              <p className="text-xs text-gray-400 mt-2">
+                                {new Date(notice.createdAt).toLocaleDateString("ko-KR")}
+                              </p>
+                            </div>
+                            <div className="flex gap-1 flex-shrink-0">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEditNotice(notice)}
+                                className="h-8 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteNotice(notice.id)}
+                                className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </details>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* 링크 목록 섹션 */}
         <div className="bg-white rounded-lg p-4 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-base font-semibold">링크 목록</h2>
@@ -846,14 +1029,24 @@ export default function HomePage() {
         onLinkAdd={handleLinkAdd}
       />
 
+      {/* 공지사항 관리 다이얼로그 */}
+      <NoticeManagerDialog
+        open={isNoticeDialogOpen}
+        onOpenChange={setIsNoticeDialogOpen}
+        mode={noticeMode}
+        notice={editingNotice}
+        onSubmit={handleNoticeSubmit}
+        isLoading={createNoticeMutation.isPending || updateNoticeMutation.isPending}
+      />
+
       {/* 미리보기 다이얼로그 */}
       <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
-        <DialogContent className="max-w-[400px] p-0 gap-0">
+        <DialogContent className="max-w-[400px] p-0 gap-0 overflow-hidden">
           <DialogHeader className="px-6 pt-6 pb-4">
             <DialogTitle>손님이 보는 화면</DialogTitle>
           </DialogHeader>
           <div className="overflow-auto max-h-[70vh]">
-            <CustomerView storeData={previewStoreData} />
+            <CustomerView storeData={previewStoreData} notices={notices} />
           </div>
         </DialogContent>
       </Dialog>
