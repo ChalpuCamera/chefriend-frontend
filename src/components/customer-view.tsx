@@ -23,7 +23,7 @@ export function CustomerView({ storeData, notices = [] }: CustomerViewProps) {
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         )
       : [];
-  const latestNotice = sortedNotices[0];
+  const latestNotice = notices.find((notice) => notice.isRepresentative) || sortedNotices[0];
 
   return (
     <div className="bg-white w-full mx-auto min-h-screen max-w-[430px]">
