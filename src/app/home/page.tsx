@@ -885,8 +885,8 @@ export default function HomePage() {
               {notices
                 .slice(0, 1)
                 .map((notice) => (
-                <div key={notice.id} className="flex items-start gap-3">
-                  <div className="flex items-center pt-6 flex-shrink-0">
+                <div key={notice.id} className="flex items-center gap-3">
+                  <div className="flex items-center flex-shrink-0">
                     <button
                       onClick={() => !notice.isRepresentative && handleSetFeaturedNotice(notice)}
                       className="w-5 h-5 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 rounded-full"
@@ -949,8 +949,8 @@ export default function HomePage() {
                     {notices
                       .slice(1)
                       .map((notice) => (
-                      <div key={notice.id} className="flex items-start gap-3">
-                        <div className="flex items-center pt-6 flex-shrink-0">
+                      <div key={notice.id} className="flex items-center gap-3">
+                        <div className="flex items-center flex-shrink-0">
                           <button
                             onClick={() => !notice.isRepresentative && handleSetFeaturedNotice(notice)}
                             className="w-5 h-5 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 rounded-full"
