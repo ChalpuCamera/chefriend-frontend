@@ -308,6 +308,7 @@ function SortableLinkItem({
             placeholder={`${linkType === "INSTAGRAM" ? "인스타 아이디를 입력하세요" : "URL을 입력하세요"}`}
             className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={!isEditing}
+            autoFocus={isEditing}
           />
         </div>
       </>

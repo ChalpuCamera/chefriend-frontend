@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { LinkType, LinkItem } from "@/lib/types/api/store";
 
 export interface Platform {
@@ -205,19 +206,128 @@ export function LinkSelectorDialog({
         <div className="overflow-y-auto px-6 pb-6">
           {!selectedPlatform ? (
             // 플랫폼 선택 화면
-            <div className="space-y-3">
-              {platforms.map((platform) => {
-                const isAdded = platform.key !== "CUSTOM" && existingLinks.some(link => link.linkType === platform.key);
-                return (
+            <Accordion type="multiple" className="w-full">
+              {/* 지도 카테고리 */}
+              <AccordionItem value="map">
+                <AccordionTrigger className="text-body-sb">지도</AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-2 pt-2">
+                    {platforms.slice(0, 3).map((platform) => {
+                      const isAdded = existingLinks.some(link => link.linkType === platform.key);
+                      return (
+                        <button
+                          key={platform.key}
+                          onClick={() => handlePlatformClick(platform)}
+                          disabled={isAdded}
+                          className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                            isAdded
+                              ? 'bg-gray-100 border-gray-200 opacity-50 cursor-not-allowed'
+                              : 'hover:bg-gray-50 border-gray-200'
+                          }`}
+                        >
+                          <div className="w-10 h-10 flex items-center justify-center">
+                            <Image
+                              src={platform.icon}
+                              alt={platform.name}
+                              width={40}
+                              height={40}
+                              className="object-contain"
+                            />
+                          </div>
+                          <span className="text-body-sb text-gray-800">{platform.name}</span>
+                          {isAdded && (
+                            <span className="ml-auto text-xs text-gray-500">추가됨</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* 배달 카테고리 */}
+              <AccordionItem value="delivery">
+                <AccordionTrigger className="text-body-sb">배달</AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-2 pt-2">
+                    {platforms.slice(3, 7).map((platform) => {
+                      const isAdded = existingLinks.some(link => link.linkType === platform.key);
+                      return (
+                        <button
+                          key={platform.key}
+                          onClick={() => handlePlatformClick(platform)}
+                          disabled={isAdded}
+                          className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                            isAdded
+                              ? 'bg-gray-100 border-gray-200 opacity-50 cursor-not-allowed'
+                              : 'hover:bg-gray-50 border-gray-200'
+                          }`}
+                        >
+                          <div className="w-10 h-10 flex items-center justify-center">
+                            <Image
+                              src={platform.icon}
+                              alt={platform.name}
+                              width={40}
+                              height={40}
+                              className="object-contain"
+                            />
+                          </div>
+                          <span className="text-body-sb text-gray-800">{platform.name}</span>
+                          {isAdded && (
+                            <span className="ml-auto text-xs text-gray-500">추가됨</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* SNS 카테고리 */}
+              <AccordionItem value="sns">
+                <AccordionTrigger className="text-body-sb">SNS</AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-2 pt-2">
+                    {platforms.slice(7, 10).map((platform) => {
+                      const isAdded = existingLinks.some(link => link.linkType === platform.key);
+                      return (
+                        <button
+                          key={platform.key}
+                          onClick={() => handlePlatformClick(platform)}
+                          disabled={isAdded}
+                          className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                            isAdded
+                              ? 'bg-gray-100 border-gray-200 opacity-50 cursor-not-allowed'
+                              : 'hover:bg-gray-50 border-gray-200'
+                          }`}
+                        >
+                          <div className="w-10 h-10 flex items-center justify-center">
+                            <Image
+                              src={platform.icon}
+                              alt={platform.name}
+                              width={40}
+                              height={40}
+                              className="object-contain"
+                            />
+                          </div>
+                          <span className="text-body-sb text-gray-800">{platform.name}</span>
+                          {isAdded && (
+                            <span className="ml-auto text-xs text-gray-500">추가됨</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* 커스텀 링크 (카테고리 밖) */}
+              <div className="pt-2">
+                {platforms.slice(10).map((platform) => (
                   <button
                     key={platform.key}
                     onClick={() => handlePlatformClick(platform)}
-                    disabled={isAdded}
-                    className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors ${
-                      isAdded
-                        ? 'bg-gray-100 border-gray-200 opacity-50 cursor-not-allowed'
-                        : 'hover:bg-gray-50 border-gray-200'
-                    }`}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg border transition-colors hover:bg-gray-50 border-gray-200"
                   >
                     <div className="w-10 h-10 flex items-center justify-center">
                       <Image
@@ -229,13 +339,10 @@ export function LinkSelectorDialog({
                       />
                     </div>
                     <span className="text-body-sb text-gray-800">{platform.name}</span>
-                    {isAdded && (
-                      <span className="ml-auto text-xs text-gray-500">추가됨</span>
-                    )}
                   </button>
-                );
-              })}
-            </div>
+                ))}
+              </div>
+            </Accordion>
           ) : (
             // URL 입력 화면
             <div className="space-y-4">
