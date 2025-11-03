@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useMyStores, useUpdateStore } from "@/lib/hooks/useStore";
-import { useNotices, useCreateNotice, useUpdateNotice, useDeleteNotices } from "@/lib/hooks/useNotice";
+import { useNotices, useCreateNotice, useUpdateNotice, useDeleteNotices, useSetRepresentativeNotice } from "@/lib/hooks/useNotice";
 import { CustomerView } from "@/components/customer-view";
 import { LinkType, LinkItem } from "@/lib/types/api/store";
 import { LinkSelectorDialog, platforms, extractUrlForPlatform, validatePlatformUrl } from "@/components/link-selector-dialog";
@@ -16,7 +16,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, GripVertical, X, Save, Eye, Pencil, Check, Trash2 } from "lucide-react";
+import { Plus, GripVertical, X, Save, Eye, Pencil, Check, Trash2, Circle, CheckCircle2 } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -335,6 +335,8 @@ export default function HomePage() {
   const [isNoticeDialogOpen, setIsNoticeDialogOpen] = useState(false);
   const [noticeMode, setNoticeMode] = useState<"create" | "edit">("create");
   const [editingNotice, setEditingNotice] = useState<StoreNoticeResponse | undefined>(undefined);
+  const [isFeaturedDialogOpen, setIsFeaturedDialogOpen] = useState(false);
+  const [selectedNoticeForFeatured, setSelectedNoticeForFeatured] = useState<StoreNoticeResponse | null>(null);
 
   // Get user's stores (첫 번째 가게 우선)
   const { data: storesData } = useMyStores({ size: 10 });
@@ -353,10 +355,21 @@ export default function HomePage() {
 
   // 공지사항 hooks
   const { data: noticesData } = useNotices(storeId || 0, { page: 0, size: 20 });
-  const notices = noticesData?.content || [];
+  const rawNotices = noticesData?.content || [];
+
+  // 공지사항 정렬: 대표 공지를 맨 위에, 나머지는 날짜순
+  const notices = [...rawNotices].sort((a, b) => {
+    // 대표 공지가 있으면 맨 위로
+    if (a.isRepresentative && !b.isRepresentative) return -1;
+    if (!a.isRepresentative && b.isRepresentative) return 1;
+    // 둘 다 대표 공지이거나 둘 다 아니면 날짜순 (최신순)
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+
   const createNoticeMutation = useCreateNotice();
   const updateNoticeMutation = useUpdateNotice();
   const deleteNoticesMutation = useDeleteNotices();
+  const setRepresentativeNoticeMutation = useSetRepresentativeNotice();
 
   // 기존 데이터로 state 초기화
   useEffect(() => {
@@ -582,7 +595,7 @@ export default function HomePage() {
     setIsNoticeDialogOpen(true);
   };
 
-  const handleNoticeSubmit = async (data: { title: string; body: string }) => {
+  const handleNoticeSubmit = async (data: { title: string; body: string; isRepresentative: boolean }) => {
     if (!storeId) return;
 
     try {
@@ -615,6 +628,27 @@ export default function HomePage() {
       });
     } catch (error) {
       console.error("Notice deletion failed:", error);
+    }
+  };
+
+  // 대표 공지 설정
+  const handleSetFeaturedNotice = (notice: StoreNoticeResponse) => {
+    setSelectedNoticeForFeatured(notice);
+    setIsFeaturedDialogOpen(true);
+  };
+
+  const handleConfirmFeaturedNotice = async () => {
+    if (!selectedNoticeForFeatured || !storeId) return;
+
+    try {
+      await setRepresentativeNoticeMutation.mutateAsync({
+        storeId,
+        noticeId: selectedNoticeForFeatured.id,
+      });
+      setIsFeaturedDialogOpen(false);
+      setSelectedNoticeForFeatured(null);
+    } catch (error) {
+      console.error("Featured notice update failed:", error);
     }
   };
 
@@ -847,45 +881,60 @@ export default function HomePage() {
           ) : (
             <div className="space-y-3">
               {/* 기본적으로 최신 1개만 표시 */}
-              {[...notices]
-                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+              {notices
                 .slice(0, 1)
                 .map((notice) => (
-                <Card key={notice.id} className="border border-gray-200 py-2">
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 mb-2 truncate">
-                          {notice.title}
-                        </h3>
-                        <p className="text-sm text-gray-600 whitespace-pre-wrap break-words line-clamp-3">
-                          {notice.body}
-                        </p>
-                        <p className="text-xs text-gray-400 mt-2">
-                          {new Date(notice.createdAt).toLocaleDateString("ko-KR")}
-                        </p>
+                <div key={notice.id} className="flex items-start gap-3">
+                  <div className="flex items-center pt-6 flex-shrink-0">
+                    <button
+                      onClick={() => !notice.isRepresentative && handleSetFeaturedNotice(notice)}
+                      className="w-5 h-5 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 rounded-full"
+                      aria-label={notice.isRepresentative ? "대표 공지" : "대표 공지로 설정"}
+                      disabled={notice.isRepresentative}
+                    >
+                      {notice.isRepresentative ? (
+                        <CheckCircle2 className="w-5 h-5 text-purple-700" />
+                      ) : (
+                        <Circle className="w-5 h-5 text-gray-400 hover:text-purple-500 transition-colors" />
+                      )}
+                    </button>
+                  </div>
+                  <Card className="flex-1 min-w-0 border border-gray-200 py-2">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-gray-900 mb-2 truncate">
+                            {notice.title}
+                          </h3>
+                          <p className="text-sm text-gray-600 whitespace-pre-wrap break-words line-clamp-3">
+                            {notice.body}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-2">
+                            {new Date(notice.createdAt).toLocaleDateString("ko-KR")}
+                          </p>
+                        </div>
+                        <div className="flex gap-1 flex-shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditNotice(notice)}
+                            className="h-8 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteNotice(notice.id)}
+                            className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex gap-1 flex-shrink-0">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEditNotice(notice)}
-                          className="h-8 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteNotice(notice.id)}
-                          className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </div>
               ))}
 
               {/* 나머지 공지사항들 표시 */}
@@ -896,45 +945,60 @@ export default function HomePage() {
                     <span className="hidden group-open:inline">접기</span>
                   </summary>
                   <div className="space-y-3 mt-3">
-                    {[...notices]
-                      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                    {notices
                       .slice(1)
                       .map((notice) => (
-                      <Card key={notice.id} className="border border-gray-200 py-2">
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-gray-900 mb-2 truncate">
-                                {notice.title}
-                              </h3>
-                              <p className="text-sm text-gray-600 whitespace-pre-wrap break-words line-clamp-3">
-                                {notice.body}
-                              </p>
-                              <p className="text-xs text-gray-400 mt-2">
-                                {new Date(notice.createdAt).toLocaleDateString("ko-KR")}
-                              </p>
+                      <div key={notice.id} className="flex items-start gap-3">
+                        <div className="flex items-center pt-6 flex-shrink-0">
+                          <button
+                            onClick={() => !notice.isRepresentative && handleSetFeaturedNotice(notice)}
+                            className="w-5 h-5 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 rounded-full"
+                            aria-label={notice.isRepresentative ? "대표 공지" : "대표 공지로 설정"}
+                            disabled={notice.isRepresentative}
+                          >
+                            {notice.isRepresentative ? (
+                              <CheckCircle2 className="w-5 h-5 text-purple-700" />
+                            ) : (
+                              <Circle className="w-5 h-5 text-gray-400 hover:text-purple-500 transition-colors" />
+                            )}
+                          </button>
+                        </div>
+                        <Card className="flex-1 min-w-0 border border-gray-200 py-2">
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-semibold text-gray-900 mb-2 truncate">
+                                  {notice.title}
+                                </h3>
+                                <p className="text-sm text-gray-600 whitespace-pre-wrap break-words line-clamp-3">
+                                  {notice.body}
+                                </p>
+                                <p className="text-xs text-gray-400 mt-2">
+                                  {new Date(notice.createdAt).toLocaleDateString("ko-KR")}
+                                </p>
+                              </div>
+                              <div className="flex gap-1 flex-shrink-0">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEditNotice(notice)}
+                                  className="h-8 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeleteNotice(notice.id)}
+                                  className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </Button>
+                              </div>
                             </div>
-                            <div className="flex gap-1 flex-shrink-0">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleEditNotice(notice)}
-                                className="h-8 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                              >
-                                <Pencil className="w-3.5 h-3.5" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDeleteNotice(notice.id)}
-                                className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
+                          </CardContent>
+                        </Card>
+                      </div>
                     ))}
                   </div>
                 </details>
@@ -1140,6 +1204,37 @@ export default function HomePage() {
                 className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300"
               >
                 닫기
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 대표 공지 설정 확인 다이얼로그 */}
+      <Dialog open={isFeaturedDialogOpen} onOpenChange={setIsFeaturedDialogOpen}>
+        <DialogContent className="max-w-[360px]">
+          <DialogHeader>
+            <DialogTitle className="text-title-2 text-gray-800">
+              대표 공지로 설정하시겠습니까?
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-body-r text-gray-600">
+              이 공지사항이 맨 위에 표시되며, 기존 대표 공지는 해제됩니다.
+            </p>
+            <DialogFooter className="flex gap-2 sm:justify-center">
+              <Button
+                onClick={() => setIsFeaturedDialogOpen(false)}
+                className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300"
+              >
+                취소
+              </Button>
+              <Button
+                onClick={handleConfirmFeaturedNotice}
+                disabled={setRepresentativeNoticeMutation.isPending}
+                className="flex-1 bg-purple-700 text-white hover:bg-purple-800"
+              >
+                {setRepresentativeNoticeMutation.isPending ? "설정 중..." : "확인"}
               </Button>
             </DialogFooter>
           </div>

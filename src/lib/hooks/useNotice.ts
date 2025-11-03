@@ -103,3 +103,29 @@ export function useDeleteNotices() {
     },
   });
 }
+
+// 대표 공지사항 설정
+export function useSetRepresentativeNotice() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      storeId,
+      noticeId,
+    }: {
+      storeId: number;
+      noticeId: number;
+    }) => {
+      const response = await noticeApi.setRepresentativeNotice(storeId, noticeId);
+      return response.result;
+    },
+    onSuccess: () => {
+      // 모든 공지사항 목록 쿼리 무효화
+      queryClient.invalidateQueries({ queryKey: noticeKeys.lists() });
+      toast.success("대표 공지사항으로 설정되었습니다");
+    },
+    onError: (error: Error) => {
+      toast.error(`대표 공지 설정 실패: ${error.message}`);
+    },
+  });
+}

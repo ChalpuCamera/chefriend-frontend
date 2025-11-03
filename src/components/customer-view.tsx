@@ -16,11 +16,13 @@ export function CustomerView({ storeData, notices = [] }: CustomerViewProps) {
   const links = storeData.links || [];
 
   // 최신순 정렬
-  const sortedNotices = notices.length > 0
-    ? [...notices].sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )
-    : [];
+  const sortedNotices =
+    notices.length > 0
+      ? [...notices].sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )
+      : [];
   const latestNotice = sortedNotices[0];
 
   return (
@@ -43,7 +45,9 @@ export function CustomerView({ storeData, notices = [] }: CustomerViewProps) {
         {/* 공지사항 섹션 */}
         {latestNotice && (
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-3">공지사항</h2>
+            <h2 className="text-lg font-semibold text-gray-800 mb-3">
+              공지사항
+            </h2>
             <div className="space-y-3">
               {/* 최신 공지사항 1개 */}
               <Card className="rounded-lg border border-gray-200 h-[110px] flex flex-col overflow-hidden py-0">
@@ -53,19 +57,26 @@ export function CustomerView({ storeData, notices = [] }: CustomerViewProps) {
                   </h3>
                   <div className="flex-1 overflow-hidden flex flex-col min-h-0">
                     <div className="flex items-start gap-2">
-                      <p className="text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis flex-1">
+                      <p className="text-sm text-gray-600 whitespace-pre-wrap break-words line-clamp-1">
                         {latestNotice.body}
                       </p>
                     </div>
                   </div>
-                  <p className="text-xs text-gray-400 mt-2 flex-shrink-0">
-                    {new Date(latestNotice.createdAt).toLocaleDateString("ko-KR")}
-                  </p>
+                  <div className="relative mt-2 flex-shrink-0">
+                    <p className="text-xs text-gray-400">
+                      {new Date(latestNotice.createdAt).toLocaleDateString(
+                        "ko-KR"
+                      )}
+                    </p>
+                    <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-center items-center">
+                      <ChevronDown className="w-5 h-5" />
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
 
               {/* 나머지 공지사항들 표시 */}
-              {sortedNotices.length > 1 && (
+              {/* {sortedNotices.length > 1 && (
                 <details className="group">
                   <summary className="cursor-pointer text-sm text-gray-600 hover:text-gray-800 font-medium list-none flex items-center justify-center py-2">
                     <span>
@@ -73,7 +84,7 @@ export function CustomerView({ storeData, notices = [] }: CustomerViewProps) {
                     </span>
                   </summary>
                 </details>
-              )}
+              )} */}
             </div>
           </div>
         )}
@@ -88,9 +99,9 @@ export function CustomerView({ storeData, notices = [] }: CustomerViewProps) {
       {/* Links Section */}
       <div className="px-6 pb-6">
         <div className="flex flex-col gap-3">
-          {links.filter(link => link.isVisible !== false).length > 0 ? (
+          {links.filter((link) => link.isVisible !== false).length > 0 ? (
             links
-              .filter(link => link.isVisible !== false)
+              .filter((link) => link.isVisible !== false)
               .map((link, index) => (
                 <LinkButton
                   key={index}
@@ -106,17 +117,13 @@ export function CustomerView({ storeData, notices = [] }: CustomerViewProps) {
         </div>
       </div>
       <div className="px-6 pb-6">
-          <div className="border border-gray-200 rounded-lg overflow-hidden">
-            <button
-              className="w-full h-10 px-4 py-4 bg-white hover:bg-gray-50 transition-colors flex items-center justify-between"
-            >
-              <h2 className="text-lg font-semibold text-gray-800">메뉴</h2>
-              <ChevronDown
-                className="w-4 h-4 text-gray-600"
-              />
-            </button>
-          </div>
+        <div className="border border-gray-200 rounded-lg overflow-hidden">
+          <button className="w-full h-10 px-4 py-4 bg-white hover:bg-gray-50 transition-colors flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-800">메뉴</h2>
+            <ChevronDown className="w-4 h-4 text-gray-600" />
+          </button>
         </div>
+      </div>
     </div>
   );
 }

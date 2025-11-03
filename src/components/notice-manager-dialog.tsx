@@ -18,7 +18,7 @@ interface NoticeManagerDialogProps {
   onOpenChange: (open: boolean) => void;
   mode: "create" | "edit";
   notice?: StoreNoticeResponse; // edit 모드일 때 전달되는 기존 공지사항
-  onSubmit: (data: { title: string; body: string }) => void;
+  onSubmit: (data: { title: string; body: string; isRepresentative: boolean }) => void;
   isLoading?: boolean;
 }
 
@@ -73,6 +73,7 @@ export function NoticeManagerDialog({
     onSubmit({
       title: title.trim(),
       body: body.trim(),
+      isRepresentative: notice?.isRepresentative ?? false, // 기존 값 유지 또는 false
     });
   };
 

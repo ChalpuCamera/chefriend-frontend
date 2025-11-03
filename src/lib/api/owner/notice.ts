@@ -44,4 +44,11 @@ export const noticeApi = {
     apiClient.delete<ApiResponse<void>>(`/api/stores/${storeId}/notices`, {
       body: JSON.stringify({ deleteIds } as StoreNoticeDeleteDto),
     }),
+
+  // Set representative notice
+  setRepresentativeNotice: (storeId: number, noticeId: number) =>
+    apiClient.put<ApiResponse<StoreNoticeResponse>>(
+      `/api/stores/${storeId}/notices/${noticeId}/representative`,
+      {}
+    ),
 };

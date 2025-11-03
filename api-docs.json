@@ -126,6 +126,40 @@
         }
       }
     },
+    "/api/stores/{storeId}/notices/{noticeId}/representative": {
+      "put": {
+        "tags": ["Store Notice"],
+        "summary": "가게 공지사항을 대표 공지로 설정",
+        "description": "특정 공지사항을 가게의 대표 공지로 설정합니다. 한 가게당 하나의 대표 공지만 존재할 수 있으며, 기존 대표 공지는 자동으로 해제됩니다. 매장 관리 권한이 필요합니다.",
+        "operationId": "setRepresentativeNotice",
+        "parameters": [
+          {
+            "name": "storeId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "noticeId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseStoreNoticeResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/stores/notices/{noticeId}": {
       "put": {
         "tags": ["Store Notice"],
@@ -681,22 +715,6 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "알림 생성 성공",
-            "content": {
-              "application/json": {
-                "example": {
-                  "code": 200,
-                  "message": "API 요청이 성공했습니다.",
-                  "result": {
-                    "notificationId": 1,
-                    "targetSubscriberCount": 150,
-                    "message": "알림 생성 완료: 150명에게 발송 예정"
-                  }
-                }
-              }
-            }
-          },
           "403": {
             "description": "해당 매장에 대한 권한이 없습니다",
             "content": {
@@ -713,6 +731,22 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiResponseCreateNotificationResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "알림 생성 성공",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "API 요청이 성공했습니다.",
+                  "result": {
+                    "notificationId": 1,
+                    "targetSubscriberCount": 150,
+                    "message": "알림 생성 완료: 150명에게 발송 예정"
+                  }
                 }
               }
             }
@@ -1235,6 +1269,33 @@
           }
         ],
         "responses": {
+          "200": {
+            "description": "피드백 및 고객 입맛 조회 성공",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FeedbackResponse" },
+                "example": {
+                  "success": true,
+                  "message": "성공했습니다",
+                  "data": {
+                    "id": 1,
+                    "foodName": "김치찌개",
+                    "storeName": "맛집",
+                    "userNickname": "음식러버",
+                    "isViewed": true,
+                    "spicyLevel": 3,
+                    "mealAmount": 4,
+                    "mealSpending": 3,
+                    "photoUrls": ["https://s3.../photo1.jpg"],
+                    "surveyAnswers": [
+                      { "questionId": 1, "answerText": "맛있었습니다" }
+                    ],
+                    "createdAt": "2024-01-01T10:00:00"
+                  }
+                }
+              }
+            }
+          },
           "401": {
             "description": "인증이 필요합니다",
             "content": {
@@ -1261,33 +1322,6 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiResponseOwnerFeedbackResponse"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "피드백 및 고객 입맛 조회 성공",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/FeedbackResponse" },
-                "example": {
-                  "success": true,
-                  "message": "성공했습니다",
-                  "data": {
-                    "id": 1,
-                    "foodName": "김치찌개",
-                    "storeName": "맛집",
-                    "userNickname": "음식러버",
-                    "isViewed": true,
-                    "spicyLevel": 3,
-                    "mealAmount": 4,
-                    "mealSpending": 3,
-                    "photoUrls": ["https://s3.../photo1.jpg"],
-                    "surveyAnswers": [
-                      { "questionId": 1, "answerText": "맛있었습니다" }
-                    ],
-                    "createdAt": "2024-01-01T10:00:00"
-                  }
                 }
               }
             }
@@ -1379,6 +1413,32 @@
           }
         ],
         "responses": {
+          "200": {
+            "description": "조회 성공",
+            "content": {
+              "application/json": {
+                "schema": { "type": "string" },
+                "example": {
+                  "success": true,
+                  "message": "성공했습니다",
+                  "data": [
+                    {
+                      "foodItemId": 1,
+                      "foodName": "김치찌개",
+                      "unreadCount": 3,
+                      "totalCount": 10
+                    },
+                    {
+                      "foodItemId": 2,
+                      "foodName": "된장찌개",
+                      "unreadCount": 0,
+                      "totalCount": 5
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "401": {
             "description": "인증이 필요합니다",
             "content": {
@@ -1405,32 +1465,6 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiResponseListFeedbackUnreadCountResponse"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "조회 성공",
-            "content": {
-              "application/json": {
-                "schema": { "type": "string" },
-                "example": {
-                  "success": true,
-                  "message": "성공했습니다",
-                  "data": [
-                    {
-                      "foodItemId": 1,
-                      "foodName": "김치찌개",
-                      "unreadCount": 3,
-                      "totalCount": 10
-                    },
-                    {
-                      "foodItemId": 2,
-                      "foodName": "된장찌개",
-                      "unreadCount": 0,
-                      "totalCount": 5
-                    }
-                  ]
                 }
               }
             }
@@ -1713,23 +1747,6 @@
         },
         "description": "매장 응답"
       },
-      "UpdateStoreNoticeRequest": {
-        "required": ["body", "title"],
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "description": "공지사항 제목",
-            "example": "설 연휴 휴무 안내"
-          },
-          "body": {
-            "type": "string",
-            "description": "공지사항 내용",
-            "example": "2024년 2월 9일부터 2월 12일까지 휴무입니다."
-          }
-        },
-        "description": "가게 공지사항 수정 요청"
-      },
       "ApiResponseStoreNoticeResponse": {
         "type": "object",
         "properties": {
@@ -1763,6 +1780,11 @@
             "description": "공지사항 내용",
             "example": "2024년 2월 9일부터 2월 12일까지 휴무입니다."
           },
+          "isRepresentative": {
+            "type": "boolean",
+            "description": "대표 공지사항 여부",
+            "example": true
+          },
           "createdAt": {
             "type": "string",
             "description": "생성 시간",
@@ -1775,6 +1797,28 @@
           }
         },
         "description": "가게 공지사항 응답"
+      },
+      "UpdateStoreNoticeRequest": {
+        "required": ["body", "title"],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "공지사항 제목",
+            "example": "설 연휴 휴무 안내"
+          },
+          "body": {
+            "type": "string",
+            "description": "공지사항 내용",
+            "example": "2024년 2월 9일부터 2월 12일까지 휴무입니다."
+          },
+          "isRepresentative": {
+            "type": "boolean",
+            "description": "대표 공지사항 여부",
+            "example": true
+          }
+        },
+        "description": "가게 공지사항 수정 요청"
       },
       "FoodItemRequest": {
         "required": ["foodName"],
