@@ -17,12 +17,14 @@ interface InquiryButtonProps {
   source: string; // "home page" | "faq page" | "menu page" 등
   variant?: "primary" | "secondary";
   className?: string;
+  title?: string;
 }
 
 export function InquiryButton({
   source,
   variant = "primary",
   className,
+  title,
 }: InquiryButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [content, setContent] = useState("");
@@ -61,14 +63,14 @@ export function InquiryButton({
         onClick={() => setIsOpen(true)}
         className={className || buttonClassName}
       >
-        개발자에게 문의하기
+        {title || "개발자에게 문의하기"}
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-[400px]">
           <DialogHeader>
             <DialogTitle className="text-title-2 text-gray-800">
-              개발자에게 문의하기
+            {title || "개발자에게 문의하기"}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
@@ -79,7 +81,7 @@ export function InquiryButton({
               className="min-h-[120px] bg-gray-200 rounded-[12px] p-4 text-body-r placeholder:text-gray-500 resize-none"
               rows={5}
             />
-            <DialogFooter className="flex gap-2 sm:justify-center">
+            <DialogFooter>
               <Button
                 onClick={handleSubmit}
                 disabled={!content.trim() || isSubmitting}

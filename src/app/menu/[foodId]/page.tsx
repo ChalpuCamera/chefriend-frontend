@@ -177,7 +177,7 @@ export default function Page({
   };
 
   const handleSettings = () => {
-    router.push("/settings");
+    router.push("/mypage");
   };
 
   if (isLoading) {
@@ -748,7 +748,7 @@ export default function Page({
               className="min-h-[120px] bg-gray-200 rounded-[12px] p-4 text-body-r placeholder:text-gray-500 resize-none"
               rows={5}
             />
-            <DialogFooter className="flex gap-2 sm:justify-center">
+            <DialogFooter>
               <Button
                 onClick={handleInquirySubmit}
                 disabled={!inquiryContent.trim() || isSubmittingInquiry}

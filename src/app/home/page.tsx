@@ -1133,18 +1133,18 @@ export default function HomePage() {
                 chefriend.kr/{currentStore?.siteLink}
               </p>
             </div>
-            <DialogFooter className="flex gap-2 sm:justify-center">
-              <Button
-                onClick={handleCopySiteLink}
-                className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300"
-              >
-                복사하기
-              </Button>
+            <DialogFooter>
               <Button
                 onClick={handleViewSite}
                 className="flex-1 bg-purple-700 text-white hover:bg-purple-800"
               >
                 사이트 보기
+              </Button>
+              <Button
+                onClick={handleCopySiteLink}
+                className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300"
+              >
+                복사하기
               </Button>
             </DialogFooter>
           </div>
@@ -1192,7 +1192,7 @@ export default function HomePage() {
               onChange={handleProfileImageUpload}
               className="hidden"
             />
-            <DialogFooter className="flex gap-2 sm:justify-center">
+            <DialogFooter>
               <Button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploadingImage}
@@ -1223,19 +1223,19 @@ export default function HomePage() {
             <p className="text-body-r text-gray-600">
               이 공지사항이 맨 위에 표시되며, 기존 대표 공지는 해제됩니다.
             </p>
-            <DialogFooter className="flex gap-2 sm:justify-center">
-              <Button
-                onClick={() => setIsFeaturedDialogOpen(false)}
-                className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300"
-              >
-                취소
-              </Button>
+            <DialogFooter>
               <Button
                 onClick={handleConfirmFeaturedNotice}
                 disabled={setRepresentativeNoticeMutation.isPending}
                 className="flex-1 bg-purple-700 text-white hover:bg-purple-800"
               >
                 {setRepresentativeNoticeMutation.isPending ? "설정 중..." : "확인"}
+              </Button>
+              <Button
+                onClick={() => setIsFeaturedDialogOpen(false)}
+                className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300"
+              >
+                취소
               </Button>
             </DialogFooter>
           </div>

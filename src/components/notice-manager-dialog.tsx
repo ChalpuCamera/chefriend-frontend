@@ -18,7 +18,11 @@ interface NoticeManagerDialogProps {
   onOpenChange: (open: boolean) => void;
   mode: "create" | "edit";
   notice?: StoreNoticeResponse; // edit 모드일 때 전달되는 기존 공지사항
-  onSubmit: (data: { title: string; body: string; isRepresentative: boolean }) => void;
+  onSubmit: (data: {
+    title: string;
+    body: string;
+    isRepresentative: boolean;
+  }) => void;
   isLoading?: boolean;
 }
 
@@ -110,9 +114,7 @@ export function NoticeManagerDialog({
             {errors.title && (
               <p className="text-xs text-destructive">{errors.title}</p>
             )}
-            <p className="text-xs text-muted-foreground">
-              {title.length}/100
-            </p>
+            <p className="text-xs text-muted-foreground">{title.length}/100</p>
           </div>
 
           <div className="space-y-2">
@@ -135,18 +137,27 @@ export function NoticeManagerDialog({
             <p className="text-xs text-muted-foreground">{body.length}/1000</p>
           </div>
 
-          <div className="flex gap-2 pt-2">
-            <Button variant="outline" onClick={handleCancel} disabled={isLoading} className="flex-1">
-              취소
-            </Button>
-            <Button onClick={handleSubmit} disabled={isLoading} className="flex-1 bg-purple-700 text-white">
+          <div className="flex gap-2">
+            <Button
+              onClick={handleSubmit}
+              disabled={isLoading}
+              className="flex-1 bg-purple-700 text-white"
+            >
               {isLoading
                 ? mode === "create"
                   ? "추가 중..."
                   : "수정 중..."
                 : mode === "create"
-                  ? "추가"
-                  : "수정"}
+                ? "추가"
+                : "수정"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleCancel}
+              disabled={isLoading}
+              className="flex-1"
+            >
+              취소
             </Button>
           </div>
         </div>

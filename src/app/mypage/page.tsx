@@ -255,17 +255,17 @@ export default function MyPage() {
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
-            <AlertDialogCancel className="w-full sm:w-auto">
-              취소
-            </AlertDialogCancel>
+          <AlertDialogFooter>
             <AlertDialogAction
               onClick={handleWithdraw}
               disabled={isWithdrawing}
-              className="w-full sm:w-auto bg-red-600 hover:bg-red-700"
+              className="flex-1 bg-red-600 hover:bg-red-700"
             >
               {isWithdrawing ? "처리 중..." : "탈퇴하기"}
             </AlertDialogAction>
+            <AlertDialogCancel className="flex-1">
+              취소
+            </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

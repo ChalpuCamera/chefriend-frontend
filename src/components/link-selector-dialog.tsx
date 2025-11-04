@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { LinkType, LinkItem } from "@/lib/types/api/store";
+import { InquiryButton } from "@/components/inquiry-button";
 
 export interface Platform {
   key: LinkType;
@@ -342,6 +343,9 @@ export function LinkSelectorDialog({
                   </button>
                 ))}
               </div>
+              <div className="flex items-center justify-center mt-5">
+              <InquiryButton source="링크 선택 다이얼로그" variant="primary" title="링크 추가 요청하기" />
+              </div>
             </Accordion>
           ) : (
             // URL 입력 화면
@@ -383,18 +387,18 @@ export function LinkSelectorDialog({
 
               <div className="flex gap-2">
                 <Button
-                  variant="outline"
-                  onClick={handleCancel}
-                  className="flex-1"
-                >
-                  취소
-                </Button>
-                <Button
                   onClick={handleSubmit}
                   disabled={!linkUrl.trim() || (selectedPlatform.key === "CUSTOM" && !customLabel.trim())}
                   className="flex-1 bg-purple-700 text-white"
                 >
                   추가
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleCancel}
+                  className="flex-1"
+                >
+                  취소
                 </Button>
               </div>
             </div>
