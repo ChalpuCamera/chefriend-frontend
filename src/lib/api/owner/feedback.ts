@@ -9,9 +9,29 @@ import type {
   FeedbackCreateRequest,
   CustomerTasteDto,
   ReviewDisplayData,
+  ReviewAttributeDisplay,
   FeedbackPhotosUploadRequest,
   FeedbackPhotosPresignedUrlResponse,
 } from "@/lib/types/api/feedback";
+
+// questionId 23-32에 대한 한글 라벨 매핑
+const QUESTION_LABEL_MAP: Record<number, string> = {
+  23: '맵기',
+  24: '짠맛',
+  25: '단맛',
+  26: '신맛',
+  27: '바삭함',
+  28: '쫄깃함',
+  29: '부드러움',
+  30: '양',
+  31: '재료 신선도',
+  32: '온도',
+};
+
+// 랜덤 3자리 숫자 생성 함수 (100-999)
+function generateRandomNumber(): string {
+  return Math.floor(Math.random() * 900 + 100).toString();
+}
 
 // Mock 맛 프로필 데이터 (백엔드에서 사용자별 조회 API 제공 전까지 사용)
 const mockTasteProfiles: Record<string, CustomerTasteDto> = {
@@ -71,9 +91,23 @@ export const transformFeedbackToReview = (
   // surveyAnswers가 없는 경우 빈 배열로 처리
   const surveyAnswers = feedback.surveyAnswers || [];
 
-  // questionId 9번 찾기 (리뷰 텍스트)
-  const reviewAnswer = surveyAnswers.find((answer) => answer.questionId === 9);
+  // questionId 33번 찾기 (리뷰 텍스트 - 사장님께 한마디)
+  const reviewAnswer = surveyAnswers.find((answer) => answer.questionId === 33);
   const reviewText = reviewAnswer?.answerText || "";
+
+  // questionId 23-32 (RATING 질문들)만 필터링하여 attributes 생성
+  const attributes: ReviewAttributeDisplay[] = surveyAnswers
+    .filter(a =>
+      a.questionId &&
+      a.questionId >= 23 &&
+      a.questionId <= 32 &&
+      a.numericValue !== undefined &&
+      a.numericValue !== null
+    )
+    .map(a => ({
+      label: QUESTION_LABEL_MAP[a.questionId!] || `질문${a.questionId}`,
+      value: a.numericValue || 0,
+    }));
 
   // Mock 맛 프로필 가져오기 (실제로는 API 호출 필요)
   const profile = tasteProfile ||
@@ -83,12 +117,17 @@ export const transformFeedbackToReview = (
       mealSpending: 3,
     };
 
+  // 랜덤 3자리 숫자로 익명 ID 생성
+  const anonymousId = `익명${generateRandomNumber()}`;
+
   return {
     id: feedback.id,
     userName: feedback.userNickname || "익명",
+    anonymousId,
     date: feedback.createdAt ? formatDate(feedback.createdAt) : "",
     menuName: feedback.foodName || "",
     reviewText,
+    attributes,
     servings: getServingsText(profile.mealAmount),
     spiciness: getSpicinessText(profile.spicyLevel),
     price: getPriceText(profile.mealSpending),
@@ -172,6 +211,15 @@ export const feedbackApi = {
   ): Promise<ApiResponse<FeedbackResponse>> => {
     return apiClient.get<ApiResponse<FeedbackResponse>>(
       `/api/customer-feedback/${feedbackId}`
+    );
+  },
+
+  // 사장님용 피드백 상세 조회 (고객 입맛 포함)
+  getOwnerFeedbackDetail: async (
+    feedbackId: number
+  ): Promise<ApiResponse<FeedbackResponse>> => {
+    return apiClient.get<ApiResponse<FeedbackResponse>>(
+      `/api/customer-feedback/${feedbackId}/owner`
     );
   },
 
@@ -273,34 +321,69 @@ export const feedbackApi = {
     pageable: Pageable = {}
   ): Promise<ReviewDisplayData[]> => {
     try {
-      const response = await feedbackApi.getFoodFeedbacks(foodId, pageable);
+      // 1단계: feedbackId 목록 조회
+      const summaryResponse = await feedbackApi.getFoodFeedbacks(foodId, pageable);
 
-      if (response?.code === 200 && response?.result?.content) {
-        // null/undefined 체크 및 필터링
-        return response.result.content
-          .filter((feedback) => feedback && typeof feedback === "object")
-          .map((feedback) => {
-            try {
-              return transformFeedbackToReview(feedback);
-            } catch (err) {
-              console.error("Failed to transform feedback:", err, feedback);
-              // 변환 실패 시 기본값 반환
-              return {
-                id: feedback?.id || Math.random(),
-                userName: feedback?.userNickname || "익명",
-                date: feedback?.createdAt ? formatDate(feedback.createdAt) : "",
-                menuName: feedback?.foodName || "",
-                reviewText: "",
-                servings: "1인분",
-                spiciness: "보통",
-                price: "2만원",
-                photoUrls: feedback?.photoUrls || [],
-              };
-            }
+      console.log('📋 Summary Response:', JSON.stringify(summaryResponse, null, 2));
+
+      // 응답 구조 확인
+      const content = summaryResponse?.result?.content;
+      console.log('📦 Content:', content);
+
+      if (content && Array.isArray(content)) {
+        interface FeedbackSummary {
+          id?: number;
+          feedbackId?: number;
+        }
+
+        const feedbackSummaries = content as FeedbackSummary[];
+        console.log(`📝 Found ${feedbackSummaries.length} feedback summaries`, feedbackSummaries);
+
+        if (feedbackSummaries.length === 0) {
+          console.log('⚠️ No feedback summaries found');
+          return [];
+        }
+
+        // 2단계: 각 feedbackId로 상세 정보 조회
+        const detailPromises = feedbackSummaries
+          .filter((summary) => {
+            const hasId = summary && (summary.id || summary.feedbackId);
+            console.log(`✔️ Summary check:`, summary, 'hasId:', hasId);
+            return hasId;
+          })
+          .map((summary) => {
+            const feedbackId = summary.id || summary.feedbackId!;
+            console.log(`🔍 Fetching detail for feedbackId: ${feedbackId}`);
+
+            return feedbackApi.getOwnerFeedbackDetail(feedbackId)
+              .then((detailResponse) => {
+                console.log(`✅ Detail response for ${feedbackId}:`, JSON.stringify(detailResponse, null, 2));
+                if (detailResponse?.result || detailResponse?.code === 200) {
+                  const result = detailResponse.result || detailResponse;
+                  return transformFeedbackToReview(result);
+                }
+                console.log(`⚠️ No valid result for ${feedbackId}`);
+                return null;
+              })
+              .catch((err) => {
+                console.error(`❌ Failed to fetch feedback detail ${feedbackId}:`, err);
+                return null;
+              });
           });
+
+        console.log(`🚀 Starting ${detailPromises.length} detail requests`);
+
+        // 모든 상세 정보 조회 완료 대기
+        const details = await Promise.all(detailPromises);
+        console.log(`✨ Transformed ${details.filter(d => d !== null).length} reviews`, details);
+
+        // null 제거 후 반환
+        return details.filter((detail): detail is ReviewDisplayData => detail !== null);
+      } else {
+        console.log('⚠️ No content array found in response');
       }
     } catch (error) {
-      console.error("Failed to fetch food feedbacks:", error);
+      console.error("❌ Failed to fetch food feedbacks:", error);
     }
 
     // 오류 시 빈 배열 반환

@@ -1,10 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Home, UtensilsCrossed } from "lucide-react";
+import { Home, UtensilsCrossed, Store } from "lucide-react";
 
 interface FloatingNavBarProps {
-  currentTab: "home" | "menu";
+  currentTab: "home" | "menu" | "review";
 }
 
 export function FloatingNavBar({ currentTab }: FloatingNavBarProps) {
@@ -38,6 +38,19 @@ export function FloatingNavBar({ currentTab }: FloatingNavBarProps) {
           >
             <UtensilsCrossed className="w-5 h-5 mb-1" />
             <span className="text-xs font-medium">메뉴 관리</span>
+          </button>
+
+          {/* 가게 홍보 탭 */}
+          <button
+            onClick={() => router.push("/review")}
+            className={`flex-1 flex flex-col items-center justify-center py-4 px-4 transition-all ${
+              currentTab === "review"
+                ? "bg-purple-700 text-white"
+                : "text-gray-600 hover:bg-gray-50"
+            }`}
+          >
+            <Store className="w-5 h-5 mb-1" />
+            <span className="text-xs font-medium">가게 홍보</span>
           </button>
         </div>
       </div>

@@ -27,7 +27,8 @@
     { "name": "FoodItem", "description": "음식 관련 API" },
     { "name": "Store Notice", "description": "가게 공지사항 API" },
     { "name": "Store", "description": "매장 관리 API" },
-    { "name": "알림(사장님)", "description": "사장님용 구독자 알림 API" }
+    { "name": "알림(사장님)", "description": "사장님용 구독자 알림 API" },
+    { "name": "Food Item Question", "description": "메뉴별 질문 관리 API" }
   ],
   "paths": {
     "/api/stores/{storeId}": {
@@ -299,6 +300,42 @@
         "security": [{ "bearerAuth": [] }]
       }
     },
+    "/api/fooditems/{foodItemId}/questions": {
+      "put": {
+        "tags": ["Food Item Question"],
+        "summary": "메뉴별 활성화 질문 설정",
+        "description": "특정 메뉴에 대해 활성화할 질문들을 설정합니다. 사장님께 한마디 질문은 반드시 포함되어야 합니다. 매장 관리 권한이 필요합니다.",
+        "operationId": "updateActiveQuestions",
+        "parameters": [
+          {
+            "name": "foodItemId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FoodItemQuestionUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/ApiResponseVoid" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/customer-feedback/bulk-viewed": {
       "put": {
         "tags": ["고객 피드백"],
@@ -316,6 +353,14 @@
           "required": true
         },
         "responses": {
+          "401": {
+            "description": "인증이 필요합니다",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/ApiResponseVoid" }
+              }
+            }
+          },
           "200": {
             "description": "읽음 처리 성공",
             "content": {
@@ -325,14 +370,6 @@
                   "message": "성공했습니다",
                   "data": null
                 }
-              }
-            }
-          },
-          "401": {
-            "description": "인증이 필요합니다",
-            "content": {
-              "*/*": {
-                "schema": { "$ref": "#/components/schemas/ApiResponseVoid" }
               }
             }
           },
@@ -735,6 +772,16 @@
               }
             }
           },
+          "400": {
+            "description": "잘못된 요청 (구독자 없음, FCM 토큰 없음 등)",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseCreateNotificationResponse"
+                }
+              }
+            }
+          },
           "200": {
             "description": "알림 생성 성공",
             "content": {
@@ -747,16 +794,6 @@
                     "targetSubscriberCount": 150,
                     "message": "알림 생성 완료: 150명에게 발송 예정"
                   }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "잘못된 요청 (구독자 없음, FCM 토큰 없음 등)",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseCreateNotificationResponse"
                 }
               }
             }
@@ -1269,11 +1306,33 @@
           }
         ],
         "responses": {
+          "401": {
+            "description": "인증이 필요합니다",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseOwnerFeedbackDetailResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "해당 매장의 사장님만 조회 가능합니다",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseOwnerFeedbackDetailResponse"
+                }
+              }
+            }
+          },
           "200": {
             "description": "피드백 및 고객 입맛 조회 성공",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/FeedbackResponse" },
+                "schema": {
+                  "$ref": "#/components/schemas/OwnerFeedbackDetailResponse"
+                },
                 "example": {
                   "success": true,
                   "message": "성공했습니다",
@@ -1296,32 +1355,12 @@
               }
             }
           },
-          "401": {
-            "description": "인증이 필요합니다",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseOwnerFeedbackResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "해당 매장의 사장님만 조회 가능합니다",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponseOwnerFeedbackResponse"
-                }
-              }
-            }
-          },
           "404": {
             "description": "피드백을 찾을 수 없습니다",
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiResponseOwnerFeedbackResponse"
+                  "$ref": "#/components/schemas/ApiResponseOwnerFeedbackDetailResponse"
                 }
               }
             }
@@ -1352,16 +1391,6 @@
           }
         ],
         "responses": {
-          "404": {
-            "description": "매장을 찾을 수 없습니다",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiResponsePageResponseOwnerFeedbackResponse"
-                }
-              }
-            }
-          },
           "200": {
             "description": "매장 피드백 목록 조회 성공",
             "content": {
@@ -1392,6 +1421,16 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "매장을 찾을 수 없습니다",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponsePageResponseOwnerFeedbackSummaryResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -1413,32 +1452,6 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "조회 성공",
-            "content": {
-              "application/json": {
-                "schema": { "type": "string" },
-                "example": {
-                  "success": true,
-                  "message": "성공했습니다",
-                  "data": [
-                    {
-                      "foodItemId": 1,
-                      "foodName": "김치찌개",
-                      "unreadCount": 3,
-                      "totalCount": 10
-                    },
-                    {
-                      "foodItemId": 2,
-                      "foodName": "된장찌개",
-                      "unreadCount": 0,
-                      "totalCount": 5
-                    }
-                  ]
-                }
-              }
-            }
-          },
           "401": {
             "description": "인증이 필요합니다",
             "content": {
@@ -1465,6 +1478,32 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiResponseListFeedbackUnreadCountResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "조회 성공",
+            "content": {
+              "application/json": {
+                "schema": { "type": "string" },
+                "example": {
+                  "success": true,
+                  "message": "성공했습니다",
+                  "data": [
+                    {
+                      "foodItemId": 1,
+                      "foodName": "김치찌개",
+                      "unreadCount": 3,
+                      "totalCount": 10
+                    },
+                    {
+                      "foodItemId": 2,
+                      "foodName": "된장찌개",
+                      "unreadCount": 0,
+                      "totalCount": 5
+                    }
+                  ]
                 }
               }
             }
@@ -1500,7 +1539,7 @@
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiResponsePageResponseOwnerFeedbackResponse"
+                  "$ref": "#/components/schemas/ApiResponsePageResponseOwnerFeedbackSummaryResponse"
                 }
               }
             }
@@ -1533,6 +1572,32 @@
                     "hasPrevious": false
                   }
                 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/fooditems/{foodItemId}/question-off": {
+      "delete": {
+        "tags": ["Food Item Question"],
+        "summary": "사장님이 메뉴의 활성화 질문을 삭제하는 API",
+        "description": "특정 메뉴의 활성 질문을 다 삭제합니다.",
+        "operationId": "deleteActiveQuestions",
+        "parameters": [
+          {
+            "name": "foodItemId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/ApiResponseVoid" }
               }
             }
           }
@@ -1893,6 +1958,17 @@
             "description": "카테고리",
             "example": "메인"
           },
+          "hasActiveReview": {
+            "type": "boolean",
+            "description": "피드백 활성 여부",
+            "example": false
+          },
+          "activeQuestionCount": {
+            "type": "integer",
+            "description": "활성 피드백 개수",
+            "format": "int32",
+            "example": 6
+          },
           "createdAt": {
             "type": "string",
             "description": "생성 시간",
@@ -1912,6 +1988,31 @@
         },
         "description": "음식 응답"
       },
+      "FoodItemQuestionUpdateRequest": {
+        "required": ["questionIds"],
+        "type": "object",
+        "properties": {
+          "questionIds": {
+            "type": "array",
+            "description": "활성화할 질문 ID 목록",
+            "example": [1, 2, 3, 4, 5],
+            "items": {
+              "type": "integer",
+              "description": "활성화할 질문 ID 목록",
+              "format": "int64"
+            }
+          }
+        },
+        "description": "메뉴별 활성화 질문 설정 요청"
+      },
+      "ApiResponseVoid": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "format": "int32" },
+          "message": { "type": "string" },
+          "result": { "type": "object" }
+        }
+      },
       "FeedbackBulkViewedRequest": {
         "required": ["feedbackIds"],
         "type": "object",
@@ -1930,14 +2031,6 @@
           }
         },
         "description": "다건 피드백 읽음 처리 요청"
-      },
-      "ApiResponseVoid": {
-        "type": "object",
-        "properties": {
-          "code": { "type": "integer", "format": "int32" },
-          "message": { "type": "string" },
-          "result": { "type": "object" }
-        }
       },
       "UpdateCampaignRequest": {
         "required": ["campaignId", "name", "targetDays", "targetFeedbackCount"],
@@ -2558,11 +2651,16 @@
               "SOURNESS",
               "BITTERNESS",
               "UMAMI",
+              "CRISPINESS",
+              "CHEWINESS",
+              "TENDERNESS",
               "PORTION_SIZE",
+              "FRESHNESS",
               "TEMPERATURE",
               "DONENESS",
               "OILINESS",
-              "PRICE"
+              "PRICE",
+              "OWNER_MESSAGE"
             ]
           },
           "tooLittle": { "$ref": "#/components/schemas/JARGroup" },
@@ -2652,18 +2750,12 @@
           "completedAt": { "type": "string", "format": "date-time" }
         }
       },
-      "FeedbackResponse": {
+      "OwnerFeedbackDetailResponse": {
         "type": "object",
         "properties": {
-          "id": {
+          "feedbackId": {
             "type": "integer",
             "description": "피드백 ID",
-            "format": "int64",
-            "example": 1
-          },
-          "userId": {
-            "type": "integer",
-            "description": "사용자 ID",
             "format": "int64",
             "example": 1
           },
@@ -2677,11 +2769,6 @@
             "description": "매장 이름",
             "example": "맛있는집"
           },
-          "userNickname": {
-            "type": "string",
-            "description": "사용자 닉네임",
-            "example": "음식러버"
-          },
           "surveyName": {
             "type": "string",
             "description": "설문 이름",
@@ -2692,20 +2779,21 @@
             "description": "피드백 생성일",
             "format": "date-time"
           },
-          "ownerMessage": {
-            "type": "string",
-            "description": "사장님께 한마디 (9번 질문 답변)",
-            "example": "충분히 맛있었습니다. 감자튀김이 약간 눅눅한 감이 있어서..."
-          },
-          "photoUrls": {
-            "type": "array",
-            "description": "피드백 사진 목록",
-            "items": { "type": "string", "description": "피드백 사진 목록" }
-          },
           "isViewed": {
             "type": "boolean",
             "description": "사장님이 피드백을 조회했는지 여부",
             "example": false
+          },
+          "userId": {
+            "type": "integer",
+            "description": "사용자 ID",
+            "format": "int64",
+            "example": 1
+          },
+          "userNickname": {
+            "type": "string",
+            "description": "사용자 닉네임",
+            "example": "음식러버"
           },
           "spicyLevel": {
             "type": "integer",
@@ -2724,93 +2812,69 @@
             "description": "고객 식사 지출 정도 (1-5)",
             "format": "int32",
             "example": 3
-          }
-        },
-        "description": "피드백 응답"
-      },
-      "ApiResponseOwnerFeedbackResponse": {
-        "type": "object",
-        "properties": {
-          "code": { "type": "integer", "format": "int32" },
-          "message": { "type": "string" },
-          "result": { "$ref": "#/components/schemas/OwnerFeedbackResponse" }
-        }
-      },
-      "OwnerFeedbackResponse": {
-        "type": "object",
-        "properties": {
-          "feedbackId": {
-            "type": "integer",
-            "description": "피드백 ID",
-            "format": "int64",
-            "example": 1
           },
-          "userId": {
-            "type": "integer",
-            "description": "사용자 ID",
-            "format": "int64",
-            "example": 1
-          },
-          "foodName": {
-            "type": "string",
-            "description": "음식 이름",
-            "example": "김치찌개"
-          },
-          "storeName": {
-            "type": "string",
-            "description": "매장 이름",
-            "example": "맛있는집"
-          },
-          "userNickname": {
-            "type": "string",
-            "description": "사용자 닉네임",
-            "example": "음식러버"
-          },
-          "surveyName": {
-            "type": "string",
-            "description": "설문 이름",
-            "example": "음식 만족도 조사"
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "피드백 생성일",
-            "format": "date-time"
-          },
-          "ownerMessage": {
-            "type": "string",
-            "description": "사장님께 한마디 (9번 질문 답변)",
-            "example": "충분히 맛있었습니다. 감자튀김이 약간 눅눅한 감이 있어서..."
+          "surveyAnswers": {
+            "type": "array",
+            "description": "설문 답변 목록",
+            "items": { "$ref": "#/components/schemas/SurveyAnswerResponse" }
           },
           "photoUrls": {
             "type": "array",
             "description": "피드백 사진 목록",
             "items": { "type": "string", "description": "피드백 사진 목록" }
-          },
-          "isViewed": {
-            "type": "boolean",
-            "description": "사장님이 피드백을 조회했는지 여부",
-            "example": false
-          },
-          "spicyLevel": {
-            "type": "integer",
-            "description": "고객 매운맛 선호도 (피드백 당시, 1-5)",
-            "format": "int32",
-            "example": 3
-          },
-          "mealAmount": {
-            "type": "integer",
-            "description": "고객 식사량 (피드백 당시, 1-5)",
-            "format": "int32",
-            "example": 4
-          },
-          "mealSpending": {
-            "type": "integer",
-            "description": "고객 식사 지출 정도 (피드백 당시, 1-5)",
-            "format": "int32",
-            "example": 3
           }
         },
-        "description": "사장님용 피드백 응답 (고객 정보 포함)"
+        "description": "사장님용 피드백 상세 응답 (상세 조회용)"
+      },
+      "SurveyAnswerResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "답변 ID",
+            "format": "int64",
+            "example": 1
+          },
+          "questionId": {
+            "type": "integer",
+            "description": "질문 ID",
+            "format": "int64",
+            "example": 1
+          },
+          "questionText": {
+            "type": "string",
+            "description": "질문 내용",
+            "example": "음식의 맛은 어떠셨나요?"
+          },
+          "questionType": {
+            "type": "string",
+            "description": "질문 타입",
+            "example": "SLIDER",
+            "enum": ["SLIDER", "TEXT", "RATING", "NPS_RECOMMEND", "NPS_REORDER"]
+          },
+          "answerText": {
+            "type": "string",
+            "description": "텍스트 답변 (TEXT 타입용)",
+            "example": "매우 맛있었습니다"
+          },
+          "numericValue": {
+            "type": "number",
+            "description": "숫자 응답 (SLIDER/RATING 타입용)",
+            "format": "float",
+            "example": 1.5
+          }
+        },
+        "description": "설문 답변 응답"
+      },
+      "ApiResponseOwnerFeedbackDetailResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "format": "int32" },
+          "message": { "type": "string" },
+          "result": {
+            "$ref": "#/components/schemas/OwnerFeedbackDetailResponse"
+          }
+        }
       },
       "PageResponse": {
         "type": "object",
@@ -2857,23 +2921,91 @@
         },
         "description": "페이지네이션 응답"
       },
-      "ApiResponsePageResponseOwnerFeedbackResponse": {
+      "ApiResponsePageResponseOwnerFeedbackSummaryResponse": {
         "type": "object",
         "properties": {
           "code": { "type": "integer", "format": "int32" },
           "message": { "type": "string" },
           "result": {
-            "$ref": "#/components/schemas/PageResponseOwnerFeedbackResponse"
+            "$ref": "#/components/schemas/PageResponseOwnerFeedbackSummaryResponse"
           }
         }
       },
-      "PageResponseOwnerFeedbackResponse": {
+      "OwnerFeedbackSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "feedbackId": {
+            "type": "integer",
+            "description": "피드백 ID",
+            "format": "int64",
+            "example": 1
+          },
+          "foodName": {
+            "type": "string",
+            "description": "음식 이름",
+            "example": "김치찌개"
+          },
+          "storeName": {
+            "type": "string",
+            "description": "매장 이름",
+            "example": "맛있는집"
+          },
+          "surveyName": {
+            "type": "string",
+            "description": "설문 이름",
+            "example": "음식 만족도 조사"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "피드백 생성일",
+            "format": "date-time"
+          },
+          "isViewed": {
+            "type": "boolean",
+            "description": "사장님이 피드백을 조회했는지 여부",
+            "example": false
+          },
+          "userId": {
+            "type": "integer",
+            "description": "사용자 ID",
+            "format": "int64",
+            "example": 1
+          },
+          "userNickname": {
+            "type": "string",
+            "description": "사용자 닉네임",
+            "example": "음식러버"
+          },
+          "spicyLevel": {
+            "type": "integer",
+            "description": "고객 매운맛 선호도 (1-5)",
+            "format": "int32",
+            "example": 3
+          },
+          "mealAmount": {
+            "type": "integer",
+            "description": "고객 식사량 (1-5)",
+            "format": "int32",
+            "example": 4
+          },
+          "mealSpending": {
+            "type": "integer",
+            "description": "고객 식사 지출 정도 (1-5)",
+            "format": "int32",
+            "example": 3
+          }
+        },
+        "description": "사장님용 피드백 요약 응답 (목록용)"
+      },
+      "PageResponseOwnerFeedbackSummaryResponse": {
         "type": "object",
         "properties": {
           "content": {
             "type": "array",
             "description": "데이터 목록",
-            "items": { "$ref": "#/components/schemas/OwnerFeedbackResponse" }
+            "items": {
+              "$ref": "#/components/schemas/OwnerFeedbackSummaryResponse"
+            }
           },
           "page": {
             "type": "integer",

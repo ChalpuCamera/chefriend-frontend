@@ -1,56 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
-
-// ============ Types ============
-interface CreateCampaignRequest {
-  name: string;
-  description?: string;
-  storeId: number;
-  foodItemId: number;
-  targetFeedbackCount: number;
-  targetDays: number;
-}
-
-interface UpdateCampaignRequest {
-  id: number;
-  name?: string;
-  description?: string;
-  targetFeedbackCount?: number;
-  targetDays?: number;
-}
-
-interface DeleteCampaignRequest {
-  id: number;
-}
-
-interface ChangeCampaignStatusRequest {
-  campaignId: number;
-  status: "DRAFT" | "ACTIVE" | "PAUSED" | "COMPLETED" | "EXPIRED";
-}
-
-interface GetCampaignsByStoreRequest {
-  storeId: number;
-  status?: "DRAFT" | "ACTIVE" | "PAUSED" | "COMPLETED" | "EXPIRED";
-}
-
-export interface CampaignResponse {
-  id: number;
-  name: string;
-  description?: string;
-  storeId: number;
-  storeName: string;
-  foodItemId: number;
-  foodItemName: string;
-  targetFeedbackCount: number;
-  targetDays: number;
-  status: string;
-  startDate: string;
-  endDate: string;
-  createdAt: string;
-  updatedAt: string;
-  currentFeedbackCount: number;
-  foodItemThumbnailUrl: string;
-}
+import type {
+  CreateCampaignRequest,
+  UpdateCampaignRequest,
+  DeleteCampaignRequest,
+  ChangeCampaignStatusRequest,
+  GetCampaignsByStoreRequest,
+  CampaignResponse,
+} from "@/lib/types/api/campaign";
 
 interface PageResponse<T> {
   content: T[];

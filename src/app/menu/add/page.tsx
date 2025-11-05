@@ -180,7 +180,7 @@ export default function Page() {
       <CustomHeader handleBack={handleBack} title="메뉴 등록하기" />
 
       {/* Main Content */}
-      <div className="space-y-8 px-4 pt-30">
+      <div className="space-y-8 px-4 pt-30 pb-6">
         {/* Menu Photo */}
         <div>
           <label className="block text-body-sb text-black mb-3">
@@ -281,7 +281,7 @@ export default function Page() {
 
       {/* Submit Button */}
       <div className="fixed bottom-0 left-0 right-0 bg-white">
-        <div className="max-w-[430px] mx-auto pb-6 flex justify-center px-4">
+        <div className="max-w-[430px] mx-auto pb-4 flex justify-center px-4">
           <CustomButton onClick={handleSubmit} disabled={isCreating}>
             {isCreating ? "등록 중..." : "등록하기"}
           </CustomButton>

@@ -10,10 +10,9 @@ import {
   useUpdateThumbnail,
 } from "@/lib/hooks/useFood";
 import { usePhotosByFoodItem } from "@/lib/hooks/usePhoto";
+import { useGetActiveQuestions, useDeleteFoodQuestions } from "@/lib/hooks/useFoodQuestions";
 //import { useJARAnalysis } from "@/lib/hooks/useJAR";
-// import {
-//   useFoodReviews,
-// } from "@/lib/hooks/useFoodReviews";
+import { useFoodReviews, getFlattenedReviews } from "@/lib/hooks/useFoodReviews";
 import { inquiryApi } from "@/lib/api/landing/inquiry";
 
 import { toast } from "sonner";
@@ -26,6 +25,17 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { FloatingNavBar } from "@/components/floating-nav-bar";
 // import { useGetActiveCampaignByFood, calculateRemainingDays } from "@/lib/hooks/useCampaign";
 // import { useMyStores } from "@/lib/hooks/useStore";
 
@@ -40,22 +50,25 @@ export default function Page({
   const [isInquiryDialogOpen, setIsInquiryDialogOpen] = useState(false);
   const [inquiryContent, setInquiryContent] = useState("");
   const [isSubmittingInquiry, setIsSubmittingInquiry] = useState(false);
+  const [showDeleteReviewDialog, setShowDeleteReviewDialog] = useState(false);
   const foodId = parseInt(resolvedParams.foodId);
   // const observerTarget = useRef<HTMLDivElement>(null);
 
   // API 데이터 가져오기
   const { data: menuData, isLoading } = useFood(foodId);
   const { data: photos = [] } = usePhotosByFoodItem(foodId);
+  const { data: activeQuestionsData } = useGetActiveQuestions(foodId);
   // const { data: jarData, isError: jarError } = useJARAnalysis(foodId);
-  // const {
-  //   data: reviewsData,
-  //   fetchNextPage,
-  //   hasNextPage,
-  //   isFetchingNextPage,
-  // } = useFoodReviews(foodId);
+  const {
+    data: reviewsData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useFoodReviews(foodId);
 
   const deleteFood = useDeleteFood();
   const updateThumbnail = useUpdateThumbnail();
+  const deleteReviewQuestions = useDeleteFoodQuestions();
 
   const handleInquirySubmit = async () => {
     if (!inquiryContent.trim()) {
@@ -74,6 +87,15 @@ export default function Page({
       toast.error("문의 전송에 실패했습니다.");
     } finally {
       setIsSubmittingInquiry(false);
+    }
+  };
+
+  const handleDeleteReview = async () => {
+    try {
+      await deleteReviewQuestions.mutateAsync(foodId);
+      setShowDeleteReviewDialog(false);
+    } catch (error) {
+      console.error("리뷰 종료 실패:", error);
     }
   };
 
@@ -105,7 +127,8 @@ export default function Page({
       .map((photo) => ({ url: photo.imageUrl, id: photo.photoId })),
   ].slice(0, 3); // 최대 3개까지만
 
-  // const reviews = getFlattenedReviews(reviewsData);
+  // reviewsData에서 모든 페이지의 리뷰를 평탄화
+  const reviews = getFlattenedReviews(reviewsData);
 
   // // 캠페인 데이터 처리
   // const hasCampaign = !!activeCampaign;
@@ -243,7 +266,7 @@ export default function Page({
       </div>
 
       {/* Main Content - pt 추가하여 헤더 공간 확보 */}
-      <div className="pt-[104px] pb-6">
+      <div className="pt-[104px] pb-40">
         {/* Main Image */}
         <div className="w-full h-[220px] bg-gray-100">
           {allImages.length > 0 ? (
@@ -651,10 +674,49 @@ export default function Page({
         </div> */}
 
         {/* Recent Reviews Section */}
-        {/* <div className="px-4 py-6">
-          <h2 className="text-sub-title-b text-gray-800 mb-5">
-            손님의 솔직한 평가
-          </h2>
+        <div className="px-4 py-6">
+          {/* 헤더: 제목 + ON/OFF 상태 + 버튼들 */}
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <h2 className="text-sub-title-b text-gray-800">손님 후기</h2>
+
+              {/* ON/OFF 상태 배지 */}
+              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                activeQuestionsData?.result && activeQuestionsData.result.filter(q => q.questionType === 'RATING').length > 0
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-gray-100 text-gray-500'
+              }`}>
+                {activeQuestionsData?.result && activeQuestionsData.result.filter(q => q.questionType === 'RATING').length > 0 ? 'ON' : 'OFF'}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {/* 리뷰 등록/관리 버튼 */}
+              <Button
+                onClick={() => {
+                  const params = new URLSearchParams({
+                    foodId: foodId.toString()
+                  });
+                  router.push(`/review/add?${params.toString()}`);
+                }}
+                className="h-9 px-4 bg-purple-600 text-white text-sm hover:bg-purple-700"
+              >
+                {menuData?.hasActiveReview ? "리뷰 관리하기" : "리뷰 등록하기"}
+              </Button>
+
+              {/* 종료 버튼 (활성 질문이 있을 때만) */}
+              {activeQuestionsData?.result &&
+               activeQuestionsData.result.filter(q => q.questionType === 'RATING').length > 0 && (
+                <Button
+                  onClick={() => setShowDeleteReviewDialog(true)}
+                  variant="outline"
+                  className="h-9 px-4 border-red-500 text-red-500 hover:bg-red-50"
+                >
+                  종료
+                </Button>
+              )}
+            </div>
+          </div>
 
           {reviews.length === 0 ? (
             // Empty state
@@ -662,67 +724,54 @@ export default function Page({
               <p className="text-sub-body-r mb-4">
                 아직 손님이 진행한 평가가 없어요
               </p>
-              <Button
-                onClick={() => {
-                  window.open("https://open.kakao.com/o/sCpB58Hh", "_blank");
-                }}
-                className="w-27 h-9 bg-purple-700 text-sub-body-sb text-white rounded-[8px]"
-              >
-                문의하기
-              </Button>
             </div>
           ) : (
             // Review Items
-            <div className="space-y-6">
-              {reviews.map((review) => (
-                <div key={review.id} className="py-4">
-                
-                  <div className="flex items-start gap-3 mb-3">
-                    <Image
-                      src={review.avatar || "/user_profile.png"}
-                      alt={review.userName}
-                      width={50}
-                      height={50}
-                      className="rounded-full"
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-body-sb text-gray-900">
-                          {review.userName}
+            <div className="space-y-4">
+              {reviews.map((review, index) => (
+                <div key={`review-${index}-${review.id}`} className="py-3 border-b border-gray-200 last:border-0">
+                  {/* Anonymous ID and Attributes */}
+                  <div className="flex items-center gap-2 mb-2 text-sm text-gray-700">
+                    <span className="font-semibold">{review.anonymousId || review.userName}</span>
+                    {review.attributes && review.attributes.length > 0 &&
+                      review.attributes.map((attr, idx) => (
+                        <span key={`${review.id}-${attr.label}-${idx}`}>
+                          {attr.label}:{attr.value}
                         </span>
-                        <span className="text-sub-body-r text-gray-500">
-                          {review.date}
-                        </span>
-                      </div>
-                      
-                      <div className="flex items-center gap-3 mt-2 text-body-r text-gray-700">
-                        <span>🍽️ {review.servings}</span>
-                        <span>🌶️ {review.spiciness}</span>
-                        <span>💰 {review.price}</span>
-                      </div>
-                    </div>
+                      ))
+                    }
                   </div>
 
-                  <div className="mt-4">
-                    <p className="text-body-r text-gray-700 whitespace-pre-line">
+                  {/* Review Text */}
+                  {review.reviewText && (
+                    <p className="text-body-r text-gray-800 whitespace-pre-line mb-2">
                       {review.reviewText}
                     </p>
-                  </div>
+                  )}
+
+                  {/* Date */}
+                  <p className="text-xs text-gray-500">{review.date}</p>
                 </div>
               ))}
 
               {hasNextPage && (
-                <div ref={observerTarget} className="py-4 text-center">
+                <div className="py-4 text-center">
                   {isFetchingNextPage ? (
                     <p className="text-gray-500">더 불러오는 중...</p>
                   ) : (
-                    <p className="text-gray-400">스크롤하여 더 보기</p>
+                    <Button
+                      onClick={() => fetchNextPage()}
+                      variant="outline"
+                      className="text-sm"
+                    >
+                      더 보기
+                    </Button>
                   )}
                 </div>
               )}
             </div>
           )}
-        </div> */}
+        </div>
         <div className="flex flex-col items-center justify-center w-full h-24">
         <Button
           onClick={() => setIsInquiryDialogOpen(true)}
@@ -766,6 +815,32 @@ export default function Page({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Review Confirmation Dialog */}
+      <AlertDialog open={showDeleteReviewDialog} onOpenChange={setShowDeleteReviewDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>리뷰 받기 종료</AlertDialogTitle>
+            <AlertDialogDescription>
+              &quot;{menuData?.foodName}&quot; 메뉴의 리뷰 받기를 종료하시겠습니까?
+              <br />
+              설정된 평가 항목이 모두 삭제됩니다.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteReview}
+              className="bg-red-500 hover:bg-red-600"
+              disabled={deleteReviewQuestions.isPending}
+            >
+              {deleteReviewQuestions.isPending ? "종료 중..." : "종료"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <FloatingNavBar currentTab="menu" />
     </div>
   );
 }

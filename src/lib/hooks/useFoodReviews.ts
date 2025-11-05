@@ -13,13 +13,18 @@ export function useFoodReviews(
   foodId: number,
   options?: { enabled?: boolean }
 ) {
+  console.log(`🎯 useFoodReviews called with foodId: ${foodId}, enabled: ${options?.enabled ?? !!foodId}`);
+
   return useInfiniteQuery({
     queryKey: reviewKeys.byFood(foodId),
     queryFn: async ({ pageParam = 0 }) => {
+      console.log(`🚀 Fetching reviews for foodId: ${foodId}, page: ${pageParam}`);
       const reviews = await feedbackApi.getFoodReviews(foodId, {
         page: pageParam,
         size: 20,
       });
+
+      console.log(`📦 Received ${reviews.length} reviews`);
 
       return {
         reviews,

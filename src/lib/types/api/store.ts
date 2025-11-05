@@ -45,6 +45,7 @@ export interface StoreResponse {
   thumbnailUrl?: string;
   requiredStampsForCoupon?: number;
   displayTemplate?: number;
+  autoCreateMenus?: boolean;  // 사장님의 메뉴가 자동으로 자신의 가게에 등록되는 기능 on/off
   links: LinkItem[];
 }
 
