@@ -324,7 +324,6 @@ export const feedbackApi = {
       // 1단계: feedbackId 목록 조회
       const summaryResponse = await feedbackApi.getFoodFeedbacks(foodId, pageable);
 
-      console.log('📋 Summary Response:', JSON.stringify(summaryResponse, null, 2));
 
       // 응답 구조 확인
       const content = summaryResponse?.result?.content;
@@ -357,7 +356,6 @@ export const feedbackApi = {
 
             return feedbackApi.getOwnerFeedbackDetail(feedbackId)
               .then((detailResponse) => {
-                console.log(`✅ Detail response for ${feedbackId}:`, JSON.stringify(detailResponse, null, 2));
                 if (detailResponse?.result || detailResponse?.code === 200) {
                   const result = detailResponse.result || detailResponse;
                   return transformFeedbackToReview(result);

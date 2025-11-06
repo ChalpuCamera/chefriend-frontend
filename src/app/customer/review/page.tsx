@@ -1,16 +1,19 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   useGetFoodItem,
   useGetCustomerActiveQuestions,
   useSubmitCustomerFeedback,
+  useGetFeedbackPresignedUrls,
 } from "@/lib/hooks/useCustomerReview";
+import { customerApiClient } from "@/lib/api/customerClient";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { CustomButton } from "@/components/ui/custom-button";
+import { toast } from "sonner";
 
 // 고정 5단계 라벨 (2번, 4번은 빈 문자열)
 const fixedLabels = [
@@ -31,9 +34,15 @@ function CustomerReviewPageContent() {
   const { data: foodData, isLoading: isFoodLoading } = useGetFoodItem(foodId);
   const { data: questionsData, isLoading: isQuestionsLoading } = useGetCustomerActiveQuestions(foodId);
   const submitMutation = useSubmitCustomerFeedback();
+  const getPresignedUrlsMutation = useGetFeedbackPresignedUrls();
 
   // 답변 상태
   const [answers, setAnswers] = useState<{ [key: number]: { rating?: number; text?: string } }>({});
+
+  // 사진 업로드 상태
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const food = foodData?.result;
   const questions = questionsData?.result || [];
@@ -52,6 +61,51 @@ function CustomerReviewPageContent() {
       ...prev,
       [questionId]: { ...prev[questionId], text }
     }));
+  };
+
+  // 이미지 선택 처리
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // 이미지 파일인지 확인
+      if (!file.type.startsWith('image/')) {
+        toast.error('이미지 파일만 업로드 가능합니다');
+        return;
+      }
+      setSelectedImage(file);
+    }
+  };
+
+  // 이미지 제거
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // 사진 업로드 (선택 사항)
+  const uploadPhoto = async (): Promise<string[]> => {
+    if (!selectedImage) return [];
+
+    setIsUploadingPhoto(true);
+    try {
+      // 1. Presigned URL 가져오기
+      const response = await getPresignedUrlsMutation.mutateAsync([selectedImage.name]);
+      const photoUrlInfo = response.result.photoUrls[0];
+
+      // 2. S3에 업로드
+      await customerApiClient.uploadFile(photoUrlInfo.presignedUrl, selectedImage);
+
+      // 3. S3 키 반환
+      return [photoUrlInfo.s3Key];
+    } catch (error) {
+      console.error('Photo upload failed:', error);
+      toast.error('사진 업로드에 실패했습니다');
+      return [];
+    } finally {
+      setIsUploadingPhoto(false);
+    }
   };
 
   // TEXT 질문의 답변이 비어있는지 확인
@@ -82,15 +136,19 @@ function CustomerReviewPageContent() {
     });
 
     try {
+      // 사진 업로드 (선택 사항 - 없으면 빈 배열 반환)
+      const photoS3Keys = await uploadPhoto();
+
       await submitMutation.mutateAsync({
         storeId,
         foodId,
         surveyId: 2, // 고정값
-        surveyAnswers
+        surveyAnswers,
+        photoS3Keys
       });
 
-      // 성공 시 완료 페이지로 이동
-      router.push("/customer/review/complete");
+      // 성공 시 완료 페이지로 이동 (storeId 전달)
+      router.push(`/customer/review/complete?storeId=${storeId}`);
     } catch {
       // 에러는 mutation에서 처리
     }
@@ -252,17 +310,60 @@ function CustomerReviewPageContent() {
               />
             </div>
           ))}
+
+        {/* 사진 업로드 섹션 */}
+        <div className="bg-white px-4 py-6 mt-4">
+          <h3 className="text-headline-b text-gray-800 mb-4">사진 추가 (선택)</h3>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageSelect}
+            className="hidden"
+          />
+
+          {selectedImage ? (
+            // 이미지 미리보기
+            <div className="relative w-full h-full mx-auto">
+              <Image
+                src={URL.createObjectURL(selectedImage)}
+                alt="선택한 사진"
+                width={100}
+                height={100}
+                className="object-cover rounded-[12px]"
+              />
+              <button
+                onClick={handleRemoveImage}
+                className="absolute top-2 right-2 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70"
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            // 사진 선택 버튼
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full py-4 border-2 border-dashed border-gray-300 rounded-[12px] text-gray-500 hover:border-purple-400 hover:text-purple-600 transition-colors"
+            >
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-2xl">📷</span>
+                <span className="text-body-m">사진 선택</span>
+              </div>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* 제출 버튼 (하단 고정) */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t">
+      <div className="fixed bottom-0 left-0 right-0 bg-white">
         <div className="max-w-[430px] mx-auto p-4">
           <CustomButton
             onClick={handleSubmit}
-            disabled={submitMutation.isPending || isTextEmpty}
+            disabled={submitMutation.isPending || isUploadingPhoto || isTextEmpty}
             className="w-full h-12 text-base"
           >
-            {submitMutation.isPending ? "제출 중..." : "리뷰 제출하기"}
+            {isUploadingPhoto ? "사진 업로드 중..." : submitMutation.isPending ? "제출 중..." : "리뷰 제출하기"}
           </CustomButton>
         </div>
       </div>

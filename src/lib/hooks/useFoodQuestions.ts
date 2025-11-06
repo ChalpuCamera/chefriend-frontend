@@ -52,8 +52,10 @@ export const useSetFoodQuestions = () => {
       return response;
     },
     onSuccess: () => {
+      // 모든 관련 캐시 무효화
       queryClient.invalidateQueries({ queryKey: ['activeQuestions'] });
       queryClient.invalidateQueries({ queryKey: ['foodsWithQuestions'] });
+      queryClient.invalidateQueries({ queryKey: ['foods'] }); // 메뉴 목록 캐시도 무효화
       toast.success('평가 항목이 설정되었습니다');
     },
     onError: () => {
@@ -72,8 +74,10 @@ export const useDeleteFoodQuestions = () => {
       return response;
     },
     onSuccess: () => {
+      // 모든 관련 캐시 무효화
       queryClient.invalidateQueries({ queryKey: ['activeQuestions'] });
       queryClient.invalidateQueries({ queryKey: ['foodsWithQuestions'] });
+      queryClient.invalidateQueries({ queryKey: ['foods'] }); // 메뉴 목록 캐시도 무효화
       toast.success('리뷰 받기가 종료되었습니다');
     },
     onError: () => {

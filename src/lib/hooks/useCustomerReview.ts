@@ -3,7 +3,7 @@ import { customerApiClient } from '@/lib/api/customerClient';
 import { toast } from 'sonner';
 import type { ActiveQuestionResponse } from '@/lib/types/api/survey';
 import type { FoodItemResponse } from '@/lib/types/api/food';
-import type { FeedbackCreateRequest } from '@/lib/types/api/feedback';
+import type { FeedbackCreateRequest, FeedbackPhotosPresignedUrlResponse } from '@/lib/types/api/feedback';
 
 interface ApiResponse<T> {
   code: number;
@@ -65,6 +65,21 @@ export const useSubmitCustomerFeedback = () => {
       } else {
         toast.error('리뷰 등록에 실패했습니다. 다시 시도해주세요.');
       }
+    },
+  });
+};
+
+// Hook to get presigned URLs for photo upload
+export const useGetFeedbackPresignedUrls = () => {
+  return useMutation({
+    mutationFn: async (fileNames: string[]) => {
+      return await customerApiClient.post<FeedbackPhotosPresignedUrlResponse>(
+        '/api/customer-feedback/presigned-urls',
+        { fileNames }
+      );
+    },
+    onError: () => {
+      toast.error('사진 업로드 URL 생성에 실패했습니다.');
     },
   });
 };

@@ -161,7 +161,10 @@ function ReviewAddContent() {
         questionIds
       });
 
-      router.push('/review');
+      // 캐시 무효화가 완료될 시간 확보 후 페이지 이동
+      setTimeout(() => {
+        router.push('/review');
+      }, 100);
     } catch (error) {
       console.error('Failed to save questions:', error);
     }
@@ -305,7 +308,7 @@ function ReviewAddContent() {
           disabled={!selectedMenu || selectedQuestions.length === 0}
           className="w-full"
         >
-          {isEditMode ? '수정하기' : '저장하기'}
+          저장하기
         </CustomButton>
       </div>
     </div>

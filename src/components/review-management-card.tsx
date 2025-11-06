@@ -3,7 +3,8 @@
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 import { useDeleteFoodQuestions } from "@/lib/hooks/useFoodQuestions"
 
 interface ReviewManagementCardProps {
@@ -46,7 +47,7 @@ export function ReviewManagementCard({
         {/* Image */}
         <div className="relative w-24 h-24 flex-shrink-0">
           <Image
-            src={imageUrl || "/placeholder-food.png"}
+            src={imageUrl || "/menu_icon.png"}
             alt={name}
             fill
             className="object-cover rounded-[8px]"
@@ -90,27 +91,35 @@ export function ReviewManagementCard({
       </div>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>리뷰 받기 종료</AlertDialogTitle>
-            <AlertDialogDescription>
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>리뷰 받기 종료</DialogTitle>
+            <DialogDescription>
               &quot;{name}&quot; 메뉴의 리뷰 받기를 종료하시겠습니까?
               <br />
               설정된 평가 항목이 모두 삭제됩니다.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-row justify-end gap-2">
+            
+          <Button
               onClick={confirmDelete}
-              className="bg-red-500 hover:bg-red-600"
+              disabled={deleteMutation.isPending}
+              className="flex-1 bg-purple-700 text-white hover:bg-purple-800"
             >
-              종료
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+              {deleteMutation.isPending ? "종료 중..." : "종료"}
+            </Button>
+            <Button
+              onClick={() => setShowDeleteDialog(false)}
+              
+                className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300"
+            >
+              취소
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

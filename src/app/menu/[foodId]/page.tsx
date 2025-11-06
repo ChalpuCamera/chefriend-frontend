@@ -10,31 +10,27 @@ import {
   useUpdateThumbnail,
 } from "@/lib/hooks/useFood";
 import { usePhotosByFoodItem } from "@/lib/hooks/usePhoto";
-import { useGetActiveQuestions, useDeleteFoodQuestions } from "@/lib/hooks/useFoodQuestions";
+import {
+  useGetActiveQuestions,
+  useDeleteFoodQuestions,
+} from "@/lib/hooks/useFoodQuestions";
 //import { useJARAnalysis } from "@/lib/hooks/useJAR";
-import { useFoodReviews, getFlattenedReviews } from "@/lib/hooks/useFoodReviews";
+import {
+  useFoodReviews,
+  getFlattenedReviews,
+} from "@/lib/hooks/useFoodReviews";
 import { inquiryApi } from "@/lib/api/landing/inquiry";
-
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { FloatingNavBar } from "@/components/floating-nav-bar";
 // import { useGetActiveCampaignByFood, calculateRemainingDays } from "@/lib/hooks/useCampaign";
 // import { useMyStores } from "@/lib/hooks/useStore";
@@ -51,6 +47,9 @@ export default function Page({
   const [inquiryContent, setInquiryContent] = useState("");
   const [isSubmittingInquiry, setIsSubmittingInquiry] = useState(false);
   const [showDeleteReviewDialog, setShowDeleteReviewDialog] = useState(false);
+  const [expandedReviewIndices, setExpandedReviewIndices] = useState<
+    Set<number>
+  >(new Set());
   const foodId = parseInt(resolvedParams.foodId);
   // const observerTarget = useRef<HTMLDivElement>(null);
 
@@ -78,7 +77,14 @@ export default function Page({
 
     setIsSubmittingInquiry(true);
     try {
-      await inquiryApi.saveInquiry({ content: (inquiryContent + " [from menu page foodId: " + foodId + "]").trim() });
+      await inquiryApi.saveInquiry({
+        content: (
+          inquiryContent +
+          " [from menu page foodId: " +
+          foodId +
+          "]"
+        ).trim(),
+      });
       toast.success("문의가 접수되었습니다!");
       setInquiryContent("");
       setIsInquiryDialogOpen(false);
@@ -97,6 +103,18 @@ export default function Page({
     } catch (error) {
       console.error("리뷰 종료 실패:", error);
     }
+  };
+
+  const toggleExpandReview = (index: number) => {
+    setExpandedReviewIndices((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
   };
 
   // 사용자의 가게 정보 가져오기
@@ -681,12 +699,22 @@ export default function Page({
               <h2 className="text-sub-title-b text-gray-800">손님 후기</h2>
 
               {/* ON/OFF 상태 배지 */}
-              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                activeQuestionsData?.result && activeQuestionsData.result.filter(q => q.questionType === 'RATING').length > 0
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-gray-100 text-gray-500'
-              }`}>
-                {activeQuestionsData?.result && activeQuestionsData.result.filter(q => q.questionType === 'RATING').length > 0 ? 'ON' : 'OFF'}
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                  activeQuestionsData?.result &&
+                  activeQuestionsData.result.filter(
+                    (q) => q.questionType === "RATING"
+                  ).length > 0
+                    ? "bg-green-100 text-green-700"
+                    : "bg-gray-100 text-gray-500"
+                }`}
+              >
+                {activeQuestionsData?.result &&
+                activeQuestionsData.result.filter(
+                  (q) => q.questionType === "RATING"
+                ).length > 0
+                  ? "ON"
+                  : "OFF"}
               </span>
             </div>
 
@@ -695,7 +723,7 @@ export default function Page({
               <Button
                 onClick={() => {
                   const params = new URLSearchParams({
-                    foodId: foodId.toString()
+                    foodId: foodId.toString(),
                   });
                   router.push(`/review/add?${params.toString()}`);
                 }}
@@ -706,15 +734,17 @@ export default function Page({
 
               {/* 종료 버튼 (활성 질문이 있을 때만) */}
               {activeQuestionsData?.result &&
-               activeQuestionsData.result.filter(q => q.questionType === 'RATING').length > 0 && (
-                <Button
-                  onClick={() => setShowDeleteReviewDialog(true)}
-                  variant="outline"
-                  className="h-9 px-4 border-red-500 text-red-500 hover:bg-red-50"
-                >
-                  종료
-                </Button>
-              )}
+                activeQuestionsData.result.filter(
+                  (q) => q.questionType === "RATING"
+                ).length > 0 && (
+                  <Button
+                    onClick={() => setShowDeleteReviewDialog(true)}
+                    variant="outline"
+                    className="h-9 px-4 border-red-500 text-red-500 hover:bg-red-50"
+                  >
+                    리뷰 끄기
+                  </Button>
+                )}
             </div>
           </div>
 
@@ -728,31 +758,67 @@ export default function Page({
           ) : (
             // Review Items
             <div className="space-y-4">
-              {reviews.map((review, index) => (
-                <div key={`review-${index}-${review.id}`} className="py-3 border-b border-gray-200 last:border-0">
-                  {/* Anonymous ID and Attributes */}
-                  <div className="flex items-center gap-2 mb-2 text-sm text-gray-700">
-                    <span className="font-semibold">{review.anonymousId || review.userName}</span>
-                    {review.attributes && review.attributes.length > 0 &&
-                      review.attributes.map((attr, idx) => (
-                        <span key={`${review.id}-${attr.label}-${idx}`}>
-                          {attr.label}:{attr.value}
-                        </span>
-                      ))
-                    }
+              {reviews.map((review, index) => {
+                const isExpanded = expandedReviewIndices.has(index);
+                return (
+                  <div
+                    key={`review-${index}-${review.id}`}
+                    className="py-2 border-b border-gray-200 last:border-0"
+                  >
+                    <div className="flex gap-3">
+                      {/* Left: Review Content */}
+                      <div className="flex-1 min-w-0">
+                        {/* Anonymous ID and Attributes */}
+                        <div className="flex items-start gap-2 mb-2 text-sm text-gray-700">
+                          <span className="text-body-sb flex-shrink-0">
+                            익명{reviews.length - index}
+                          </span>
+                          {review.attributes && review.attributes.length > 0 && (
+                            <div
+                              onClick={() => toggleExpandReview(index)}
+                              className={`flex-1 cursor-pointer ${
+                                isExpanded
+                                  ? "whitespace-normal"
+                                  : "whitespace-nowrap overflow-hidden text-ellipsis"
+                              }`}
+                            >
+                              {review.attributes.map((attr, idx) => (
+                                <span
+                                  key={`${review.id}-${attr.label}-${idx}`}
+                                  className="mr-2"
+                                >
+                                  {attr.label}:{attr.value}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Review Text */}
+                        {review.reviewText && (
+                          <p className="text-body-r text-gray-800 whitespace-pre-line mb-2">
+                            {review.reviewText}
+                          </p>
+                        )}
+
+                        {/* Date */}
+                        <p className="text-xs text-gray-500">{review.date}</p>
+                      </div>
+
+                      {/* Right: Photo (if exists) */}
+                      {review.photoUrls && review.photoUrls.length > 0 && (
+                        <div className="w-20 h-20 flex-shrink-0">
+                          <img
+                            src={review.photoUrls[0]}
+                            alt="리뷰 사진"
+                            className="w-full h-full object-cover rounded-[8px]"
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
-
-                  {/* Review Text */}
-                  {review.reviewText && (
-                    <p className="text-body-r text-gray-800 whitespace-pre-line mb-2">
-                      {review.reviewText}
-                    </p>
-                  )}
-
-                  {/* Date */}
-                  <p className="text-xs text-gray-500">{review.date}</p>
-                </div>
-              ))}
+                );
+              })}
 
               {hasNextPage && (
                 <div className="py-4 text-center">
@@ -773,13 +839,13 @@ export default function Page({
           )}
         </div>
         <div className="flex flex-col items-center justify-center w-full h-24">
-        <Button
-          onClick={() => setIsInquiryDialogOpen(true)}
-          className="w-40 h-9 bg-purple-600 text-sub-body-sb text-white rounded-[8px]"
-        >
-          개발자에게 문의하기
-        </Button>
-      </div>
+          <Button
+            onClick={() => setIsInquiryDialogOpen(true)}
+            className="w-40 h-9 bg-purple-600 text-sub-body-sb text-white rounded-[8px]"
+          >
+            개발자에게 문의하기
+          </Button>
+        </div>
       </div>
       {/* 문의하기 Dialog */}
       <Dialog open={isInquiryDialogOpen} onOpenChange={setIsInquiryDialogOpen}>
@@ -817,28 +883,37 @@ export default function Page({
       </Dialog>
 
       {/* Delete Review Confirmation Dialog */}
-      <AlertDialog open={showDeleteReviewDialog} onOpenChange={setShowDeleteReviewDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>리뷰 받기 종료</AlertDialogTitle>
-            <AlertDialogDescription>
-              &quot;{menuData?.foodName}&quot; 메뉴의 리뷰 받기를 종료하시겠습니까?
+      <Dialog
+        open={showDeleteReviewDialog}
+        onOpenChange={setShowDeleteReviewDialog}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>리뷰 받기 종료</DialogTitle>
+            <DialogDescription>
+              &quot;{menuData?.foodName}&quot; 메뉴의 리뷰 받기를
+              종료하시겠습니까?
               <br />
               설정된 평가 항목이 모두 삭제됩니다.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-row justify-end gap-2">
+            <Button
               onClick={handleDeleteReview}
-              className="bg-red-500 hover:bg-red-600"
               disabled={deleteReviewQuestions.isPending}
+              className="flex-1 bg-purple-700 text-white hover:bg-purple-800"
             >
               {deleteReviewQuestions.isPending ? "종료 중..." : "종료"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+            <Button
+              onClick={() => setShowDeleteReviewDialog(false)}
+              className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300"
+            >
+              취소
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <FloatingNavBar currentTab="menu" />
     </div>
