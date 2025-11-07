@@ -16,13 +16,14 @@ interface ApiResponse<T> {
 }
 
 // Hook to get all available survey questions
-export const useGetSurveyQuestions = (surveyId: number = 2) => {
+export const useGetSurveyQuestions = (surveyId: number | null = 2) => {
   return useQuery<ApiResponse<SurveyQuestionResponse[]>>({
     queryKey: ['surveyQuestions', surveyId],
     queryFn: async () => {
       const response = await apiClient.get<ApiResponse<SurveyQuestionResponse[]>>(`/api/surveys/${surveyId}/questions`);
       return response;
     },
+    enabled: surveyId !== null,
   });
 };
 

@@ -19,6 +19,7 @@ import {
   useGetFoodsWithQuestions
 } from "@/lib/hooks/useFoodQuestions";
 import { toast } from "sonner";
+import { InquiryButton } from "@/components/inquiry-button";
 
 interface SelectedMenu {
   id: number;
@@ -62,7 +63,7 @@ function ReviewAddContent() {
   const [showMenuSelector, setShowMenuSelector] = useState(false);
   const [selectedQuestions, setSelectedQuestions] = useState<number[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [surveyId, setSurveyId] = useState<number>(2);
+  const [surveyId, setSurveyId] = useState<number | null>(null);
 
   // 사용자의 가게 정보 가져오기
   const { data: storesData } = useMyStores();
@@ -156,6 +157,11 @@ function ReviewAddContent() {
       imageUrl: menu.photoUrl || menu.thumbnailUrl || "/menu_icon.png",
     });
     setShowMenuSelector(false);
+    // 신규 설정 모드에서만 surveyId 초기화 (수정 모드에서는 자동 감지됨)
+    if (!isEditMode) {
+      setSurveyId(null);
+      setSelectedQuestions([]);
+    }
   };
 
   const handleQuestionToggle = (questionId: number) => {
@@ -295,92 +301,100 @@ function ReviewAddContent() {
         </div>
 
         {/* Survey 템플릿 선택 */}
-        <div className={`mb-6 ${!selectedMenu ? 'opacity-50 pointer-events-none' : ''}`}>
-          <h2 className="text-body-sb text-gray-900 mb-3">평가 템플릿 선택</h2>
-          <RadioGroup
-            value={surveyId.toString()}
-            onValueChange={(value) => {
-              setSurveyId(parseInt(value));
-              setSelectedQuestions([]); // 템플릿 변경 시 선택 초기화
-            }}
-            disabled={!selectedMenu}
-          >
-            <div className="grid grid-cols-2 gap-2">
-              <Label
-                htmlFor="survey-2"
-                className="flex items-center gap-2 p-3 bg-gray-50 rounded-[8px] cursor-pointer hover:bg-gray-100 transition-colors border-2 data-[checked=true]:border-purple-500 data-[checked=true]:bg-purple-50"
-                data-checked={surveyId === 2}
-              >
-                <RadioGroupItem
-                  value="2"
-                  id="survey-2"
-                  disabled={!selectedMenu}
-                />
-                <div className="text-body-m text-gray-900">일반 음식</div>
-              </Label>
+        {selectedMenu && (
+          <div className="mb-6">
+            <h2 className="text-body-sb text-gray-900 mb-3">평가 템플릿 선택</h2>
+            <RadioGroup
+              value={surveyId?.toString() || ""}
+              onValueChange={(value) => {
+                setSurveyId(parseInt(value));
+                setSelectedQuestions([]); // 템플릿 변경 시 선택 초기화
+              }}
+            >
+              <div className="grid grid-cols-2 gap-2">
+                <Label
+                  htmlFor="survey-2"
+                  className="flex items-center gap-2 p-3 bg-gray-50 rounded-[8px] cursor-pointer hover:bg-gray-100 transition-colors border-2 data-[checked=true]:border-purple-500 data-[checked=true]:bg-purple-50"
+                  data-checked={surveyId === 2}
+                >
+                  <RadioGroupItem
+                    value="2"
+                    id="survey-2"
+                  />
+                  <div className="text-body-m text-gray-900">일반 음식</div>
+                </Label>
 
-              <Label
-                htmlFor="survey-3"
-                className="flex items-center gap-2 p-3 bg-gray-50 rounded-[8px] cursor-pointer hover:bg-gray-100 transition-colors border-2 data-[checked=true]:border-purple-500 data-[checked=true]:bg-purple-50"
-                data-checked={surveyId === 3}
-              >
-                <RadioGroupItem
-                  value="3"
-                  id="survey-3"
-                  disabled={!selectedMenu}
-                />
-                <div className="text-body-m text-gray-900">베이커리</div>
-              </Label>
-            </div>
-          </RadioGroup>
-        </div>
+                <Label
+                  htmlFor="survey-3"
+                  className="flex items-center gap-2 p-3 bg-gray-50 rounded-[8px] cursor-pointer hover:bg-gray-100 transition-colors border-2 data-[checked=true]:border-purple-500 data-[checked=true]:bg-purple-50"
+                  data-checked={surveyId === 3}
+                >
+                  <RadioGroupItem
+                    value="3"
+                    id="survey-3"
+                  />
+                  <div className="text-body-m text-gray-900">베이커리</div>
+                </Label>
+              </div>
+            </RadioGroup>
+          </div>
+        )}
 
         {/* 평가 항목 선택 */}
-        <div className={!selectedMenu ? 'opacity-50 pointer-events-none' : ''}>
-          <h2 className="text-body-sb text-gray-900 mb-3">평가 항목 선택</h2>
-          <p className="text-small-r text-gray-600 mb-4">
-            고객에게 평가받고 싶은 항목을 선택해주세요
-          </p>
-
-          <div className="space-y-3">
-            {ratingQuestions.map((question) => {
-              const labels = surveyId === 3 ? questionLabelsSurvey3 : questionLabelsSurvey2;
-              const labelText = labels[question.jarAttribute] || question.jarAttribute;
-
-              return (
-                <Label
-                  key={question.questionId}
-                  htmlFor={`question-${question.questionId}`}
-                  className="flex items-center gap-3 p-3 bg-gray-50 rounded-[8px] cursor-pointer hover:bg-gray-100 transition-colors"
-                >
-                  <Checkbox
-                    id={`question-${question.questionId}`}
-                    checked={selectedQuestions.includes(question.questionId)}
-                    onCheckedChange={() => handleQuestionToggle(question.questionId)}
-                    disabled={!selectedMenu}
-                    className="data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
-                  />
-                  <span className="text-body-m text-gray-800 flex-1">
-                    {labelText}
-                  </span>
-                </Label>
-              );
-            })}
-          </div>
-
-          <div className="mt-4 p-3 bg-blue-50 rounded-[8px]">
-            <p className="text-small-m text-blue-700">
-              💡 &quot;사장님께 한마디&quot; 항목은 자동으로 포함됩니다
+        {surveyId && selectedMenu && (
+          <div className="mb-6">
+            <h2 className="text-body-sb text-gray-900 mb-3">평가 항목 선택</h2>
+            <p className="text-small-r text-gray-600 mb-4">
+              고객에게 평가받고 싶은 항목을 선택해주세요
             </p>
+
+            <div className="space-y-3">
+              {ratingQuestions.map((question) => {
+                const labels = surveyId === 3 ? questionLabelsSurvey3 : questionLabelsSurvey2;
+                const labelText = labels[question.jarAttribute] || question.jarAttribute;
+
+                return (
+                  <Label
+                    key={question.questionId}
+                    htmlFor={`question-${question.questionId}`}
+                    className="flex items-center gap-3 p-3 bg-gray-50 rounded-[8px] cursor-pointer hover:bg-gray-100 transition-colors"
+                  >
+                    <Checkbox
+                      id={`question-${question.questionId}`}
+                      checked={selectedQuestions.includes(question.questionId)}
+                      onCheckedChange={() => handleQuestionToggle(question.questionId)}
+                      className="data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
+                    />
+                    <span className="text-body-m text-gray-800 flex-1">
+                      {labelText}
+                    </span>
+                  </Label>
+                );
+              })}
+            </div>
+
+            <div className="mt-4 p-3 bg-blue-50 rounded-[8px]">
+              <p className="text-small-m text-blue-700">
+                💡 &quot;사장님께 한마디&quot; 항목은 자동으로 포함됩니다
+              </p>
+            </div>
+
+            <div className="mt-4 flex justify-center">
+              <InquiryButton
+                source={`평가 항목 추가 (${surveyId === 3 ? '베이커리' : '일반 음식'})`}
+                variant="primary"
+                title="평가 항목 추가 제안하기"
+              />
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* 하단 버튼 */}
       <div className="px-4 py-4 border-t bg-white">
         <CustomButton
           onClick={handleSave}
-          disabled={!selectedMenu || selectedQuestions.length === 0}
+          disabled={!selectedMenu || !surveyId || selectedQuestions.length === 0}
           className="w-full"
         >
           저장하기
