@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, Suspense } from "react";
+import { useState, useRef, useMemo, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import {
@@ -46,6 +46,21 @@ function CustomerReviewPageContent() {
 
   const food = foodData?.result;
   const questions = questionsData?.result || [];
+
+  // surveyId 자동 감지: questionId 범위로 판단
+  // Survey 2: 23-33, Survey 3: 34-44
+  const surveyId = useMemo(() => {
+    const questionList = questionsData?.result || [];
+    if (questionList.length === 0) return 2; // 기본값
+
+    const firstQuestionId = questionList[0].questionId;
+    if (firstQuestionId >= 34 && firstQuestionId <= 44) {
+      return 3;
+    } else if (firstQuestionId >= 23 && firstQuestionId <= 33) {
+      return 2;
+    }
+    return 2; // 기본값
+  }, [questionsData?.result]);
 
   // 평점 설정
   const handleRatingChange = (questionId: number, rating: number) => {
@@ -142,7 +157,7 @@ function CustomerReviewPageContent() {
       await submitMutation.mutateAsync({
         storeId,
         foodId,
-        surveyId: 2, // 고정값
+        surveyId, // questionId 범위로 자동 감지된 값
         surveyAnswers,
         photoS3Keys
       });

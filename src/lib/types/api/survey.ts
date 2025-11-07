@@ -20,7 +20,13 @@ export type JARAttribute =
   | "DONENESS"
   | "OILINESS"
   | "PRICE"
-  | "OWNER_MESSAGE";
+  | "OWNER_MESSAGE"
+  | "DESIGN_SATISFACTION"
+  | "MOISTNESS"
+  | "CREAMINESS"
+  | "FLAVOR_BALANCE"
+  | "VALUE_FOR_MONEY"
+  | "REPURCHASE_INTENT";
 
 export type QuestionType =
   | "SLIDER"

@@ -14,8 +14,9 @@ import type {
   FeedbackPhotosPresignedUrlResponse,
 } from "@/lib/types/api/feedback";
 
-// questionId 23-32에 대한 한글 라벨 매핑
+// questionId 23-32(Survey 2), 34-44(Survey 3)에 대한 한글 라벨 매핑
 const QUESTION_LABEL_MAP: Record<number, string> = {
+  // Survey 2 (일반 음식)
   23: '맵기',
   24: '짠맛',
   25: '단맛',
@@ -26,6 +27,17 @@ const QUESTION_LABEL_MAP: Record<number, string> = {
   30: '양',
   31: '재료 신선도',
   32: '온도',
+  // Survey 3 (베이커리)
+  34: '당도',
+  35: '디자인 만족도',
+  36: '촉촉함',
+  37: '크림 질감',
+  38: '크림 느끼함',
+  39: '맛 조화',
+  40: '신선도',
+  41: '양',
+  42: '가격 대비 만족도',
+  43: '재구매 의향',
 };
 
 // 랜덤 3자리 숫자 생성 함수 (100-999)
@@ -91,16 +103,18 @@ export const transformFeedbackToReview = (
   // surveyAnswers가 없는 경우 빈 배열로 처리
   const surveyAnswers = feedback.surveyAnswers || [];
 
-  // questionId 33번 찾기 (리뷰 텍스트 - 사장님께 한마디)
-  const reviewAnswer = surveyAnswers.find((answer) => answer.questionId === 33);
+  // questionId 33번(Survey 2) 또는 44번(Survey 3) 찾기 (리뷰 텍스트 - 사장님께 한마디)
+  const reviewAnswer = surveyAnswers.find((answer) => answer.questionId === 33 || answer.questionId === 44);
   const reviewText = reviewAnswer?.answerText || "";
 
-  // questionId 23-32 (RATING 질문들)만 필터링하여 attributes 생성
+  // questionId 23-32(Survey 2) 또는 34-43(Survey 3) RATING 질문들만 필터링하여 attributes 생성
   const attributes: ReviewAttributeDisplay[] = surveyAnswers
     .filter(a =>
       a.questionId &&
       a.questionId >= 23 &&
-      a.questionId <= 32 &&
+      a.questionId <= 44 &&
+      a.questionId !== 33 && // Survey 2 TEXT 질문 제외
+      a.questionId !== 44 && // Survey 3 TEXT 질문 제외
       a.numericValue !== undefined &&
       a.numericValue !== null
     )

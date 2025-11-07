@@ -8,6 +8,7 @@ import { CustomButton } from "@/components/ui/custom-button";
 import { CustomHeader } from "@/components/ui/custom-header";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useMyStores } from "@/lib/hooks/useStore";
 import { useFoodsByStore } from "@/lib/hooks/useFood";
 import { FoodItemResponse } from "@/lib/types/api/food";
@@ -26,8 +27,8 @@ interface SelectedMenu {
   imageUrl: string;
 }
 
-// 평가 항목 한글 매핑
-const questionLabels: { [key: string]: string } = {
+// Survey 2 (일반 음식) 평가 항목 한글 매핑
+const questionLabelsSurvey2: { [key: string]: string } = {
   SPICINESS: "매운맛",
   SALTINESS: "짠맛",
   SWEETNESS: "단맛",
@@ -40,6 +41,20 @@ const questionLabels: { [key: string]: string } = {
   TEMPERATURE: "온도",
 };
 
+// Survey 3 (베이커리) 평가 항목 한글 매핑
+const questionLabelsSurvey3: { [key: string]: string } = {
+  SWEETNESS: "당도",
+  DESIGN_SATISFACTION: "디자인 만족도",
+  MOISTNESS: "촉촉함",
+  CREAMINESS: "크림 질감",
+  OILINESS: "크림 느끼함",
+  FLAVOR_BALANCE: "맛 조화",
+  FRESHNESS: "신선도",
+  PORTION_SIZE: "양",
+  VALUE_FOR_MONEY: "가격 대비 만족도",
+  REPURCHASE_INTENT: "재구매 의향",
+};
+
 function ReviewAddContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -47,6 +62,7 @@ function ReviewAddContent() {
   const [showMenuSelector, setShowMenuSelector] = useState(false);
   const [selectedQuestions, setSelectedQuestions] = useState<number[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [surveyId, setSurveyId] = useState<number>(2);
 
   // 사용자의 가게 정보 가져오기
   const { data: storesData } = useMyStores();
@@ -71,8 +87,8 @@ function ReviewAddContent() {
   const { data: reviewFoodsData } = useGetFoodsWithQuestions();
   const reviewFoodIds = reviewFoodsData?.result?.map(food => food.id) || [];
 
-  // 전체 평가 항목 가져오기
-  const { data: questionsData } = useGetSurveyQuestions(2);
+  // 전체 평가 항목 가져오기 (선택한 surveyId에 따라)
+  const { data: questionsData } = useGetSurveyQuestions(surveyId);
   const allQuestions = questionsData?.result || [];
 
   // RATING 타입 질문만 필터링 (TEXT 타입인 "사장님께 한마디"는 자동 포함)
@@ -105,10 +121,22 @@ function ReviewAddContent() {
   // 기존 선택된 질문 로드 (수정 모드)
   useEffect(() => {
     if (activeQuestionsData?.result && isEditMode) {
-      const activeQuestionIds = activeQuestionsData.result
+      const activeQuestions = activeQuestionsData.result;
+      const activeQuestionIds = activeQuestions
         .filter(q => q.questionType === 'RATING')
         .map(q => q.questionId);
       setSelectedQuestions(activeQuestionIds);
+
+      // surveyId 자동 감지: questionId 범위로 판단
+      // Survey 2: 23-33, Survey 3: 34-44
+      if (activeQuestions.length > 0) {
+        const firstQuestionId = activeQuestions[0].questionId;
+        if (firstQuestionId >= 34 && firstQuestionId <= 44) {
+          setSurveyId(3);
+        } else if (firstQuestionId >= 23 && firstQuestionId <= 33) {
+          setSurveyId(2);
+        }
+      }
     }
   }, [activeQuestionsData, isEditMode]);
 
@@ -150,7 +178,8 @@ function ReviewAddContent() {
     }
 
     try {
-      // 선택된 평가 항목 + "사장님께 한마디" (questionId: 33) 자동 포함
+      // 선택된 평가 항목 + "사장님께 한마디" 자동 포함
+      // Survey 2: questionId 33, Survey 3: questionId 44
       const textQuestion = allQuestions.find(q => q.jarAttribute === 'OWNER_MESSAGE');
       const questionIds = textQuestion
         ? [...selectedQuestions, textQuestion.questionId]
@@ -265,6 +294,47 @@ function ReviewAddContent() {
           )}
         </div>
 
+        {/* Survey 템플릿 선택 */}
+        <div className={`mb-6 ${!selectedMenu ? 'opacity-50 pointer-events-none' : ''}`}>
+          <h2 className="text-body-sb text-gray-900 mb-3">평가 템플릿 선택</h2>
+          <RadioGroup
+            value={surveyId.toString()}
+            onValueChange={(value) => {
+              setSurveyId(parseInt(value));
+              setSelectedQuestions([]); // 템플릿 변경 시 선택 초기화
+            }}
+            disabled={!selectedMenu}
+          >
+            <div className="grid grid-cols-2 gap-2">
+              <Label
+                htmlFor="survey-2"
+                className="flex items-center gap-2 p-3 bg-gray-50 rounded-[8px] cursor-pointer hover:bg-gray-100 transition-colors border-2 data-[checked=true]:border-purple-500 data-[checked=true]:bg-purple-50"
+                data-checked={surveyId === 2}
+              >
+                <RadioGroupItem
+                  value="2"
+                  id="survey-2"
+                  disabled={!selectedMenu}
+                />
+                <div className="text-body-m text-gray-900">일반 음식</div>
+              </Label>
+
+              <Label
+                htmlFor="survey-3"
+                className="flex items-center gap-2 p-3 bg-gray-50 rounded-[8px] cursor-pointer hover:bg-gray-100 transition-colors border-2 data-[checked=true]:border-purple-500 data-[checked=true]:bg-purple-50"
+                data-checked={surveyId === 3}
+              >
+                <RadioGroupItem
+                  value="3"
+                  id="survey-3"
+                  disabled={!selectedMenu}
+                />
+                <div className="text-body-m text-gray-900">베이커리</div>
+              </Label>
+            </div>
+          </RadioGroup>
+        </div>
+
         {/* 평가 항목 선택 */}
         <div className={!selectedMenu ? 'opacity-50 pointer-events-none' : ''}>
           <h2 className="text-body-sb text-gray-900 mb-3">평가 항목 선택</h2>
@@ -273,24 +343,29 @@ function ReviewAddContent() {
           </p>
 
           <div className="space-y-3">
-            {ratingQuestions.map((question) => (
-              <Label
-                key={question.questionId}
-                htmlFor={`question-${question.questionId}`}
-                className="flex items-center gap-3 p-3 bg-gray-50 rounded-[8px] cursor-pointer hover:bg-gray-100 transition-colors"
-              >
-                <Checkbox
-                  id={`question-${question.questionId}`}
-                  checked={selectedQuestions.includes(question.questionId)}
-                  onCheckedChange={() => handleQuestionToggle(question.questionId)}
-                  disabled={!selectedMenu}
-                  className="data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
-                />
-                <span className="text-body-m text-gray-800 flex-1">
-                  {questionLabels[question.jarAttribute] || question.jarAttribute}
-                </span>
-              </Label>
-            ))}
+            {ratingQuestions.map((question) => {
+              const labels = surveyId === 3 ? questionLabelsSurvey3 : questionLabelsSurvey2;
+              const labelText = labels[question.jarAttribute] || question.jarAttribute;
+
+              return (
+                <Label
+                  key={question.questionId}
+                  htmlFor={`question-${question.questionId}`}
+                  className="flex items-center gap-3 p-3 bg-gray-50 rounded-[8px] cursor-pointer hover:bg-gray-100 transition-colors"
+                >
+                  <Checkbox
+                    id={`question-${question.questionId}`}
+                    checked={selectedQuestions.includes(question.questionId)}
+                    onCheckedChange={() => handleQuestionToggle(question.questionId)}
+                    disabled={!selectedMenu}
+                    className="data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
+                  />
+                  <span className="text-body-m text-gray-800 flex-1">
+                    {labelText}
+                  </span>
+                </Label>
+              );
+            })}
           </div>
 
           <div className="mt-4 p-3 bg-blue-50 rounded-[8px]">
