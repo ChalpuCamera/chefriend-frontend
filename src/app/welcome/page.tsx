@@ -203,17 +203,17 @@ export default function Page() {
           </div>
         </div>
 
-        {/* 공지사항 */}
+        {/* 가게 설명 */}
         <div className="space-y-2.5">
           <Label htmlFor="description" className="text-body-sb text-black">
-            공지사항
+            가게 설명
           </Label>
           <Textarea
             id="description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="min-h-27 bg-gray-200 rounded-[12px] p-4 text-body-r placeholder:text-gray-500 resize-none"
-            placeholder="공지사항을 입력해주세요"
+            placeholder="가게 설명을 입력해주세요"
             rows={4}
           />
         </div>
