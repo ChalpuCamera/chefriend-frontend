@@ -17,11 +17,11 @@ import { toast } from "sonner";
 
 // 고정 5단계 라벨 (2번, 4번은 빈 문자열)
 const fixedLabels = [
-  "많이 부족해요",
+  "매우 불만족",
   "",
-  "적당해요",
+  "보통",
   "",
-  "너무 강해요"
+  "매우 만족"
 ];
 
 function CustomerReviewPageContent() {
