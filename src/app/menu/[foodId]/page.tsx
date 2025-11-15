@@ -32,6 +32,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { FloatingNavBar } from "@/components/floating-nav-bar";
+import { MenuStatsDemo } from "@/components/menu/MenuStatsDemo";
 // import { useGetActiveCampaignByFood, calculateRemainingDays } from "@/lib/hooks/useCampaign";
 // import { useMyStores } from "@/lib/hooks/useStore";
 
@@ -455,241 +456,12 @@ export default function Page({
           )}
         </div> */}
 
-        {/* Menu Stats */}
-        {/* <div className="px-4 mb-4">
-          <h3 className="text-sub-title-b text-gray-800 mb-4">
-            메뉴 평가 리포트
-          </h3>
-          <div className="flex gap-2">
-            <div className="flex-1 bg-white border border-gray-300 rounded-lg p-3">
-              <p className="text-sub-body-r text-gray-700">평가 수</p>
-              <p className="text-title-2 text-gray-800 mt-1">
-                {jarData?.npsScore?.totalResponses || 23}
-              </p>
-            </div>
-            <div className="flex-1 bg-white border border-gray-300 rounded-lg p-3">
-              <p className="text-sub-body-r text-gray-700">평점</p>
-              <p className="text-title-2 text-gray-800 mt-1">
-                {jarData?.results && jarData.results.length > 0
-                  ? (() => {
-                      const avgScore =
-                        jarData.results.reduce(
-                          (sum, item) => sum + item.overallMeanScore,
-                          0
-                        ) / jarData.results.length;
-                      return (avgScore / 2).toFixed(1);
-                    })()
-                  : 4.4}
-              </p>
-            </div>
-            <div className="flex-1 bg-white border border-gray-300 rounded-lg p-3">
-              <p className="text-sub-body-r text-gray-700">재주문률</p>
-              <p className="text-title-2 text-gray-800 mt-1">
-                {jarData?.npsScore?.promoterRate
-                  ? `${Math.round(jarData.npsScore.promoterRate)}%`
-                  : "87%"}
-              </p>
-            </div>
+        {/* Menu Stats - 시연용: 특정 메뉴 ID에서만 표시 */}
+        {resolvedParams.foodId === "861" && (
+          <div className="px-4">
+            <MenuStatsDemo />
           </div>
-        </div> */}
-        {/* 그래프 Section */}
-        {/* <div className="px-4 py-6 flex flex-col gap-4">
-      
-          <div className="relative bg-white rounded-[8px] overflow-hidden">
-            <div className={jarError ? "opacity-20" : ""}>
-
-              <div className="divide-y divide-gray-100">
-                {(() => {
-                  // 에러 시 더미 데이터 사용
-                  let tasteData;
-
-                  // JAR 데이터에서 맛 속성 찾기
-                  const spicyData = jarData?.results?.find(
-                    (r) => r.attribute === "SPICINESS"
-                  );
-                  const sweetData = jarData?.results?.find(
-                    (r) => r.attribute === "SWEETNESS"
-                  );
-                  const saltyData = jarData?.results?.find(
-                    (r) => r.attribute === "SALTINESS"
-                  );
-                  const sourData = jarData?.results?.find(
-                    (r) => r.attribute === "SOURNESS"
-                  );
-
-                  // 각 속성별 상태 결정 함수
-                  const getStatus = (
-                    data: typeof spicyData,
-                    defaultStatus: string
-                  ) => {
-                    if (!data) return defaultStatus;
-                    // tooLittle이나 tooMuch의 비율이 높으면 문제
-                    const problemRatio =
-                      data.tooLittle.percentage + data.tooMuch.percentage;
-                    if (problemRatio > 60) return "개선 필요";
-                    if (problemRatio > 40) return "주의";
-                    return "적정";
-                  };
-
-                  const getColor = (status: string) => {
-                    if (status === "개선 필요") return "bg-[#f8535a]";
-                    if (status === "주의") return "bg-[#fe951c]";
-                    return "bg-[#40c057]";
-                  };
-
-                  const getValue = (
-                    data: typeof spicyData,
-                    defaultValue: number
-                  ) => {
-                    if (!data) return defaultValue;
-                    // justRight 비율을 기준으로 표시
-                    return data.justRight.percentage || defaultValue;
-                  };
-
-                  if (jarError) {
-                    // 에러일 때 더미 데이터
-                    tasteData = [
-                      {
-                        name: "맵기",
-                        value: 13,
-                        status: "개선 필요",
-                        color: "bg-[#f8535a]",
-                      },
-                      {
-                        name: "단맛",
-                        value: 34,
-                        status: "주의",
-                        color: "bg-[#fe951c]",
-                      },
-                      {
-                        name: "짠맛",
-                        value: 55,
-                        status: "적정",
-                        color: "bg-[#40c057]",
-                      },
-                      {
-                        name: "신맛",
-                        value: 55,
-                        status: "적정",
-                        color: "bg-[#40c057]",
-                      },
-                    ];
-                  } else {
-                    // 정상일 때 실제 데이터 (없으면 더미 데이터와 동일한 기본값 사용)
-                    tasteData = [
-                      {
-                        name: "맵기",
-                        value: getValue(spicyData, 13),
-                        status: getStatus(spicyData, "개선 필요"),
-                        color: getColor(getStatus(spicyData, "개선 필요")),
-                      },
-                      {
-                        name: "단맛",
-                        value: getValue(sweetData, 34),
-                        status: getStatus(sweetData, "주의"),
-                        color: getColor(getStatus(sweetData, "주의")),
-                      },
-                      {
-                        name: "짠맛",
-                        value: getValue(saltyData, 55),
-                        status: getStatus(saltyData, "적정"),
-                        color: getColor(getStatus(saltyData, "적정")),
-                      },
-                      {
-                        name: "신맛",
-                        value: getValue(sourData, 55),
-                        status: getStatus(sourData, "적정"),
-                        color: getColor(getStatus(sourData, "적정")),
-                      },
-                    ];
-                  }
-
-                  return tasteData;
-                })().map((item, index) => (
-                  <div key={index} className="p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-[17px] font-medium text-gray-700">
-                        {item.name}
-                      </span>
-                      <span
-                        className={`px-2.5 py-0.5 rounded-full text-xs font-semibold text-white ${item.color}`}
-                      >
-                        {item.status}
-                      </span>
-                    </div>
-                    <div>
-                      <div className="flex justify-between text-xs text-gray-500 mb-2">
-                        <span>약함</span>
-                        <span>적정</span>
-                        <span>강함</span>
-                      </div>
-                      <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full ${item.color}`}
-                          style={{ width: `${item.value}%` }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {jarError && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="bg-[#f7f4fe] border border-gray-700 rounded-[12px] px-8 py-4 mx-6">
-                  <p className="text-body-sb text-gray-800 text-center leading-[24px]">
-                    평가 수가 5개가 넘으면
-                    <br />더 자세한 리포트를 보여드려요.
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div
-            className={`bg-white rounded-[8px] border border-gray-300 p-4 ${
-              jarError ? "opacity-20" : ""
-            }`}
-          >
-            <div className="flex gap-2">
-              <div className="flex-1 bg-gray-50 rounded-[7px] border border-gray-200 p-3">
-                <p className="text-xs font-semibold text-[#008214] mb-1">
-                  추천
-                </p>
-                <p className="text-xl font-bold text-[#008214]">
-                  {jarError
-                    ? "77%"
-                    : jarData?.npsScore?.promoterRate
-                    ? `${Math.round(jarData.npsScore.promoterRate)}%`
-                    : "77%"}
-                </p>
-              </div>
-              <div className="flex-1 bg-gray-50 rounded-[7px] border border-gray-200 p-3">
-                <p className="text-xs font-semibold text-gray-700 mb-1">중립</p>
-                <p className="text-xl font-bold text-gray-700">
-                  {jarError
-                    ? "11%"
-                    : jarData?.npsScore?.passiveRate
-                    ? `${Math.round(jarData.npsScore.passiveRate)}%`
-                    : "11%"}
-                </p>
-              </div>
-              <div className="flex-1 bg-gray-50 rounded-[7px] border border-gray-200 p-3">
-                <p className="text-xs font-semibold text-[#d02532] mb-1">
-                  비추천
-                </p>
-                <p className="text-xl font-bold text-[#d02532]">
-                  {jarError
-                    ? "12%"
-                    : jarData?.npsScore?.detractorRate
-                    ? `${Math.round(jarData.npsScore.detractorRate)}%`
-                    : "12%"}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div> */}
+        )}
 
         {/* Recent Reviews Section */}
         <div className="px-4 py-6">
@@ -769,7 +541,7 @@ export default function Page({
                       {/* Left: Review Content */}
                       <div className="flex-1 min-w-0">
                         {/* Anonymous ID and Attributes */}
-                        <div className="flex items-start gap-2 mb-2 text-sm text-gray-700">
+                        <div className="flex items-baseline gap-2 mb-2 text-sm text-gray-700">
                           <span className="text-body-sb flex-shrink-0">
                             익명{reviews.length - index}
                           </span>
@@ -785,7 +557,7 @@ export default function Page({
                               {review.attributes.map((attr, idx) => (
                                 <span
                                   key={`${review.id}-${attr.label}-${idx}`}
-                                  className="mr-2"
+                                  className="mr-2 text-sub-body-sb"
                                 >
                                   {attr.label}:{attr.value}
                                 </span>
