@@ -282,11 +282,16 @@ function CustomerReviewPageContent() {
                     </div>
 
                     {/* 5단계 라벨 */}
-                    <div className="flex justify-between w-full max-w-[341px] text-sub-body-sb text-gray-700">
+                    <div className="relative w-full max-w-[327px] h-[20px]">
                       {fixedLabels.map((label, idx) => (
                         <span
                           key={idx}
-                          className="text-center text-xs leading-tight"
+                          className={`absolute text-sub-body-r font-bold leading-tight text-gray-700 ${
+                            idx === 0 ? 'left-0' :
+                            idx === fixedLabels.length - 1 ? 'right-0' :
+                            '-translate-x-1/2'
+                          }`}
+                          style={idx === 0 || idx === fixedLabels.length - 1 ? {} : { left: `${idx * 25}%` }}
                         >
                           {label}
                         </span>
