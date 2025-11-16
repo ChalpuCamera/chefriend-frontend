@@ -44,6 +44,7 @@ export default function Page() {
     id: food.id || food.foodItemId, // 새 필드명 우선, 구 필드명 폴백
     name: food.name || food.foodName || "", // 새 필드명 우선, 구 필드명 폴백
     price: food.price,
+    description: food.description,
     reviewCount: 0, // TODO: 리뷰 수 API 추가 필요
     imageUrl: food.photoUrl || food.thumbnailUrl || undefined, // 새 필드명 우선, 구 필드명 폴백
   }));
@@ -176,17 +177,20 @@ export default function Page() {
                   </div>
 
                   {/* Menu Info */}
-                  <div className="flex-1 flex flex-col justify-between h-full py-1">
-                    <div className="flex items-center justify-between w-full">
-                      <div className="text-headline-b text-gray-800">
+                  <div className="flex-1 flex flex-col justify-between h-full py-1 min-w-0">
+                    <div className="flex items-center justify-between w-full gap-2">
+                      <div className="text-headline-b text-gray-800 truncate">
                         {item.name}
                       </div>
                       <button
-                        className="min-w-16 px-3 py-1 text-sub-body-sb text-gray-800 border border-gray-800 rounded-[6px]"
+                        className="min-w-16 px-3 py-1 text-sub-body-sb text-gray-800 border border-gray-800 rounded-[6px] flex-shrink-0"
                         onClick={() => router.push(`/menu/${item.id!}`)}
                       >
                         자세히
                       </button>
+                    </div>
+                    <div className="text-body-r text-gray-600 truncate pr-2">
+                      {item.description}
                     </div>
 
                     <div className="text-headline-m text-gray-600">
