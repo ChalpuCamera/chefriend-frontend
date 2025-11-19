@@ -457,7 +457,7 @@ export default function Page({
         </div> */}
 
         {/* Menu Stats - 시연용: 특정 메뉴 ID에서만 표시 */}
-        {resolvedParams.foodId === "861" && (
+        {resolvedParams.foodId === "865" && (
           <div className="px-4">
             <MenuStatsDemo />
           </div>
