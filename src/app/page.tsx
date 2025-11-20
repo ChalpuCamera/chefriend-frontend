@@ -26,7 +26,7 @@ export default function LoginPage() {
             src="/mock.png"
             alt="Promotion"
             width={343}
-            height={256}
+            height={100}
           />
         </div>
 
