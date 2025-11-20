@@ -28,7 +28,7 @@ const fixedLabels = [
 const npsLabels = [
   "불만족",
   "",
-  "적정",
+  "보통",
   "",
   "만족"
 ];
