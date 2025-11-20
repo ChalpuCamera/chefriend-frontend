@@ -73,9 +73,9 @@ function getTasteBadge(avgPosition: number) {
   const distanceFromCenter = Math.abs(avgPosition - 50)
 
   // 중앙에 가까울수록 녹색 (JAR 방식: 적정이 중앙)
-  if (distanceFromCenter <= 20) {
+  if (distanceFromCenter <= 10) {
     return { label: "적정", variant: "default" as const, color: "bg-[#40c057]" }
-  } else if (distanceFromCenter <= 35) {
+  } else if (distanceFromCenter <= 30) {
     return { label: "주의", variant: "secondary" as const, color: "bg-[#fe951c]" }
   } else {
     return { label: "개선 필요", variant: "destructive" as const, color: "bg-[#f8535a]" }
