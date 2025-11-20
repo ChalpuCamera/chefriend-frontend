@@ -218,7 +218,8 @@ export function useFoodReviews(
   return useQuery({
     queryKey: feedbackKeys.reviewsByFood(foodId, pageable),
     queryFn: async () => {
-      return feedbackApi.getFoodReviews(foodId, pageable);
+      const response = await feedbackApi.getFoodReviews(foodId, pageable);
+      return response.reviews; // reviews 배열만 반환
     },
     enabled: !!foodId,
   });
@@ -279,15 +280,15 @@ export function useInfiniteFoodReviews(foodId: number, size: number = 10) {
   return useInfiniteQuery({
     queryKey: [...feedbackKeys.reviews(), "infinite", "food", foodId],
     queryFn: async ({ pageParam = 0 }) => {
-      const reviews = await feedbackApi.getFoodReviews(foodId, {
+      const response = await feedbackApi.getFoodReviews(foodId, {
         page: pageParam,
         size,
         sort: ["createdAt,desc"],
       });
       return {
-        content: reviews,
+        content: response.reviews,
         page: pageParam,
-        hasNext: reviews.length === size,
+        hasNext: response.reviews.length === size,
       };
     },
     getNextPageParam: (lastPage) => {

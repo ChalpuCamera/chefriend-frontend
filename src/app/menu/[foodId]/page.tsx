@@ -18,6 +18,7 @@ import {
 import {
   useFoodReviews,
   getFlattenedReviews,
+  getTotalElements,
 } from "@/lib/hooks/useFoodReviews";
 import { inquiryApi } from "@/lib/api/landing/inquiry";
 import { toast } from "sonner";
@@ -148,6 +149,7 @@ export default function Page({
 
   // reviewsData에서 모든 페이지의 리뷰를 평탄화
   const reviews = getFlattenedReviews(reviewsData);
+  const totalElements = getTotalElements(reviewsData);
 
   // // 캠페인 데이터 처리
   // const hasCampaign = !!activeCampaign;
@@ -543,7 +545,7 @@ export default function Page({
                         {/* Anonymous ID and Attributes */}
                         <div className="flex items-baseline gap-2 mb-2 text-sm text-gray-700">
                           <span className="text-body-sb flex-shrink-0">
-                            익명{reviews.length - index}
+                            익명{totalElements - index}
                           </span>
                           {review.attributes && review.attributes.length > 0 && (
                             <div

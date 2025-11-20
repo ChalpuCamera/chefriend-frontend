@@ -64,7 +64,7 @@ function transformJARData(jarData: JARAnalysisResponse): CalculatedStats {
 
 interface TasteItemData {
   label: string
-  key: "spicy" | "sweet" | "salty" | "sour"
+  key: "spicy" | "salty" | "sweet" | "sour"
   stats: TasteStats
 }
 
@@ -109,8 +109,8 @@ export function MenuStatsDemoBackend({ foodId }: MenuStatsDemoBackendProps) {
 
   const tasteItems: TasteItemData[] = [
     { label: "맵기", key: "spicy", stats: stats.tastes.spicy },
-    { label: "단맛", key: "sweet", stats: stats.tastes.sweet },
     { label: "짠맛", key: "salty", stats: stats.tastes.salty },
+    { label: "단맛", key: "sweet", stats: stats.tastes.sweet },
     { label: "신맛", key: "sour", stats: stats.tastes.sour },
   ]
 

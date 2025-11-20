@@ -345,11 +345,13 @@ export const feedbackApi = {
   getFoodReviews: async (
     foodId: number,
     pageable: Pageable = {}
-  ): Promise<ReviewDisplayData[]> => {
+  ): Promise<{ reviews: ReviewDisplayData[], totalElements: number }> => {
     try {
       // 1단계: feedbackId 목록 조회
       const summaryResponse = await feedbackApi.getFoodFeedbacks(foodId, pageable);
 
+      // totalElements 추출
+      const totalElements = summaryResponse?.result?.totalElements || 0;
 
       // 응답 구조 확인
       const content = summaryResponse?.result?.content;
@@ -366,7 +368,7 @@ export const feedbackApi = {
 
         if (feedbackSummaries.length === 0) {
           console.log('⚠️ No feedback summaries found');
-          return [];
+          return { reviews: [], totalElements };
         }
 
         // 2단계: 각 feedbackId로 상세 정보 조회
@@ -402,7 +404,8 @@ export const feedbackApi = {
         console.log(`✨ Transformed ${details.filter(d => d !== null).length} reviews`, details);
 
         // null 제거 후 반환
-        return details.filter((detail): detail is ReviewDisplayData => detail !== null);
+        const reviews = details.filter((detail): detail is ReviewDisplayData => detail !== null);
+        return { reviews, totalElements };
       } else {
         console.log('⚠️ No content array found in response');
       }
@@ -411,6 +414,6 @@ export const feedbackApi = {
     }
 
     // 오류 시 빈 배열 반환
-    return [];
+    return { reviews: [], totalElements: 0 };
   },
 };

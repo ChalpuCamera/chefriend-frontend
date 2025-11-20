@@ -19,17 +19,18 @@ export function useFoodReviews(
     queryKey: reviewKeys.byFood(foodId),
     queryFn: async ({ pageParam = 0 }) => {
       console.log(`🚀 Fetching reviews for foodId: ${foodId}, page: ${pageParam}`);
-      const reviews = await feedbackApi.getFoodReviews(foodId, {
+      const response = await feedbackApi.getFoodReviews(foodId, {
         page: pageParam,
         size: 20,
       });
 
-      console.log(`📦 Received ${reviews.length} reviews`);
+      console.log(`📦 Received ${response.reviews.length} reviews, totalElements: ${response.totalElements}`);
 
       return {
-        reviews,
+        reviews: response.reviews,
+        totalElements: response.totalElements,
         page: pageParam,
-        hasNextPage: reviews.length === 20, // 20개 미만이면 더 이상 데이터 없음
+        hasNextPage: response.reviews.length === 20, // 20개 미만이면 더 이상 데이터 없음
       };
     },
     getNextPageParam: (lastPage) => {
@@ -46,6 +47,7 @@ export function useFoodReviews(
 interface PagedReviewData {
   pages: Array<{
     reviews: ReviewDisplayData[];
+    totalElements: number;
     page: number;
     totalPages?: number;
     hasNextPage?: boolean;
@@ -58,4 +60,12 @@ export function getFlattenedReviews(
 ): ReviewDisplayData[] {
   if (!data?.pages) return [];
   return data.pages.flatMap((page) => page.reviews);
+}
+
+// totalElements 추출 헬퍼
+export function getTotalElements(
+  data: PagedReviewData | undefined
+): number {
+  if (!data?.pages || data.pages.length === 0) return 0;
+  return data.pages[0].totalElements;
 }
