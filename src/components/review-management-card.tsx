@@ -63,7 +63,7 @@ export function ReviewManagementCard({
             </p>
             <div className="flex items-center gap-3 text-small-r">
               <span className="text-gray-600">
-                평가 항목: <span className="text-purple-700 font-medium">{Math.max(0, questionCount - 1)}개</span>
+                평가 항목: <span className="text-purple-700 font-medium">{Math.max(0, questionCount - 3)}개</span>
               </span>
               <span className="text-gray-400">|</span>
               <span className="text-gray-600">

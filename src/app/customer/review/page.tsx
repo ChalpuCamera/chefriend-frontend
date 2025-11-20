@@ -24,6 +24,15 @@ const fixedLabels = [
   "매우 강함"
 ];
 
+// NPS 슬라이더용 라벨 (0~10 범위)
+const npsLabels = [
+  "불만족",
+  "",
+  "적정",
+  "",
+  "만족"
+];
+
 function CustomerReviewPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -292,6 +301,58 @@ function CustomerReviewPageContent() {
                             '-translate-x-1/2'
                           }`}
                           style={idx === 0 || idx === fixedLabels.length - 1 ? {} : { left: `${idx * 25}%` }}
+                        >
+                          {label}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+
+        {/* NPS 질문들 (Survey 2 전용) */}
+        {surveyId === 2 && questions
+          .filter(q => q.questionType === 'NPS_RECOMMEND' || q.questionType === 'NPS_REORDER')
+          .map(question => (
+            <div key={question.questionId} className="bg-white px-4 py-[18px]">
+              <div className="flex flex-col gap-[13px]">
+                <div className="flex flex-col gap-4 items-center">
+                  {/* 질문 텍스트 */}
+                  <p className="text-headline-b text-gray-800 text-center">
+                    {question.questionText}
+                  </p>
+
+                  {/* 슬라이더 + 라벨 */}
+                  <div className="flex flex-col gap-[10px] w-full items-center">
+                    {/* 슬라이더 (0~10 범위) */}
+                    <div className="relative h-[29px] w-full max-w-[327px]">
+                      <input
+                        type="range"
+                        min="0"
+                        max="10"
+                        step="1"
+                        value={answers[question.questionId]?.rating ?? 5}
+                        onChange={(e) => handleRatingChange(question.questionId, parseInt(e.target.value))}
+                        className="absolute w-full h-[19px] top-[5px] appearance-none cursor-pointer slider-purple-figma"
+                        style={{
+                          background: `linear-gradient(to right, #a67de8 0%, #a67de8 ${(answers[question.questionId]?.rating ?? 5) * 10}%, #e9ecef ${(answers[question.questionId]?.rating ?? 5) * 10}%, #e9ecef 100%)`
+                        }}
+                      />
+                    </div>
+
+                    {/* 5단계 라벨 (0, 2.5, 5, 7.5, 10 위치) */}
+                    <div className="relative w-full max-w-[327px] h-[20px]">
+                      {npsLabels.map((label, idx) => (
+                        <span
+                          key={idx}
+                          className={`absolute text-sub-body-r font-bold leading-tight text-gray-700 ${
+                            idx === 0 ? 'left-0' :
+                            idx === npsLabels.length - 1 ? 'right-0' :
+                            '-translate-x-1/2'
+                          }`}
+                          style={idx === 0 || idx === npsLabels.length - 1 ? {} : { left: `${idx * 25}%` }}
                         >
                           {label}
                         </span>

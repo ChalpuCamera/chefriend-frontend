@@ -85,7 +85,7 @@ export default function Page() {
                 price={food.price}
                 imageUrl={food.photoUrl}
                 questionCount={food.activeQuestionCount}
-                reviewCount={food.reviewCount}
+                reviewCount={food.feedbackCount}
               />
             ))}
           </div>

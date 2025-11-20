@@ -49,7 +49,7 @@ export interface CustomerTasteDto {
 // 평가 항목 표시 데이터
 export interface ReviewAttributeDisplay {
   label: string;   // 한글 라벨 (예: "맵기", "짠맛")
-  value: number;   // 1-5 숫자 값
+  value: string;   // JAR 텍스트 값 (예: "적정", "약함", "강함")
 }
 
 // UI 표시용 리뷰 데이터 (피드백 + 맛 프로필 조합)

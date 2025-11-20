@@ -187,9 +187,20 @@ function ReviewAddContent() {
       // 선택된 평가 항목 + "사장님께 한마디" 자동 포함
       // Survey 2: questionId 33, Survey 3: questionId 44
       const textQuestion = allQuestions.find(q => q.jarAttribute === 'OWNER_MESSAGE');
-      const questionIds = textQuestion
-        ? [...selectedQuestions, textQuestion.questionId]
-        : selectedQuestions;
+
+      // NPS 질문 찾기 (Survey 2 전용)
+      const npsQuestions = surveyId === 2
+        ? allQuestions.filter(q =>
+            q.questionType === 'NPS_RECOMMEND' || q.questionType === 'NPS_REORDER'
+          )
+        : [];
+
+      // questionIds 배열 구성
+      const questionIds = [
+        ...selectedQuestions,
+        ...(textQuestion ? [textQuestion.questionId] : []),
+        ...npsQuestions.map(q => q.questionId)
+      ];
 
       await setQuestionsMutation.mutateAsync({
         foodItemId: selectedMenu.id,
@@ -375,7 +386,10 @@ function ReviewAddContent() {
 
             <div className="mt-4 p-3 bg-blue-50 rounded-[8px]">
               <p className="text-small-m text-blue-700">
-                💡 &quot;사장님께 한마디&quot; 항목은 자동으로 포함됩니다
+                {surveyId === 2
+                  ? '💡 "사장님께 한마디" 및 추천/재주문 의향 항목은 자동으로 포함됩니다'
+                  : '💡 "사장님께 한마디" 항목은 자동으로 포함됩니다'
+                }
               </p>
             </div>
 

@@ -95,6 +95,18 @@ const formatDate = (dateString: string): string => {
   return `${year}. ${month}. ${day}`;
 };
 
+// JAR 방식 텍스트 변환: 3(적정)이 중심
+const convertToJARText = (originalValue: number): string => {
+  const jarTextMap: Record<number, string> = {
+    1: "매우 약함",  // 너무 약함
+    2: "약함",       // 약간 약함
+    3: "적정",       // 적정 (최고)
+    4: "강함",       // 약간 강함
+    5: "매우 강함",  // 너무 강함
+  };
+  return jarTextMap[originalValue] || "적정";
+};
+
 // FeedbackResponse를 ReviewDisplayData로 변환
 export const transformFeedbackToReview = (
   feedback: FeedbackResponse,
@@ -120,7 +132,7 @@ export const transformFeedbackToReview = (
     )
     .map(a => ({
       label: QUESTION_LABEL_MAP[a.questionId!] || `질문${a.questionId}`,
-      value: a.numericValue || 0,
+      value: convertToJARText(a.numericValue || 0),  // JAR 텍스트로 변환
     }));
 
   // Mock 맛 프로필 가져오기 (실제로는 API 호출 필요)

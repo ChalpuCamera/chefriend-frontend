@@ -124,7 +124,7 @@ export const useGetFoodsWithQuestions = () => {
       photoUrl?: string;
       isActive: boolean;
       activeQuestionCount?: number;
-      reviewCount?: number;
+      feedbackCount?: number;
       createdAt: string;
       updatedAt: string;
     }
@@ -139,7 +139,7 @@ export const useGetFoodsWithQuestions = () => {
         photoUrl: food.thumbnailUrl || food.photoUrl || '',
         isActive: food.isActive,
         activeQuestionCount: food.activeQuestionCount || 0,
-        reviewCount: food.reviewCount || 0,
+        feedbackCount: food.feedbackCount || 0,
         createdAt: food.createdAt,
         updatedAt: food.updatedAt,
       }));

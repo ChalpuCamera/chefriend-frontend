@@ -32,7 +32,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { FloatingNavBar } from "@/components/floating-nav-bar";
-import { MenuStatsDemo } from "@/components/menu/MenuStatsDemo";
+import { MenuStatsDemoBackend } from "@/components/menu/MenuStatsDemoBackend";
 // import { useGetActiveCampaignByFood, calculateRemainingDays } from "@/lib/hooks/useCampaign";
 // import { useMyStores } from "@/lib/hooks/useStore";
 
@@ -457,9 +457,9 @@ export default function Page({
         </div> */}
 
         {/* Menu Stats - 시연용: 특정 메뉴 ID에서만 표시 */}
-        {resolvedParams.foodId === "865" && (
+        {reviews.length >= 20 && (
           <div className="px-4">
-            <MenuStatsDemo />
+            <MenuStatsDemoBackend foodId={foodId} />
           </div>
         )}
 
