@@ -223,7 +223,7 @@ export const feedbackApi = {
     const params = {
       page: pageable.page ?? 0,
       size: pageable.size ?? 20,
-      sort: pageable.sort ?? ["createdAt,asc"],
+      sort: pageable.sort ?? ["createdAt,desc"],
     };
     return apiClient.get<ApiResponse<PageResponse<FeedbackResponse>>>(
       `/api/customer-feedback/food/${foodId}`,
