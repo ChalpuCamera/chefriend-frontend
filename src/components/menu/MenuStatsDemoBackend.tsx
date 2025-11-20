@@ -68,14 +68,14 @@ interface TasteItemData {
   stats: TasteStats
 }
 
-function getTasteBadge(stats: TasteStats) {
-  const total = stats.too_little + stats.just_right + stats.too_much
-  const justRightPercent = (stats.just_right / total) * 100
+function getTasteBadge(avgPosition: number) {
+  // 바의 위치가 중앙(50%)에서 얼마나 떨어져 있는지 계산
+  const distanceFromCenter = Math.abs(avgPosition - 50)
 
-  // just_right 비율이 높을수록 좋음 (JAR 방식)
-  if (justRightPercent >= 60) {
+  // 중앙에 가까울수록 녹색 (JAR 방식: 적정이 중앙)
+  if (distanceFromCenter <= 15) {
     return { label: "적정", variant: "default" as const, color: "bg-[#40c057]" }
-  } else if (justRightPercent >= 40) {
+  } else if (distanceFromCenter <= 30) {
     return { label: "주의", variant: "secondary" as const, color: "bg-[#fe951c]" }
   } else {
     return { label: "개선 필요", variant: "destructive" as const, color: "bg-[#f8535a]" }
@@ -154,7 +154,6 @@ export function MenuStatsDemoBackend({ foodId }: MenuStatsDemoBackendProps) {
               const tooLittlePercent = (item.stats.too_little / total) * 100
               const justRightPercent = (item.stats.just_right / total) * 100
               const tooMuchPercent = (item.stats.too_much / total) * 100
-              const badge = getTasteBadge(item.stats)
 
               // 평균 위치 계산: 약함(0) ~ 강함(100) 스펙트럼에서의 위치
               // too_little은 0, just_right는 50, too_much는 100으로 가중 평균
@@ -163,6 +162,8 @@ export function MenuStatsDemoBackend({ foodId }: MenuStatsDemoBackendProps) {
                   justRightPercent * 50 +
                   tooMuchPercent * 100) /
                 100
+
+              const badge = getTasteBadge(avgPosition)
 
               return (
                 <div key={index} className="p-4">
